@@ -1,0 +1,179 @@
+/* ========================================
+   Estilos Condicionales para Tema
+   ======================================== */
+
+/* Tema Bootstrap */
+body.theme-bootstrap {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+body.theme-bootstrap * {
+  /* Asegurar que Bootstrap tenga prioridad */
+  box-sizing: border-box;
+}
+
+/* Ocultar elementos específicos de Tailwind cuando Bootstrap está activo */
+body.theme-bootstrap .tailwind-only {
+  display: none !important;
+}
+
+/* Tema Tailwind */
+body.theme-tailwind {
+  /* Configuración por defecto de Tailwind */
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+}
+
+/* Ocultar elementos específicos de Bootstrap cuando Tailwind está activo */
+body.theme-tailwind .bootstrap-only {
+  display: none !important;
+}
+
+/* ========================================
+   Transiciones Suaves al Cambiar Tema
+   ======================================== */
+
+body {
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* ========================================
+   Compatibilidad entre Tailwind y Bootstrap
+   ======================================== */
+
+/* Evitar conflictos con reset de Tailwind */
+body.theme-bootstrap button,
+body.theme-bootstrap input,
+body.theme-bootstrap select,
+body.theme-bootstrap textarea {
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+}
+
+/* Asegurar que las clases de Bootstrap funcionen correctamente */
+body.theme-bootstrap .container,
+body.theme-bootstrap .container-fluid,
+body.theme-bootstrap .row,
+body.theme-bootstrap .col,
+body.theme-bootstrap [class*='col-'] {
+  display: block;
+  box-sizing: border-box;
+}
+
+body.theme-bootstrap .d-flex {
+  display: flex !important;
+}
+
+body.theme-bootstrap .d-none {
+  display: none !important;
+}
+
+/* ========================================
+   Mejoras Visuales para el Selector
+   ======================================== */
+
+.design-library-selector {
+  position: relative;
+}
+
+.design-library-selector select {
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.design-library-selector select:focus {
+  outline: none;
+  border-color: #10b981;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+}
+
+/* Indicador visual del tema activo */
+body.theme-bootstrap::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #0d6efd, #6610f2);
+  z-index: 9999;
+  pointer-events: none;
+}
+
+body.theme-tailwind::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #06b6d4, #3b82f6);
+  z-index: 9999;
+  pointer-events: none;
+}
+
+/* ========================================
+   Animaciones de Transición
+   ======================================== */
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.theme-transition {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+/* ========================================
+   Responsive Helpers
+   ======================================== */
+
+/* Asegurar que ambos sistemas grid funcionen */
+body.theme-bootstrap .container-fluid {
+  width: 100%;
+  padding-right: 15px;
+  padding-left: 15px;
+  margin-right: auto;
+  margin-left: auto;
+}
+
+body.theme-tailwind .container {
+  width: 100%;
+}
+
+@media (min-width: 640px) {
+  body.theme-tailwind .container {
+    max-width: 640px;
+  }
+}
+
+@media (min-width: 768px) {
+  body.theme-tailwind .container {
+    max-width: 768px;
+  }
+}
+
+@media (min-width: 1024px) {
+  body.theme-tailwind .container {
+    max-width: 1024px;
+  }
+}
+
+@media (min-width: 1280px) {
+  body.theme-tailwind .container {
+    max-width: 1280px;
+  }
+}
+
+@media (min-width: 1536px) {
+  body.theme-tailwind .container {
+    max-width: 1536px;
+  }
+}
