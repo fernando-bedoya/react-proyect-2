@@ -11,17 +11,16 @@ const UsersList = lazy(() => import('./pages/Users/List'));
 const UsersCreate = lazy(() => import('./pages/Users/Create'));
 const UsersUpdate = lazy(() => import('./pages/Users/Update'));
 
-<<<<<<< HEAD
-// Roles CRUD
-=======
 //Permissions CRUD
 const PermissionsList = lazy(() => import('./pages/Permissions/List'));
 const PermissionsCreate = lazy(() => import('./pages/Permissions/Create'));
 const PermissionsUpdate = lazy(() => import('./pages/Permissions/Update'));
 
-// Roles
->>>>>>> e4750c98b6e0938455352bee1d0f8cb082a080b4
+// Roles CRUD
 const RolesList = lazy(() => import('./pages/Roles/List'));
+const RolesCreate = lazy(() => import('./pages/Roles/Create'));
+const RolesUpdate = lazy(() => import('./pages/Roles/Update'));
+
 // Firebase Demo
 const FirebaseDemo = lazy(() => import('./pages/Firebase/FirebaseDemo'));
 const FirebaseChecker = lazy(() => import('./pages/Firebase/FirebaseChecker'));
@@ -78,6 +77,21 @@ const coreRoutes = [
     path: '/roles/list',
     title: 'Roles List',
     component: RolesList,
+  },
+    {
+    path: '/roles/list',
+    title: 'Roles List',
+    component: RolesList,
+  },
+    {
+    path: '/roles/create',
+    title: 'Create Role',
+    component: RolesCreate,
+  },
+  {
+    path: '/roles/update/:id',
+    title: 'Update Role',
+    component: RolesUpdate,
   },
   {
     path: '/permissions/list',
