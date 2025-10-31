@@ -1,7 +1,5 @@
-// Componente SignUp.tsx - Página de registro de usuarios con autenticación mediante email/password y proveedores sociales (Google, GitHub, Microsoft).
-// Permite crear cuentas usando Firebase Authentication y guarda los datos del usuario en el backend Flask.
-// Incluye validación de formularios con Formik y Yup, y notificaciones con SweetAlert2.
-
+// SOLUCIÓN FINAL: No enviar password al backend
+// Firebase maneja toda la autenticación
 import React, { useState } from 'react';
 import { Container, Row, Col, Card, Form, Button, Alert, Spinner } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
@@ -27,38 +25,82 @@ const SignUp: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  // Función para guardar usuario en el backend
-  const saveUserToBackend = async (userData: { name: string; email: string }) => {
+  // ✅ SOLUCIÓN: Solo enviar name y email al backend
+  // Firebase ya guarda la contraseña de forma segura
+  const saveUserToBackend = async (userData: { 
+    name: string; 
+    email: string;
+  }) => {
     try {
-      const createdUser = await userService.createUser(userData);
+      console.log('📤 Guardando usuario en backend (sin password)');
+      console.log('   - Name:', userData.name);
+      console.log('   - Email:', userData.email);
+      
+      const payload = {
+        name: userData.name,
+        email: userData.email,
+        // ❌ NO enviar password - el backend no lo acepta
+      };
+
+      const createdUser = await userService.createUser(payload as any);
+      
+      console.log('✅ Usuario creado en backend:', createdUser);
+      
       return createdUser;
     } catch (error: any) {
-      console.error('Error al guardar en backend:', error);
+      console.error('❌ Error al guardar en backend:', error);
       throw error;
     }
   };
 
-  // Registro con email/password
   const handleSignUp = async (values: User & { confirmPassword?: string }) => {
     setLoading(true);
     setError(null);
 
     try {
-      // 1. Crear usuario en Firebase
-      if (values.password) {
-        await createUserWithEmailAndPassword(auth, values.email!, values.password);
+      console.log('🚀 Iniciando registro con Firebase + Backend');
+      
+      if (!values.password) {
+        throw new Error('La contraseña es requerida');
       }
 
-      // 2. Guardar en backend
-      const { confirmPassword, password, ...userData } = values;
-      const createdUser = await saveUserToBackend(userData as { name: string; email: string });
+      // 1. Crear usuario en Firebase (guarda la contraseña de forma segura)
+      console.log('🔥 Creando autenticación en Firebase...');
+      const userCredential = await createUserWithEmailAndPassword(auth, values.email!, values.password);
+      console.log('✅ Usuario autenticado en Firebase');
+
+      // Obtener ID token de Firebase y guardarlo para que el backend lo valide
+      try {
+        const idToken = await userCredential.user.getIdToken();
+        localStorage.setItem('session', idToken);
+        console.log('🔑 Firebase ID token almacenado en localStorage');
+      } catch (tokenErr) {
+        console.warn('No se pudo obtener el ID token de Firebase:', tokenErr);
+      }
+
+      // 2. Guardar datos básicos en backend (sin password)
+      console.log('💾 Guardando datos en backend...');
+      const createdUser = await saveUserToBackend({
+        name: values.name!,
+        email: values.email!,
+      });
       
       if (createdUser) {
+        console.log('🎉 Registro completado exitosamente');
+        console.log('   - Firebase: ✅ Autenticación creada');
+        console.log('   - Backend: ✅ Usuario ID', (createdUser as any).id);
+        
         Swal.fire({
           title: '¡Registro Exitoso!',
-          text: 'Tu cuenta ha sido creada correctamente',
+          html: `
+            <p>Tu cuenta ha sido creada correctamente</p>
+            <small class="text-muted">
+              • Autenticación: Firebase<br>
+              • Datos de usuario: Base de datos
+            </small>
+          `,
           icon: 'success',
-          timer: 2000,
+          timer: 3000,
           showConfirmButton: false
         });
         
@@ -67,7 +109,7 @@ const SignUp: React.FC = () => {
         }, 2000);
       }
     } catch (error: any) {
-      console.error('Error al registrar usuario:', error);
+      console.error('❌ Error en registro:', error);
       let errorMsg = 'Error al crear la cuenta';
       
       if (error.code === 'auth/email-already-in-use') {
@@ -90,20 +132,31 @@ const SignUp: React.FC = () => {
     }
   };
 
-  // Autenticación con Google
   const handleGoogleLogin = async () => {
     setLoading(true);
     setError(null);
     
     try {
+      console.log('🔐 Iniciando registro con Google');
+      
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
+
+      // Store Firebase ID token so backend can validate this user when creating record
+      try {
+        const idToken = await user.getIdToken();
+        localStorage.setItem('session', idToken);
+        console.log('🔑 Firebase ID token almacenado en localStorage (Google)');
+      } catch (tokenErr) {
+        console.warn('No se pudo obtener el ID token tras Google SignIn:', tokenErr);
+      }
       
-      // Guardar en backend
+      console.log('✅ Usuario autenticado con Google');
+      
       await saveUserToBackend({
         name: user.displayName || 'Usuario de Google',
-        email: user.email!
+        email: user.email!,
       });
       
       Swal.fire({
@@ -116,7 +169,7 @@ const SignUp: React.FC = () => {
       
       setTimeout(() => navigate('/auth/signin'), 2000);
     } catch (error: any) {
-      console.error('Error en Google login:', error);
+      console.error('❌ Error en Google login:', error);
       let errorMsg = 'Error al iniciar sesión con Google';
       
       if (error.code === 'auth/popup-blocked') {
@@ -132,20 +185,30 @@ const SignUp: React.FC = () => {
     }
   };
 
-  // Autenticación con GitHub
   const handleGithubLogin = async () => {
     setLoading(true);
     setError(null);
     
     try {
+      console.log('🔐 Iniciando registro con GitHub');
+      
       const provider = new GithubAuthProvider();
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
+
+      try {
+        const idToken = await user.getIdToken();
+        localStorage.setItem('session', idToken);
+        console.log('🔑 Firebase ID token almacenado en localStorage (GitHub)');
+      } catch (tokenErr) {
+        console.warn('No se pudo obtener el ID token tras GitHub SignIn:', tokenErr);
+      }
       
-      // Guardar en backend
+      console.log('✅ Usuario autenticado con GitHub');
+      
       await saveUserToBackend({
         name: user.displayName || 'Usuario de GitHub',
-        email: user.email!
+        email: user.email!,
       });
       
       Swal.fire({
@@ -158,7 +221,7 @@ const SignUp: React.FC = () => {
       
       setTimeout(() => navigate('/auth/signin'), 2000);
     } catch (error: any) {
-      console.error('Error en GitHub login:', error);
+      console.error('❌ Error en GitHub login:', error);
       let errorMsg = 'Error al iniciar sesión con GitHub';
       
       if (error.code === 'auth/popup-blocked') {
@@ -174,20 +237,30 @@ const SignUp: React.FC = () => {
     }
   };
 
-  // Autenticación con Microsoft
   const handleMicrosoftLogin = async () => {
     setLoading(true);
     setError(null);
     
     try {
+      console.log('🔐 Iniciando registro con Microsoft');
+      
       const provider = new OAuthProvider('microsoft.com');
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
+
+      try {
+        const idToken = await user.getIdToken();
+        localStorage.setItem('session', idToken);
+        console.log('🔑 Firebase ID token almacenado en localStorage (Microsoft)');
+      } catch (tokenErr) {
+        console.warn('No se pudo obtener el ID token tras Microsoft SignIn:', tokenErr);
+      }
       
-      // Guardar en backend
+      console.log('✅ Usuario autenticado con Microsoft');
+      
       await saveUserToBackend({
         name: user.displayName || 'Usuario de Microsoft',
-        email: user.email!
+        email: user.email!,
       });
       
       Swal.fire({
@@ -200,7 +273,7 @@ const SignUp: React.FC = () => {
       
       setTimeout(() => navigate('/auth/signin'), 2000);
     } catch (error: any) {
-      console.error('Error en Microsoft login:', error);
+      console.error('❌ Error en Microsoft login:', error);
       let errorMsg = 'Error al iniciar sesión con Microsoft';
       
       if (error.code === 'auth/popup-blocked') {
@@ -247,7 +320,6 @@ const SignUp: React.FC = () => {
                 </Alert>
               )}
 
-              {/* Botones de autenticación social */}
               <div className="d-grid gap-2 mb-4">
                 <Button 
                   onClick={handleGoogleLogin} 
@@ -324,7 +396,6 @@ const SignUp: React.FC = () => {
               >
                 {({ errors, touched }) => (
                   <FormikForm>
-                    {/* Nombre */}
                     <Form.Group className="mb-3">
                       <Form.Label className="fw-semibold">
                         <UserIcon size={16} className="me-2" />
@@ -340,7 +411,6 @@ const SignUp: React.FC = () => {
                       <ErrorMessage name="name" component="div" className="invalid-feedback" />
                     </Form.Group>
 
-                    {/* Email */}
                     <Form.Group className="mb-3">
                       <Form.Label className="fw-semibold">
                         <Mail size={16} className="me-2" />
@@ -356,7 +426,6 @@ const SignUp: React.FC = () => {
                       <ErrorMessage name="email" component="div" className="invalid-feedback" />
                     </Form.Group>
 
-                    {/* Contraseña */}
                     <Form.Group className="mb-3">
                       <Form.Label className="fw-semibold">
                         <Lock size={16} className="me-2" />
@@ -382,7 +451,6 @@ const SignUp: React.FC = () => {
                       </div>
                     </Form.Group>
 
-                    {/* Confirmar Contraseña */}
                     <Form.Group className="mb-4">
                       <Form.Label className="fw-semibold">
                         <Lock size={16} className="me-2" />
@@ -408,7 +476,6 @@ const SignUp: React.FC = () => {
                       </div>
                     </Form.Group>
 
-                    {/* Botón de Registro */}
                     <Button
                       type="submit"
                       variant="success"

@@ -180,7 +180,7 @@ const UserView = () => {
    * Navega a la vista de contraseñas del usuario
    */
   const handlePassword = (user) => {
-    navigate(`/passwords?userId=${user.id}`);
+    navigate(`/passwords/list?userId=${user.id}`);
   };
 
   /**
