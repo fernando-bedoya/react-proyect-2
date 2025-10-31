@@ -13,6 +13,8 @@ const UsersUpdate = lazy(() => import('./pages/Users/Update'));
 
 // Roles
 const RolesList = lazy(() => import('./pages/Roles/List'));
+const RolesCreate = lazy(() => import('./pages/Roles/Create'));
+const RolesUpdate = lazy(() => import('./pages/Roles/Update'));
 const PermissionsList = lazy(() => import('./pages/Permissions/List'));
 const PermissionsCreate = lazy(() => import('./pages/Permissions/Create'));
 // Firebase Demo
@@ -72,6 +74,16 @@ const coreRoutes = [
     path: '/roles/list',
     title: 'Roles List',
     component: RolesList,
+  },
+  {
+    path: '/roles/create',
+    title: 'Create Role',
+    component: RolesCreate,
+  },
+  {
+    path: '/roles/update/:id',
+    title: 'Update Role',
+    component: RolesUpdate,
   },
   {
     path: '/permissions/list',

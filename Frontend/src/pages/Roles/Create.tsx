@@ -4,7 +4,7 @@ import { ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import Breadcrumb from '../../components/Breadcrumb';
-import RoleFormValidator from '../../components/RoleFormValidator';
+import GenericEntityForm, { FieldDef } from '../../components/formValidators/GenericEntityForm';
 import { Role } from '../../models/Role';
 import { roleService } from '../../services/Role/roleService';
 
@@ -90,7 +90,18 @@ const CreateRole: React.FC = () => {
               <h5 className="mb-0 fw-semibold">Información del Rol</h5>
             </Card.Header>
             <Card.Body className="p-4">
-              <RoleFormValidator mode={1} handleCreate={handleCreateRole} />
+              <GenericEntityForm
+                mode={1}
+                fields={[
+                  { name: 'name', label: 'Nombre', type: 'text', required: true, placeholder: 'Nombre del rol' },
+                  { name: 'description', label: 'Descripción', type: 'textarea', required: false, placeholder: 'Descripción corta (opcional)' },
+                ] as FieldDef[]}
+                onCreate={async (values: any) => {
+                  // adapt values to Role payload
+                  const payload = { name: (values.name || '').trim(), description: values.description };
+                  return await handleCreateRole(payload as any);
+                }}
+              />
             </Card.Body>
           </Card>
 
