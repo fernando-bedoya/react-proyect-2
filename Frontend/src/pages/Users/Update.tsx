@@ -6,6 +6,7 @@ import { userService } from "../../services/userService";
 import Swal from "sweetalert2";
 import { User } from '../../models/User';
 import UserFormValidator from '../../components/UserFormValidator';
+import ThemeSelector from '../../components/ThemeSelector';
 import Breadcrumb from "../../components/Breadcrumb";
 
 const UpdateUser: React.FC = () => {
@@ -120,23 +121,26 @@ const UpdateUser: React.FC = () => {
             <Row className="mb-4">
                 <Col>
                     <Breadcrumb pageName="Actualizar Usuario" />
-                    <div className="d-flex align-items-center gap-3 mt-3">
-                        <button
-                            onClick={handleBack}
-                            className="btn btn-outline-secondary btn-sm d-flex align-items-center gap-2"
-                            disabled={updating}
-                        >
-                            <ArrowLeft size={16} />
-                            Volver
-                        </button>
-                        <div>
-                            <h2 className="h3 fw-bold mb-1" style={{ color: '#10b981' }}>
-                                Actualizar Usuario
-                            </h2>
-                            <p className="text-muted mb-0">
-                                Modifique la información del usuario <strong>{user?.name}</strong>
-                            </p>
+                    <div className="d-flex justify-content-between align-items-center mt-3">
+                        <div className="d-flex align-items-center gap-3">
+                            <button
+                                onClick={handleBack}
+                                className="btn btn-outline-secondary btn-sm d-flex align-items-center gap-2"
+                                disabled={updating}
+                            >
+                                <ArrowLeft size={16} />
+                                Volver
+                            </button>
+                            <div>
+                                <h2 className="h3 fw-bold mb-1" style={{ color: '#10b981' }}>
+                                    Actualizar Usuario
+                                </h2>
+                                <p className="text-muted mb-0">
+                                    Modifique la información del usuario <strong>{user?.name}</strong>
+                                </p>
+                            </div>
                         </div>
+                        <ThemeSelector />
                     </div>
                 </Col>
             </Row>

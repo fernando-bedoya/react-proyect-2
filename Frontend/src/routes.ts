@@ -11,12 +11,27 @@ const UsersList = lazy(() => import('./pages/Users/List'));
 const UsersCreate = lazy(() => import('./pages/Users/Create'));
 const UsersUpdate = lazy(() => import('./pages/Users/Update'));
 
+<<<<<<< HEAD
 // Roles CRUD
-const RolesList = lazy(() => import('./pages/Roles/List'));
+=======
+//Permissions CRUD
+const PermissionsList = lazy(() => import('./pages/Permissions/List'));
+const PermissionsCreate = lazy(() => import('./pages/Permissions/Create'));
+const PermissionsUpdate = lazy(() => import('./pages/Permissions/Update'));
 
+// Roles
+>>>>>>> e4750c98b6e0938455352bee1d0f8cb082a080b4
+const RolesList = lazy(() => import('./pages/Roles/List'));
 // Firebase Demo
 const FirebaseDemo = lazy(() => import('./pages/Firebase/FirebaseDemo'));
 const FirebaseChecker = lazy(() => import('./pages/Firebase/FirebaseChecker'));
+
+// CRUD Views
+const DigitalSignatureView = lazy(() => import('./views/digitalSignature/DigitalSignatureView.jsx'));
+const DeviceView = lazy(() => import('./views/device/DeviceView.jsx'));
+const SecurityQuestionView = lazy(() => import('./views/securityQuestion/SecurityQuestionView.jsx'));
+const AnswerView = lazy(() => import('./views/answer/AnswerView.jsx'));
+// const SessionView = lazy(() => import('./views/session/SessionView.jsx')); // Comentado temporalmente - archivo no existe
 
 const coreRoutes = [
   {
@@ -65,6 +80,21 @@ const coreRoutes = [
     component: RolesList,
   },
   {
+    path: '/permissions/list',
+    title: 'Permissions List',
+    component: PermissionsList,
+  },
+  {
+    path: '/permissions/create',
+    title: 'Create Permission',
+    component: PermissionsCreate,
+  },
+  {
+    path: '/permissions/update/:id',
+    title: 'Update Permission',
+    component: PermissionsUpdate,
+  },
+  {
     path: '/firebase',
     title: 'Firebase Demo',
     component: FirebaseDemo,
@@ -74,6 +104,31 @@ const coreRoutes = [
     title: 'Firebase Checker',
     component: FirebaseChecker,
   },
+  {
+    path: '/digital-signatures',
+    title: 'Digital Signatures',
+    component: DigitalSignatureView,
+  },
+  {
+    path: '/devices',
+    title: 'Devices',
+    component: DeviceView,
+  },
+  {
+    path: '/security-questions',
+    title: 'Security Questions',
+    component: SecurityQuestionView,
+  },
+  {
+    path: '/answers',
+    title: 'Answers',
+    component: AnswerView,
+  },
+  // {
+  //   path: '/sessions',
+  //   title: 'Sessions',
+  //   component: SessionView,
+  // },
 ];
 
 const routes = [...coreRoutes];

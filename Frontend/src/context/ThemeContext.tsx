@@ -1,11 +1,16 @@
+// ThemeContext.tsx - Contexto global para manejar el tema de diseño de la aplicación (Bootstrap, Tailwind, Material UI).
+// Permite cambiar dinámicamente entre frameworks de diseño y guarda la preferencia en localStorage.
+// Proporciona un hook personalizado useTheme() para acceder y modificar el tema desde cualquier componente.
+
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
-export type DesignLibrary = 'tailwind' | 'bootstrap';
+export type DesignLibrary = 'tailwind' | 'bootstrap' | 'material';
 
 interface ThemeContextType {
   designLibrary: DesignLibrary;
   setDesignLibrary: (library: DesignLibrary) => void;
   toggleDesignLibrary: () => void;
+  nextDesignLibrary: () => void;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
@@ -34,7 +39,7 @@ export const ThemeProvider = ({ children }: ThemeProviderProps) => {
     localStorage.setItem('designLibrary', designLibrary);
     
     // Agregar/remover clase en el body para estilos globales
-    document.body.classList.remove('theme-tailwind', 'theme-bootstrap');
+    document.body.classList.remove('theme-tailwind', 'theme-bootstrap', 'theme-material');
     document.body.classList.add(`theme-${designLibrary}`);
     
     console.log(`🎨 Librería de diseño cambiada a: ${designLibrary}`);
@@ -48,10 +53,20 @@ export const ThemeProvider = ({ children }: ThemeProviderProps) => {
     setDesignLibraryState(prev => prev === 'tailwind' ? 'bootstrap' : 'tailwind');
   };
 
+  // Función para cambiar al siguiente tema en el ciclo
+  const nextDesignLibrary = () => {
+    setDesignLibraryState(prev => {
+      if (prev === 'bootstrap') return 'tailwind';
+      if (prev === 'tailwind') return 'material';
+      return 'bootstrap';
+    });
+  };
+
   const value = {
     designLibrary,
     setDesignLibrary,
     toggleDesignLibrary,
+    nextDesignLibrary,
   };
 
   return (

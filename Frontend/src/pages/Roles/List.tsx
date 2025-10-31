@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Container, Row, Col, Card, Button, Alert, Spinner, Badge, Modal, Form } from "react-bootstrap";
 import { Plus, RefreshCw, Shield } from "lucide-react";
 import GenericTable from "../../components/GenericTable";
+import ThemeSelector from "../../components/ThemeSelector";
 import { Role } from "../../models/Role";
 import { roleService } from "../../services/Role/roleService";
 import Swal from "sweetalert2";
@@ -151,7 +152,8 @@ const Roles: React.FC = () => {
                 <Badge bg="secondary" className="ms-2">{roles.length} roles</Badge>
               </p>
             </div>
-            <div className="d-flex gap-2">
+            <div className="d-flex gap-2 align-items-center">
+              <ThemeSelector />
               <Button 
                 variant="outline-secondary"
                 size="sm"
