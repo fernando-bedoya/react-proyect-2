@@ -39,7 +39,8 @@ const ListPermissions: React.FC = () => {
             setSelectedPermission(item);
             setShowModal(true);
         } else if (action === "edit") {
-            navigate(`/permissions/update/${item.id}`);
+            // Redirect to create page in edit mode (uses ?edit=<id>)
+            navigate(`/permissions/create?edit=${item.id}`);
         } else if (action === "delete") {
             Swal.fire({
                 title: "Eliminación",

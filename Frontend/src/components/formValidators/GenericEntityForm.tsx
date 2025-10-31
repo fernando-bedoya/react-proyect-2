@@ -9,6 +9,7 @@ export interface FieldDef {
   name: string;
   label: string;
   type?: FieldType;
+  readOnly?: boolean;
   required?: boolean;
   options?: Array<{ value: string | number; label: string }>; // for select
   placeholder?: string;
@@ -71,7 +72,10 @@ const GenericEntityForm: React.FC<GenericEntityFormProps> = ({ mode, fields, ini
           {fields.map((f) => (
             <div key={f.name} className="mb-3">
               <label className="form-label" htmlFor={f.name}>{f.label}</label>
-              {f.type === 'textarea' ? (
+              {f.readOnly ? (
+                // show read-only field as disabled input
+                <Field id={f.name} name={f.name} className="form-control" placeholder={f.placeholder} disabled />
+              ) : f.type === 'textarea' ? (
                 <Field as="textarea" id={f.name} name={f.name} className="form-control" placeholder={f.placeholder} />
               ) : f.type === 'select' ? (
                 <Field as="select" id={f.name} name={f.name} className="form-select">

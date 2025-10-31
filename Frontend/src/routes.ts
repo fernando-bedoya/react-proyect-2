@@ -15,7 +15,6 @@ const UsersUpdate = lazy(() => import('./pages/Users/Update'));
 const RolesList = lazy(() => import('./pages/Roles/List'));
 const PermissionsList = lazy(() => import('./pages/Permissions/List'));
 const PermissionsCreate = lazy(() => import('./pages/Permissions/Create'));
-const PermissionsUpdate = lazy(() => import('./pages/Permissions/Update'));
 // Firebase Demo
 const FirebaseDemo = lazy(() => import('./pages/Firebase/FirebaseDemo'));
 const FirebaseChecker = lazy(() => import('./pages/Firebase/FirebaseChecker'));
@@ -84,11 +83,7 @@ const coreRoutes = [
     title: 'Create Permission',
     component: PermissionsCreate,
   },
-  {
-    path: '/permissions/update/:id',
-    title: 'Update Permission',
-    component: PermissionsUpdate,
-  },
+  // Permissions update handled via Create page with ?edit=<id>
   {
     path: '/firebase',
     title: 'Firebase Demo',
