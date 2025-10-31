@@ -19,11 +19,11 @@ const FirebaseDemo = lazy(() => import('./pages/Firebase/FirebaseDemo'));
 const FirebaseChecker = lazy(() => import('./pages/Firebase/FirebaseChecker'));
 
 // CRUD Views
-const DigitalSignatureView = lazy(() => import('./views/digitalSignature/DigitalSignatureView'));
-const DeviceView = lazy(() => import('./views/device/DeviceView'));
-const SecurityQuestionView = lazy(() => import('./views/securityQuestion/SecurityQuestionView'));
-const AnswerView = lazy(() => import('./views/answer/AnswerView'));
-const SessionView = lazy(() => import('./views/session/SessionView'));
+const DigitalSignatureView = lazy(() => import('./views/digitalSignature/DigitalSignatureView.jsx'));
+const DeviceView = lazy(() => import('./views/device/DeviceView.jsx'));
+const SecurityQuestionView = lazy(() => import('./views/securityQuestion/SecurityQuestionView.jsx'));
+const AnswerView = lazy(() => import('./views/answer/AnswerView.jsx'));
+// const SessionView = lazy(() => import('./views/session/SessionView.jsx')); // Comentado temporalmente - archivo no existe
 
 const coreRoutes = [
   {
@@ -106,11 +106,11 @@ const coreRoutes = [
     title: 'Answers',
     component: AnswerView,
   },
-  {
-    path: '/sessions',
-    title: 'Sessions',
-    component: SessionView,
-  },
+  // {
+  //   path: '/sessions',
+  //   title: 'Sessions',
+  //   component: SessionView,
+  // },
 ];
 
 const routes = [...coreRoutes];
