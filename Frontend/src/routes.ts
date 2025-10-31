@@ -18,6 +18,13 @@ const RolesList = lazy(() => import('./pages/Roles/List'));
 const FirebaseDemo = lazy(() => import('./pages/Firebase/FirebaseDemo'));
 const FirebaseChecker = lazy(() => import('./pages/Firebase/FirebaseChecker'));
 
+// CRUD Views
+const DigitalSignatureView = lazy(() => import('./views/digitalSignature/DigitalSignatureView'));
+const DeviceView = lazy(() => import('./views/device/DeviceView'));
+const SecurityQuestionView = lazy(() => import('./views/securityQuestion/SecurityQuestionView'));
+const AnswerView = lazy(() => import('./views/answer/AnswerView'));
+const SessionView = lazy(() => import('./views/session/SessionView'));
+
 const coreRoutes = [
   {
     path: '/calendar',
@@ -73,6 +80,31 @@ const coreRoutes = [
     path: '/firebase/checker',
     title: 'Firebase Checker',
     component: FirebaseChecker,
+  },
+  {
+    path: '/digital-signatures',
+    title: 'Digital Signatures',
+    component: DigitalSignatureView,
+  },
+  {
+    path: '/devices',
+    title: 'Devices',
+    component: DeviceView,
+  },
+  {
+    path: '/security-questions',
+    title: 'Security Questions',
+    component: SecurityQuestionView,
+  },
+  {
+    path: '/answers',
+    title: 'Answers',
+    component: AnswerView,
+  },
+  {
+    path: '/sessions',
+    title: 'Sessions',
+    component: SessionView,
   },
 ];
 
