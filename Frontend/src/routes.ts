@@ -14,7 +14,6 @@ const UsersUpdate = lazy(() => import('./pages/Users/Update'));
 // Roles
 const RolesList = lazy(() => import('./pages/Roles/List'));
 const PermissionsList = lazy(() => import('./pages/Permissions/List'));
-
 // Firebase Demo
 const FirebaseDemo = lazy(() => import('./pages/Firebase/FirebaseDemo'));
 const FirebaseChecker = lazy(() => import('./pages/Firebase/FirebaseChecker'));
