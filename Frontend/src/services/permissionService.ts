@@ -1,7 +1,8 @@
 import axios from "axios";
 import { Permission } from "../models/Permission";
 
-const API_URL = import.meta.env.VITE_API_URL + "/permissions" || "";
+const VITE_API_URL = (import.meta as any).env?.VITE_API_URL || '';
+const API_URL = VITE_API_URL + "/permissions";
 
 class PermissionService {
     async getPermissions(): Promise<Permission[]> {
@@ -29,8 +30,16 @@ class PermissionService {
             const response = await axios.post<Permission>(API_URL, permission);
             return response.data;
         } catch (error) {
-            console.error("Error al crear permiso:", error);
-            return null;
+            // Log full server response if available for debugging (400/validation errors)
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const e: any = error;
+            if (e?.response?.data) {
+                console.error("Error al crear permiso - response.data:", e.response.data);
+            } else {
+                console.error("Error al crear permiso:", e);
+            }
+            // Re-throw so callers can handle specific server errors if desired
+            throw error;
         }
     }
 

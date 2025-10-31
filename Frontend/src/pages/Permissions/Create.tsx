@@ -1,23 +1,17 @@
 import React, { useEffect, useState } from "react";
-import { Container, Row, Col, Card, Button, Alert, Spinner, Modal, Form } from "react-bootstrap";
+import { Container, Row, Col, Card, Button, Alert, Spinner, Modal } from "react-bootstrap";
 import { ArrowLeft, Plus } from "lucide-react";
 import Breadcrumb from '../../components/Breadcrumb';
 import Swal from 'sweetalert2';
 import { permissionService } from '../../services/permissionService';
 import { Permission } from '../../models/Permission';
 import { useNavigate } from 'react-router-dom';
+import GenericEntityForm, { FieldDef } from '../../components/formValidators/GenericEntityForm';
 
 const CreatePermission: React.FC = () => {
     const navigate = useNavigate();
     const [showModal, setShowModal] = useState<boolean>(true); // abrir modal al cargar la página
-    const [saving, setSaving] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
-
-    const [form, setForm] = useState<Partial<Permission>>({
-        url: '',
-        method: 'GET',
-        entity: ''
-    });
 
     useEffect(() => {
         // abrir modal al montarse
@@ -30,57 +24,63 @@ const CreatePermission: React.FC = () => {
         navigate('/permissions/list');
     };
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-        const { name, value } = e.target;
-        setForm(prev => ({ ...prev, [name]: value }));
-    };
+    const fields: FieldDef[] = [
+        { name: 'url', label: 'URL', type: 'text', required: true, placeholder: '/api/users' },
+        { name: 'method', label: 'Método', type: 'select', required: true, options: [
+            { value: 'GET', label: 'GET' },
+            { value: 'POST', label: 'POST' },
+            { value: 'PUT', label: 'PUT' },
+            { value: 'DELETE', label: 'DELETE' },
+            { value: 'PATCH', label: 'PATCH' },
+        ]},
+        // NOTE: `entity` removed from form fields — it will be derived automatically from the URL
+    ];
 
-    const validate = (): string | null => {
-        if (!form.url || form.url.trim() === '') return 'La URL es obligatoria.';
-        if (!form.method || form.method.trim() === '') return 'El método es obligatorio.';
-        if (!form.entity || form.entity.trim() === '') return 'La entidad es obligatoria.';
-        return null;
-    };
-
-    const handleSave = async () => {
-        const v = validate();
-        if (v) {
-            setError(v);
-            return;
-        }
-
-        setSaving(true);
-        setError(null);
-
+    const deriveEntityFromUrl = (url?: string) => {
+        if (!url) return '';
         try {
+            const clean = String(url).split('?')[0].split('#')[0];
+            const parts = clean.split('/').filter(Boolean);
+            // prefer the first segment after possible api/version prefixes
+            // if route starts with 'api' or 'v1' choose the next segment
+            if (parts.length === 0) return '';
+            if (parts[0].toLowerCase() === 'api' && parts.length > 1) return parts[1];
+            if (/^v\d+/i.test(parts[0]) && parts.length > 1) return parts[1];
+            return parts[0];
+        } catch (e) {
+            return '';
+        }
+    };
+
+    const handleCreate = async (values: any) => {
+        setError(null);
+        try {
+            const derivedEntity = deriveEntityFromUrl(values.url);
             const payload: Omit<Permission, 'id' | 'created_at' | 'updated_at'> = {
-                url: form.url!.trim(),
-                method: form.method!.trim(),
-                entity: form.entity!.trim()
+                url: values.url?.trim(),
+                method: values.method?.trim(),
+                entity: (values.entity && values.entity.trim()) || derivedEntity || ''
             };
 
             const created = await permissionService.createPermission(payload as any);
             if (created) {
-                Swal.fire({
-                    title: '¡Completado!',
-                    text: 'El permiso se ha creado correctamente.',
-                    icon: 'success',
-                    timer: 1500,
-                    showConfirmButton: false
-                });
-
-                // cerrar modal y volver a la lista
-                setTimeout(() => navigate('/permissions/list'), 800);
+                // close modal first to avoid focus/aria-hidden conflicts
+                setShowModal(false);
+                Swal.fire({ title: '¡Completado!', text: 'El permiso se ha creado correctamente.', icon: 'success', timer: 1400, showConfirmButton: false });
+                setTimeout(() => navigate('/permissions/list'), 700);
+                return created;
             } else {
                 setError('No se pudo crear el permiso. Verifica los datos.');
                 Swal.fire('Error', 'No se pudo crear el permiso', 'error');
+                return null;
             }
-        } catch (err) {
+        } catch (err: any) {
             console.error('Error creating permission:', err);
-            setError('Error al conectar con el servidor.');
-            Swal.fire('Error', 'Error al conectar con el servidor', 'error');
-        } finally {
-            setSaving(false);
+            // if server returned a message, show it
+            const serverMessage = err?.response?.data?.message || err?.response?.data || err?.message;
+            setError(typeof serverMessage === 'string' ? serverMessage : 'Error al conectar con el servidor.');
+            Swal.fire('Error', typeof serverMessage === 'string' ? serverMessage : 'Error al conectar con el servidor', 'error');
+            return null;
         }
     };
 
@@ -93,7 +93,6 @@ const CreatePermission: React.FC = () => {
                         <button
                             onClick={() => navigate('/permissions/list')}
                             className="btn btn-outline-secondary btn-sm d-flex align-items-center gap-2"
-                            disabled={saving}
                         >
                             <ArrowLeft size={16} />
                             Volver
@@ -135,52 +134,10 @@ const CreatePermission: React.FC = () => {
                     <Modal.Title>Nuevo Permiso</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
-                    <Form>
-                        <Form.Group className="mb-3" controlId="perm-url">
-                            <Form.Label>URL</Form.Label>
-                            <Form.Control
-                                type="text"
-                                name="url"
-                                value={form.url}
-                                onChange={handleChange}
-                                placeholder="/api/users"
-                            />
-                        </Form.Group>
-
-                        <Form.Group className="mb-3" controlId="perm-method">
-                            <Form.Label>Método</Form.Label>
-                            <Form.Select name="method" value={form.method} onChange={handleChange}>
-                                <option>GET</option>
-                                <option>POST</option>
-                                <option>PUT</option>
-                                <option>DELETE</option>
-                                <option>PATCH</option>
-                            </Form.Select>
-                        </Form.Group>
-
-                        <Form.Group className="mb-3" controlId="perm-entity">
-                            <Form.Label>Entidad</Form.Label>
-                            <Form.Control
-                                type="text"
-                                name="entity"
-                                value={form.entity}
-                                onChange={handleChange}
-                                placeholder="users, roles, settings"
-                            />
-                        </Form.Group>
-                    </Form>
+                    <GenericEntityForm mode={1} fields={fields} onCreate={handleCreate} />
                 </Modal.Body>
                 <Modal.Footer className="bg-light">
-                    <Button variant="outline-secondary" onClick={handleClose} disabled={saving}>Cancelar</Button>
-                    <Button variant="success" onClick={handleSave} disabled={saving}>
-                        {saving ? (
-                            <>
-                                <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" /> Guardando...
-                            </>
-                        ) : (
-                            'Guardar'
-                        )}
-                    </Button>
+                    <Button variant="outline-secondary" onClick={handleClose}>Cancelar</Button>
                 </Modal.Footer>
             </Modal>
         </Container>
