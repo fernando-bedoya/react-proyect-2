@@ -22,6 +22,11 @@ const PermissionsCreate = lazy(() => import('./pages/Permissions/Create'));
 const FirebaseDemo = lazy(() => import('./pages/Firebase/FirebaseDemo'));
 const FirebaseChecker = lazy(() => import('./pages/Firebase/FirebaseChecker'));
 
+// Passwords
+const PasswordsList = lazy(() => import('./pages/password/List'));
+const PasswordsCreate = lazy(() => import('./pages/password/Create'));
+const PasswordsUpdate = lazy(() => import('./pages/password/Update'));
+
 // CRUD Views
 const DigitalSignatureView = lazy(() => import('./views/digitalSignature/DigitalSignatureView.jsx'));
 const DeviceView = lazy(() => import('./views/device/DeviceView.jsx'));
@@ -126,6 +131,21 @@ const coreRoutes = [
     path: '/answers',
     title: 'Answers',
     component: AnswerView,
+  },
+  {
+    path: '/passwords/list',
+    title: 'Passwords List',
+    component: PasswordsList,
+  },
+  {
+    path: '/passwords/create',
+    title: 'Create Password',
+    component: PasswordsCreate,
+  },
+  {
+    path: '/passwords/update/:id',
+    title: 'Update Password',
+    component: PasswordsUpdate,
   },
   // {
   //   path: '/sessions',
