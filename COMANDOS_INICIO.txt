@@ -1,0 +1,121 @@
+========================================
+  COMANDOS PARA INICIAR EL PROYECTO
+========================================
+
+REQUISITOS PREVIOS:
+- Python 3.8+ instalado
+- Node.js y npm instalados
+- Backend ya configurado y funcionando
+
+
+========================================
+PASO 1: INICIAR BACKEND
+========================================
+
+Abrir una terminal y ejecutar:
+
+cd Backend
+
+PRIMERA VEZ - Crear entorno virtual:
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+
+LUEGO (cada vez que inicies):
+source venv/bin/activate
+python run.py
+
+El backend debe estar corriendo en: http://localhost:5000
+
+NOTA: Si requirements.txt no existe, el backend debe tener sus
+propias instrucciones de instalación. Usa las que ya tenías.
+
+
+========================================
+PASO 2: INICIAR FRONTEND (Nueva terminal)
+========================================
+
+Abrir otra terminal y ejecutar:
+
+cd Frontend
+npm install
+npm run dev
+
+El frontend estará disponible en: http://localhost:5173
+
+
+========================================
+VERIFICAR QUE TODO FUNCIONA
+========================================
+
+1. Backend funcionando (IMPORTANTE - Verificar primero):
+   Abre en el navegador: http://localhost:5000/api/users
+   
+   Debes ver un JSON con usuarios. Si no hay usuarios, el backend
+   debe devolver un array vacío: []
+   
+   Si ves un JSON (aunque sea vacío []), el backend funciona OK.
+
+2. Frontend - Login (abrir en navegador):
+   http://localhost:5173/auth/signin
+   
+   Debe cargar la página de inicio de sesión.
+   
+   Si la página no carga o da error:
+   - Abre la consola del navegador (F12)
+   - Ve a la pestaña "Console" 
+   - Mira qué error aparece en rojo
+   - Revisa también la pestaña "Network"
+
+3. Probar la conexión sin login:
+   Para probar si el frontend se conecta al backend SIN necesidad
+   de iniciar sesión, usa el componente de prueba:
+   
+   Archivo: Frontend/src/views/test/TestConnection.jsx
+   
+   Agrégalo temporalmente a tus rutas en App.tsx:
+   
+   import TestConnection from './views/test/TestConnection';
+   
+   <Route path="/test" element={<TestConnection />} />
+   
+   Luego accede a: http://localhost:5173/test
+
+4. Si todo funciona:
+   - Backend responde en http://localhost:5000/api/users
+   - Login carga en http://localhost:5173/auth/signin
+   - TestConnection muestra usuarios sin errores
+
+
+========================================
+NOTA IMPORTANTE
+========================================
+
+El frontend está configurado para conectarse automáticamente al backend en:
+http://localhost:5000/api
+
+Los archivos de servicios creados (api.js y baseService.js) ya están
+configurados para hacer las peticiones correctamente.
+
+IMPORTANTE: El formulario de usuarios solo envía estos campos al backend:
+- name (nombre del usuario)
+- email (correo electrónico)
+
+Los campos age, city, phone y is_active fueron eliminados porque no existen
+en la tabla 'users' del backend.
+
+
+========================================
+SIGUIENTES VECES
+========================================
+
+Terminal 1:
+cd Backend && python run.py
+
+Terminal 2:
+cd Frontend && npm run dev
+
+
+========================================
+FIN
+========================================

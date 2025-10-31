@@ -1,3 +1,7 @@
+// ProtectedRoute.tsx - Componente de protección de rutas privadas
+// Este componente verifica si el usuario tiene una sesión activa antes de mostrar contenido protegido
+// Sirve para proteger rutas que requieren autenticación, redirigiendo al login si no hay sesión válida
+
 import React, { useState, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import { Spinner, Container } from 'react-bootstrap';
@@ -19,13 +23,16 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        // Simular verificación de sesión (puedes agregar lógica real aquí)
+        // Verificar si hay un token de acceso en el localStorage
+        const token = localStorage.getItem('access_token');
+        
+        // Verificar autenticación usando SecurityService
         const authStatus = SecurityService.isAuthenticated();
         
         // Pequeño delay para mostrar el spinner (opcional, solo para UX)
         await new Promise(resolve => setTimeout(resolve, 500));
         
-        setIsAuthenticated(authStatus);
+        setIsAuthenticated(authStatus && !!token);
       } catch (error) {
         console.error('Error verificando autenticación:', error);
         setIsAuthenticated(false);
@@ -80,6 +87,11 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
 
   // Si no está autenticado, redirigir al login
   if (!isAuthenticated) {
+    // Limpiar datos de sesión antes de redirigir
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('refresh_token');
+    localStorage.removeItem('user');
+    
     return <Navigate to="/auth/signin" replace />;
   }
 
