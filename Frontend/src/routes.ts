@@ -11,16 +11,9 @@ const UsersList = lazy(() => import('./pages/Users/List'));
 const UsersCreate = lazy(() => import('./pages/Users/Create'));
 const UsersUpdate = lazy(() => import('./pages/Users/Update'));
 
-//Permissions CRUD
-const PermissionsList = lazy(() => import('./pages/Permissions/List'));
-const PermissionsCreate = lazy(() => import('./pages/Permissions/Create'));
-const PermissionsUpdate = lazy(() => import('./pages/Permissions/Update'));
-
-// Roles CRUD
+// Roles
 const RolesList = lazy(() => import('./pages/Roles/List'));
-const RolesCreate = lazy(() => import('./pages/Roles/Create'));
-const RolesUpdate = lazy(() => import('./pages/Roles/Update'));
-
+const PermissionsList = lazy(() => import('./pages/Permissions/List'));
 // Firebase Demo
 const FirebaseDemo = lazy(() => import('./pages/Firebase/FirebaseDemo'));
 const FirebaseChecker = lazy(() => import('./pages/Firebase/FirebaseChecker'));
@@ -30,7 +23,8 @@ const DigitalSignatureView = lazy(() => import('./views/digitalSignature/Digital
 const DeviceView = lazy(() => import('./views/device/DeviceView.jsx'));
 const SecurityQuestionView = lazy(() => import('./views/securityQuestion/SecurityQuestionView.jsx'));
 const AnswerView = lazy(() => import('./views/answer/AnswerView.jsx'));
-// const SessionView = lazy(() => import('./views/session/SessionView.jsx')); // Comentado temporalmente - archivo no existe
+// const SessionView = lazy(() => import('./views/session/SessionView.jsx')); // Archivo no existe aún
+const UserView = lazy(() => import('./views/user/UserView.jsx'));
 
 const coreRoutes = [
   {
@@ -78,35 +72,10 @@ const coreRoutes = [
     title: 'Roles List',
     component: RolesList,
   },
-    {
-    path: '/roles/list',
-    title: 'Roles List',
-    component: RolesList,
-  },
-    {
-    path: '/roles/create',
-    title: 'Create Role',
-    component: RolesCreate,
-  },
-  {
-    path: '/roles/update/:id',
-    title: 'Update Role',
-    component: RolesUpdate,
-  },
   {
     path: '/permissions/list',
     title: 'Permissions List',
     component: PermissionsList,
-  },
-  {
-    path: '/permissions/create',
-    title: 'Create Permission',
-    component: PermissionsCreate,
-  },
-  {
-    path: '/permissions/update/:id',
-    title: 'Update Permission',
-    component: PermissionsUpdate,
   },
   {
     path: '/firebase',
@@ -143,6 +112,11 @@ const coreRoutes = [
   //   title: 'Sessions',
   //   component: SessionView,
   // },
+  {
+    path: '/users',
+    title: 'Gestión de Usuarios',
+    component: UserView,
+  },
 ];
 
 const routes = [...coreRoutes];
