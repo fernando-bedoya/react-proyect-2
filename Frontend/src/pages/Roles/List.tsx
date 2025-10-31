@@ -1,43 +1,107 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Container, Row, Col, Card, Button, Alert, Spinner, Badge, Modal, Form } from "react-bootstrap";
 import { Plus, RefreshCw, Shield } from "lucide-react";
 import GenericTable from "../../components/GenericTable";
 import { Role } from "../../models/Role";
+import { roleService } from "../../services/Role/roleService";
+import Swal from "sweetalert2";
+import { useNavigate } from "react-router-dom";
 
 const Roles: React.FC = () => {
-  const [roles, setRoles] = useState<Role[]>([
-    { id: 1, name: "Admin" },
-    { id: 2, name: "User" },
-    { id: 3, name: "Editor" },
-  ]);
-  const [loading, setLoading] = useState<boolean>(false);
+  const navigate = useNavigate();
+  const [roles, setRoles] = useState<Role[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
   const [showModal, setShowModal] = useState<boolean>(false);
   const [selectedRole, setSelectedRole] = useState<Role | null>(null);
+  const [permissions, setPermissions] = useState<any[]>([]);
+  const [selectedPermissions, setSelectedPermissions] = useState<Array<number | string>>([]);
+  const [loadingPermissions, setLoadingPermissions] = useState<boolean>(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  const handleAction = (action: string, item: Role) => {
-    if (action === "assignPermissions") {
-      console.log("Assign permissions to role:", item);
-      setSelectedRole(item);
-      setShowModal(true);
-    } else if (action === "edit") {
-      console.log("Edit role:", item);
-      // Aquí puedes agregar lógica para editar
-    } else if (action === "delete") {
-      console.log("Delete role:", item);
-      // Aquí puedes agregar lógica para eliminar
+  useEffect(() => {
+    fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await roleService.getRoles();
+      setRoles(data);
+      console.log("Roles fetched:", data);
+    } catch (err) {
+      console.error("Error fetching roles:", err);
+      setError("Error al cargar los roles. Por favor, intente nuevamente.");
+    } finally {
+      setLoading(false);
     }
   };
 
+  const handleAction = async (action: string, item: Role) => {
+    if (action === "assignPermissions") {
+      setSelectedRole(item);
+      setShowModal(true);
+      setLoadingPermissions(true);
+      try {
+        // obtener todos los permisos disponibles desde el backend
+        const perms = await roleService.getPermissions();
+        setPermissions(perms || []);
+
+        // obtener permisos ya asignados al rol (si la API devuelve campo `permissions`)
+        const roleDetails = await roleService.getRoleById(item.id as number);
+        let assigned: Array<number | string> = [];
+        if (roleDetails && Array.isArray((roleDetails as any).permissions)) {
+          assigned = (roleDetails as any).permissions.map((p: any) => p.id ?? p);
+        }
+        setSelectedPermissions(assigned);
+      } catch (err) {
+        console.error('Error al cargar permisos:', err);
+        setError('No se pudieron cargar los permisos');
+      } finally {
+        setLoadingPermissions(false);
+      }
+    } else if (action === "edit") {
+      navigate(`/roles/update/${item.id}`);
+    } else if (action === "delete") {
+      Swal.fire({
+        title: "Eliminación",
+        text: "¿Está seguro de querer eliminar el registro?",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#10b981",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Sí, eliminar",
+        cancelButtonText: "No"
+      }).then(async (result) => {
+        if (result.isConfirmed) {
+          const success = await roleService.deleteRole(item.id as number);
+          if (success) {
+            setSuccessMessage("El rol se ha eliminado correctamente");
+            setTimeout(() => setSuccessMessage(null), 3000);
+            Swal.fire({
+              title: "Eliminado",
+              text: "El registro se ha eliminado",
+              icon: "success",
+              timer: 2000,
+              showConfirmButton: false
+            });
+          }
+          fetchData();
+        }
+      });
+    }
+  };
+
+  const handleCreateNew = () => {
+    navigate('/roles/create');
+  };
+
   const handleRefresh = () => {
-    setLoading(true);
     setSuccessMessage(null);
-    // Simular carga de datos
-    setTimeout(() => {
-      setLoading(false);
-      setSuccessMessage("Datos actualizados correctamente");
-      setTimeout(() => setSuccessMessage(null), 3000);
-    }, 1000);
+    setError(null);
+    fetchData();
   };
 
   const handleCloseModal = () => {
@@ -45,10 +109,31 @@ const Roles: React.FC = () => {
     setSelectedRole(null);
   };
 
+  const togglePermission = (permId: number | string) => {
+    setSelectedPermissions(prev => {
+      if (prev.includes(permId)) return prev.filter(p => p !== permId);
+      return [...prev, permId];
+    });
+  };
+
   const handleSavePermissions = () => {
-    setSuccessMessage(`Permisos asignados correctamente al rol: ${selectedRole?.name}`);
-    setTimeout(() => setSuccessMessage(null), 3000);
-    handleCloseModal();
+    (async () => {
+      if (!selectedRole) return;
+      try {
+        const success = await roleService.assignPermissions(selectedRole.id as number, selectedPermissions);
+        if (success) {
+          setSuccessMessage(`Permisos asignados correctamente al rol: ${selectedRole?.name}`);
+          setTimeout(() => setSuccessMessage(null), 3000);
+          handleCloseModal();
+          fetchData();
+        } else {
+          setError('No se pudieron asignar los permisos');
+        }
+      } catch (err) {
+        console.error('Error al asignar permisos:', err);
+        setError('Error al asignar permisos');
+      }
+    })();
   };
 
   return (
@@ -79,6 +164,7 @@ const Roles: React.FC = () => {
               </Button>
               <Button 
                 variant="success"
+                onClick={handleCreateNew}
                 className="d-flex align-items-center gap-2"
               >
                 <Plus size={18} />
@@ -104,6 +190,16 @@ const Roles: React.FC = () => {
         </Alert>
       )}
 
+      {/* Mensaje de error */}
+      {error && (
+        <Alert variant="danger" dismissible onClose={() => setError(null)} className="shadow-sm">
+          <div className="d-flex align-items-center">
+            <strong className="me-2">✕</strong>
+            {error}
+          </div>
+        </Alert>
+      )}
+
       {/* Tabla de roles */}
       <Row>
         <Col>
@@ -117,7 +213,7 @@ const Roles: React.FC = () => {
               ) : (
                 <GenericTable
                   data={roles}
-                  columns={["id", "name"]}
+                  columns={["id", "name", "description"]}
                   actions={[
                     { 
                       name: "assignPermissions", 
@@ -167,116 +263,47 @@ const Roles: React.FC = () => {
           </Alert>
 
           <h6 className="fw-semibold mb-3">Permisos Disponibles</h6>
-          
-          <Row>
-            <Col md={6}>
-              <Card className="mb-3">
-                <Card.Header className="bg-white py-2">
-                  <small className="fw-semibold">Gestión de Usuarios</small>
-                </Card.Header>
-                <Card.Body className="p-3">
-                  <Form.Check 
-                    type="checkbox"
-                    id="perm-users-view"
-                    label="Ver usuarios"
-                    className="mb-2"
-                  />
-                  <Form.Check 
-                    type="checkbox"
-                    id="perm-users-create"
-                    label="Crear usuarios"
-                    className="mb-2"
-                  />
-                  <Form.Check 
-                    type="checkbox"
-                    id="perm-users-edit"
-                    label="Editar usuarios"
-                    className="mb-2"
-                  />
-                  <Form.Check 
-                    type="checkbox"
-                    id="perm-users-delete"
-                    label="Eliminar usuarios"
-                  />
-                </Card.Body>
-              </Card>
-            </Col>
 
-            <Col md={6}>
-              <Card className="mb-3">
-                <Card.Header className="bg-white py-2">
-                  <small className="fw-semibold">Gestión de Roles</small>
-                </Card.Header>
-                <Card.Body className="p-3">
-                  <Form.Check 
-                    type="checkbox"
-                    id="perm-roles-view"
-                    label="Ver roles"
-                    className="mb-2"
-                  />
-                  <Form.Check 
-                    type="checkbox"
-                    id="perm-roles-create"
-                    label="Crear roles"
-                    className="mb-2"
-                  />
-                  <Form.Check 
-                    type="checkbox"
-                    id="perm-roles-edit"
-                    label="Editar roles"
-                    className="mb-2"
-                  />
-                  <Form.Check 
-                    type="checkbox"
-                    id="perm-roles-delete"
-                    label="Eliminar roles"
-                  />
-                </Card.Body>
-              </Card>
-            </Col>
+          {loadingPermissions ? (
+            <div className="text-center py-3">
+              <Spinner animation="border" size="sm" />
+            </div>
+          ) : permissions.length === 0 ? (
+            <p className="text-muted">No hay permisos disponibles.</p>
+          ) : (
+            (() => {
+              // Agrupar por categoría/grupo si existe
+              const groups: Record<string, any[]> = {};
+              permissions.forEach((p: any) => {
+                const g = p.group || p.category || 'General';
+                if (!groups[g]) groups[g] = [];
+                groups[g].push(p);
+              });
 
-            <Col md={6}>
-              <Card className="mb-3">
-                <Card.Header className="bg-white py-2">
-                  <small className="fw-semibold">Configuración</small>
-                </Card.Header>
-                <Card.Body className="p-3">
-                  <Form.Check 
-                    type="checkbox"
-                    id="perm-settings-view"
-                    label="Ver configuración"
-                    className="mb-2"
-                  />
-                  <Form.Check 
-                    type="checkbox"
-                    id="perm-settings-edit"
-                    label="Modificar configuración"
-                  />
-                </Card.Body>
-              </Card>
-            </Col>
-
-            <Col md={6}>
-              <Card className="mb-3">
-                <Card.Header className="bg-white py-2">
-                  <small className="fw-semibold">Reportes</small>
-                </Card.Header>
-                <Card.Body className="p-3">
-                  <Form.Check 
-                    type="checkbox"
-                    id="perm-reports-view"
-                    label="Ver reportes"
-                    className="mb-2"
-                  />
-                  <Form.Check 
-                    type="checkbox"
-                    id="perm-reports-export"
-                    label="Exportar reportes"
-                  />
-                </Card.Body>
-              </Card>
-            </Col>
-          </Row>
+              return Object.entries(groups).map(([groupName, perms]) => (
+                <div key={groupName} className="mb-3">
+                  <h6 className="small fw-semibold mb-2">{groupName}</h6>
+                  <Card className="mb-2">
+                    <Card.Body className="p-3">
+                      <div className="row">
+                        {perms.map((p: any) => (
+                          <div className="col-6 mb-2" key={p.id ?? p.name}>
+                            <Form.Check
+                              type="checkbox"
+                              id={`perm-${p.id ?? p.name}`}
+                              label={p.name || p.label || String(p)}
+                              checked={selectedPermissions.includes(p.id ?? p.name)}
+                              onChange={() => togglePermission(p.id ?? p.name)}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </Card.Body>
+                  </Card>
+                </div>
+              ));
+            })()
+          )}
         </Modal.Body>
         <Modal.Footer className="bg-light">
           <Button variant="outline-secondary" onClick={handleCloseModal}>

@@ -1,0 +1,94 @@
+/*
+ Material-like CSS utilities for this React project.
+ This file provides a simple, CSS-only approximation of Material UI visuals:
+ - Imports the Roboto font used by Material
+ - Sets sensible global variables (colors, radii)
+ - Adds a few utility classes: .mui-button, .mui-card, .mui-typography-*
+
+Usage:
+ - Import this file where you want Material-like styles applied (for example in
+   `src/main.tsx` or a specific page/component):
+     import './styles/mui.css'
+
+Notes:
+ - For full-featured Material UI (components, theming, accessibility), prefer
+   using `@mui/material` with `ThemeProvider` and `CssBaseline` (already
+   installed in this project). This CSS is only a lightweight visual shim.
+*/
+
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
+
+:root {
+  --mui-primary: #1976d2; /* blue 600 */
+  --mui-primary-contrast: #ffffff;
+  --mui-secondary: #9c27b0; /* purple 500 */
+  --mui-background: #f5f5f5;
+  --mui-surface: #ffffff;
+  --mui-text-primary: rgba(0,0,0,0.87);
+  --mui-text-secondary: rgba(0,0,0,0.6);
+  --mui-border-radius: 8px;
+  --mui-elevation-1: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  font-family: 'Roboto', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+  background-color: var(--mui-background);
+  color: var(--mui-text-primary);
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Buttons */
+.mui-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 16px;
+  font-size: 0.875rem;
+  min-width: 64px;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  background: var(--mui-primary);
+  color: var(--mui-primary-contrast);
+  box-shadow: var(--mui-elevation-1);
+  transition: box-shadow .18s ease, transform .06s ease;
+}
+.mui-button:hover {
+  box-shadow: 0 4px 6px rgba(0,0,0,0.16);
+  transform: translateY(-1px);
+}
+.mui-button.outlined {
+  background: transparent;
+  color: var(--mui-primary);
+  border: 1px solid rgba(0,0,0,0.12);
+  box-shadow: none;
+}
+
+/* Cards / surfaces */
+.mui-card {
+  background: var(--mui-surface);
+  border-radius: var(--mui-border-radius);
+  padding: 16px;
+  box-shadow: var(--mui-elevation-1);
+}
+
+/* Typography helpers */
+.mui-typography-h1 { font-size: 1.5rem; font-weight: 500; margin: 0 0 8px; }
+.mui-typography-h2 { font-size: 1.25rem; font-weight: 500; margin: 0 0 8px; }
+.mui-typography-body1 { font-size: 1rem; color: var(--mui-text-secondary); margin: 0; }
+
+/* Small helpers */
+.mui-row { display:flex; gap:12px; align-items:center; }
+.mui-column { display:flex; flex-direction:column; gap:8px; }
+
+/* Simple responsive container */
+.mui-container { max-width: 1200px; margin: 0 auto; padding: 16px; }
+
+/* Focus visible similar to MUI's focus ring */
+.mui-button:focus-visible, .mui-card:focus-visible { outline: 3px solid rgba(25,118,210,0.25); outline-offset: 2px; }

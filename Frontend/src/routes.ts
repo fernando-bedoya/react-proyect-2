@@ -11,7 +11,7 @@ const UsersList = lazy(() => import('./pages/Users/List'));
 const UsersCreate = lazy(() => import('./pages/Users/Create'));
 const UsersUpdate = lazy(() => import('./pages/Users/Update'));
 
-// Roles
+// Roles CRUD
 const RolesList = lazy(() => import('./pages/Roles/List'));
 
 // Firebase Demo
