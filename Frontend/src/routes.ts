@@ -13,6 +13,7 @@ const UsersUpdate = lazy(() => import('./pages/Users/Update'));
 
 // Roles
 const RolesList = lazy(() => import('./pages/Roles/List'));
+const PermissionsList = lazy(() => import('./pages/Permissions/List'));
 
 // Firebase Demo
 const FirebaseDemo = lazy(() => import('./pages/Firebase/FirebaseDemo'));
@@ -63,6 +64,11 @@ const coreRoutes = [
     path: '/roles/list',
     title: 'Roles List',
     component: RolesList,
+  },
+  {
+    path: '/permissions/list',
+    title: 'Permissions List',
+    component: PermissionsList,
   },
   {
     path: '/firebase',

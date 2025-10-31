@@ -14,6 +14,7 @@ const ListUsers = lazy(() => import('../pages/Users/List'));
 const CreateUser = lazy(() => import('../pages/Users/Create'));
 const UpdateUser = lazy(() => import('../pages/Users/Update'));
 const Roles = lazy(() => import('../pages/Roles/List'));
+const Permissions = lazy(() => import('../pages/Permissions/List'));
 
 const coreRoutes = [
   {
@@ -85,6 +86,11 @@ const coreRoutes = [
     path: '/users/update/:id',
     title: 'Update Users',
     component: UpdateUser,
+  },
+  {
+    path: '/permissions/list',
+    title: 'List Permissions',
+    component: Permissions,
   },
 ];
 
