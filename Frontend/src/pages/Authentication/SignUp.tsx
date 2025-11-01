@@ -1,5 +1,7 @@
-// SOLUCIÓN FINAL: No enviar password al backend
-// Firebase maneja toda la autenticación
+// Componente SignUp.tsx - Página de registro de usuarios con autenticación mediante email/password y proveedores sociales (Google, GitHub, Microsoft).
+// Permite crear cuentas usando Firebase Authentication y guarda los datos del usuario en el backend Flask.
+// Incluye validación de formularios con Formik y Yup, y notificaciones con SweetAlert2.
+
 import React, { useState } from 'react';
 import { Container, Row, Col, Card, Form, Button, Alert, Spinner } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
@@ -17,90 +19,68 @@ import { auth } from '../../firebase';
 import { User } from '../../models/User';
 import { userService } from '../../services/userService';
 import Swal from 'sweetalert2';
+import { useDispatch } from 'react-redux';
+import { setUser } from '../../store/userSlice';
 
 const SignUp: React.FC = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch(); // Hook de Redux para despachar acciones
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  // ✅ SOLUCIÓN: Solo enviar name y email al backend
-  // Firebase ya guarda la contraseña de forma segura
-  const saveUserToBackend = async (userData: { 
-    name: string; 
-    email: string;
-  }) => {
+  // Función para guardar usuario en el backend
+  const saveUserToBackend = async (userData: { name: string; email: string }) => {
     try {
-      console.log('📤 Guardando usuario en backend (sin password)');
-      console.log('   - Name:', userData.name);
-      console.log('   - Email:', userData.email);
-      
-      const payload = {
-        name: userData.name,
-        email: userData.email,
-        // ❌ NO enviar password - el backend no lo acepta
-      };
-
-      const createdUser = await userService.createUser(payload as any);
-      
-      console.log('✅ Usuario creado en backend:', createdUser);
-      
-      return createdUser;
+      // Intentar crear el usuario
+      const createdUser = await userService.createUser(userData);
+      return { user: createdUser, isNew: true };
     } catch (error: any) {
-      console.error('❌ Error al guardar en backend:', error);
+      console.error('Error al guardar en backend:', error);
+      
+      // Si el error es porque el email ya existe (400), buscar el usuario existente
+      if (error.response?.status === 400 && error.response?.data?.error?.includes('Email already registered')) {
+        console.log('Usuario ya existe, buscando en base de datos...');
+        try {
+          // Obtener todos los usuarios y buscar por email
+          const allUsers = await userService.getUsers();
+          const existingUser = allUsers.find((u: any) => u.email === userData.email);
+          
+          if (existingUser) {
+            console.log('Usuario encontrado:', existingUser);
+            return { user: existingUser, isNew: false };
+          }
+        } catch (searchError) {
+          console.error('Error al buscar usuario existente:', searchError);
+        }
+      }
+      
       throw error;
     }
   };
 
+  // Registro con email/password
   const handleSignUp = async (values: User & { confirmPassword?: string }) => {
     setLoading(true);
     setError(null);
 
     try {
-      console.log('🚀 Iniciando registro con Firebase + Backend');
-      
-      if (!values.password) {
-        throw new Error('La contraseña es requerida');
+      // 1. Crear usuario en Firebase
+      if (values.password) {
+        await createUserWithEmailAndPassword(auth, values.email!, values.password);
       }
 
-      // 1. Crear usuario en Firebase (guarda la contraseña de forma segura)
-      console.log('🔥 Creando autenticación en Firebase...');
-      const userCredential = await createUserWithEmailAndPassword(auth, values.email!, values.password);
-      console.log('✅ Usuario autenticado en Firebase');
-
-      // Obtener ID token de Firebase y guardarlo para que el backend lo valide
-      try {
-        const idToken = await userCredential.user.getIdToken();
-        localStorage.setItem('session', idToken);
-        console.log('🔑 Firebase ID token almacenado en localStorage');
-      } catch (tokenErr) {
-        console.warn('No se pudo obtener el ID token de Firebase:', tokenErr);
-      }
-
-      // 2. Guardar datos básicos en backend (sin password)
-      console.log('💾 Guardando datos en backend...');
-      const createdUser = await saveUserToBackend({
-        name: values.name!,
-        email: values.email!,
-      });
+      // 2. Guardar en backend
+      const { confirmPassword, password, ...userData } = values;
+      const createdUser = await saveUserToBackend(userData as { name: string; email: string });
       
       if (createdUser) {
-        console.log('🎉 Registro completado exitosamente');
-        console.log('   - Firebase: ✅ Autenticación creada');
-        console.log('   - Backend: ✅ Usuario ID', (createdUser as any).id);
-        
         Swal.fire({
           title: '¡Registro Exitoso!',
-          html: `
-            <p>Tu cuenta ha sido creada correctamente</p>
-            <small class="text-muted">
-              • Autenticación: Firebase<br>
-              • Datos de usuario: Base de datos
-            </small>
-          `,
+          text: 'Tu cuenta ha sido creada correctamente',
           icon: 'success',
-          timer: 3000,
+          timer: 2000,
           showConfirmButton: false
         });
         
@@ -109,7 +89,7 @@ const SignUp: React.FC = () => {
         }, 2000);
       }
     } catch (error: any) {
-      console.error('❌ Error en registro:', error);
+      console.error('Error al registrar usuario:', error);
       let errorMsg = 'Error al crear la cuenta';
       
       if (error.code === 'auth/email-already-in-use') {
@@ -132,44 +112,48 @@ const SignUp: React.FC = () => {
     }
   };
 
+  // Autenticación con Google
   const handleGoogleLogin = async () => {
     setLoading(true);
     setError(null);
     
     try {
-      console.log('🔐 Iniciando registro con Google');
-      
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
-
-      // Store Firebase ID token so backend can validate this user when creating record
-      try {
-        const idToken = await user.getIdToken();
-        localStorage.setItem('session', idToken);
-        console.log('🔑 Firebase ID token almacenado en localStorage (Google)');
-      } catch (tokenErr) {
-        console.warn('No se pudo obtener el ID token tras Google SignIn:', tokenErr);
+      
+      // Guardar en backend (o recuperar si ya existe)
+      const backendResult = await saveUserToBackend({
+        name: user.displayName || 'Usuario de Google',
+        email: user.email!
+      });
+      
+      // IMPORTANTE: Guardar el usuario en Redux para que se muestre en el header
+      dispatch(setUser(backendResult.user));
+      
+      if (backendResult.isNew) {
+        // Usuario nuevo creado
+        Swal.fire({
+          title: '¡Registro Exitoso!',
+          text: 'Cuenta creada con Google',
+          icon: 'success',
+          timer: 2000,
+          showConfirmButton: false
+        });
+      } else {
+        // Usuario ya existía
+        Swal.fire({
+          title: '¡Bienvenido de nuevo!',
+          text: 'Sesión iniciada correctamente',
+          icon: 'success',
+          timer: 2000,
+          showConfirmButton: false
+        });
       }
       
-      console.log('✅ Usuario autenticado con Google');
-      
-      await saveUserToBackend({
-        name: user.displayName || 'Usuario de Google',
-        email: user.email!,
-      });
-      
-      Swal.fire({
-        title: '¡Registro Exitoso!',
-        text: 'Cuenta creada con Google',
-        icon: 'success',
-        timer: 2000,
-        showConfirmButton: false
-      });
-      
-      setTimeout(() => navigate('/auth/signin'), 2000);
+      setTimeout(() => navigate('/'), 2000);
     } catch (error: any) {
-      console.error('❌ Error en Google login:', error);
+      console.error('Error en Google login:', error);
       let errorMsg = 'Error al iniciar sesión con Google';
       
       if (error.code === 'auth/popup-blocked') {
@@ -185,43 +169,48 @@ const SignUp: React.FC = () => {
     }
   };
 
+  // Autenticación con GitHub
   const handleGithubLogin = async () => {
     setLoading(true);
     setError(null);
     
     try {
-      console.log('🔐 Iniciando registro con GitHub');
-      
       const provider = new GithubAuthProvider();
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
-
-      try {
-        const idToken = await user.getIdToken();
-        localStorage.setItem('session', idToken);
-        console.log('🔑 Firebase ID token almacenado en localStorage (GitHub)');
-      } catch (tokenErr) {
-        console.warn('No se pudo obtener el ID token tras GitHub SignIn:', tokenErr);
+      
+      // Guardar en backend (o recuperar si ya existe)
+      const backendResult = await saveUserToBackend({
+        name: user.displayName || user.email?.split('@')[0] || 'Usuario de GitHub',
+        email: user.email!
+      });
+      
+      // IMPORTANTE: Guardar el usuario en Redux para que se muestre en el header
+      dispatch(setUser(backendResult.user));
+      
+      if (backendResult.isNew) {
+        // Usuario nuevo creado
+        Swal.fire({
+          title: '¡Registro Exitoso!',
+          text: 'Cuenta creada con GitHub',
+          icon: 'success',
+          timer: 2000,
+          showConfirmButton: false
+        });
+      } else {
+        // Usuario ya existía
+        Swal.fire({
+          title: '¡Bienvenido de nuevo!',
+          text: 'Sesión iniciada correctamente',
+          icon: 'success',
+          timer: 2000,
+          showConfirmButton: false
+        });
       }
       
-      console.log('✅ Usuario autenticado con GitHub');
-      
-      await saveUserToBackend({
-        name: user.displayName || 'Usuario de GitHub',
-        email: user.email!,
-      });
-      
-      Swal.fire({
-        title: '¡Registro Exitoso!',
-        text: 'Cuenta creada con GitHub',
-        icon: 'success',
-        timer: 2000,
-        showConfirmButton: false
-      });
-      
-      setTimeout(() => navigate('/auth/signin'), 2000);
+      setTimeout(() => navigate('/'), 2000);
     } catch (error: any) {
-      console.error('❌ Error en GitHub login:', error);
+      console.error('Error en GitHub login:', error);
       let errorMsg = 'Error al iniciar sesión con GitHub';
       
       if (error.code === 'auth/popup-blocked') {
@@ -237,43 +226,36 @@ const SignUp: React.FC = () => {
     }
   };
 
+  // Autenticación con Microsoft
   const handleMicrosoftLogin = async () => {
     setLoading(true);
     setError(null);
     
     try {
-      console.log('🔐 Iniciando registro con Microsoft');
-      
       const provider = new OAuthProvider('microsoft.com');
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
-
-      try {
-        const idToken = await user.getIdToken();
-        localStorage.setItem('session', idToken);
-        console.log('🔑 Firebase ID token almacenado en localStorage (Microsoft)');
-      } catch (tokenErr) {
-        console.warn('No se pudo obtener el ID token tras Microsoft SignIn:', tokenErr);
-      }
       
-      console.log('✅ Usuario autenticado con Microsoft');
-      
-      await saveUserToBackend({
+      // Guardar en backend (o recuperar si ya existe)
+      const backendResult = await saveUserToBackend({
         name: user.displayName || 'Usuario de Microsoft',
-        email: user.email!,
+        email: user.email!
       });
       
+      // IMPORTANTE: Guardar el usuario en Redux para que se muestre en el header
+      dispatch(setUser(backendResult.user));
+      
       Swal.fire({
-        title: '¡Registro Exitoso!',
-        text: 'Cuenta creada con Microsoft',
+        title: '¡Bienvenido!',
+        text: 'Sesión iniciada con Microsoft',
         icon: 'success',
         timer: 2000,
         showConfirmButton: false
       });
       
-      setTimeout(() => navigate('/auth/signin'), 2000);
+      setTimeout(() => navigate('/'), 2000);
     } catch (error: any) {
-      console.error('❌ Error en Microsoft login:', error);
+      console.error('Error en Microsoft login:', error);
       let errorMsg = 'Error al iniciar sesión con Microsoft';
       
       if (error.code === 'auth/popup-blocked') {
@@ -289,15 +271,15 @@ const SignUp: React.FC = () => {
 
   return (
     <Container fluid className="min-vh-100 d-flex align-items-center justify-content-center" 
-      style={{ 
-        background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-        padding: '2rem 0'
-      }}
-    >
-      <Row className="w-100 justify-content-center">
-        <Col xs={12} sm={10} md={8} lg={6} xl={5}>
-          <Card className="shadow-lg border-0" style={{ borderRadius: '1rem' }}>
-            <Card.Body className="p-4 p-md-5">
+        style={{ 
+          background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+          padding: '2rem 0'
+        }}
+      >
+        <Row className="w-100 justify-content-center">
+          <Col xs={12} sm={10} md={8} lg={6} xl={5}>
+            <Card className="shadow-lg border-0" style={{ borderRadius: '1rem' }}>
+              <Card.Body className="p-4 p-md-5">
               <div className="text-center mb-4">
                 <div 
                   className="mx-auto mb-3 d-flex align-items-center justify-content-center"
@@ -320,6 +302,7 @@ const SignUp: React.FC = () => {
                 </Alert>
               )}
 
+              {/* Botones de autenticación social */}
               <div className="d-grid gap-2 mb-4">
                 <Button 
                   onClick={handleGoogleLogin} 
@@ -396,6 +379,7 @@ const SignUp: React.FC = () => {
               >
                 {({ errors, touched }) => (
                   <FormikForm>
+                    {/* Nombre */}
                     <Form.Group className="mb-3">
                       <Form.Label className="fw-semibold">
                         <UserIcon size={16} className="me-2" />
@@ -411,6 +395,7 @@ const SignUp: React.FC = () => {
                       <ErrorMessage name="name" component="div" className="invalid-feedback" />
                     </Form.Group>
 
+                    {/* Email */}
                     <Form.Group className="mb-3">
                       <Form.Label className="fw-semibold">
                         <Mail size={16} className="me-2" />
@@ -426,6 +411,7 @@ const SignUp: React.FC = () => {
                       <ErrorMessage name="email" component="div" className="invalid-feedback" />
                     </Form.Group>
 
+                    {/* Contraseña */}
                     <Form.Group className="mb-3">
                       <Form.Label className="fw-semibold">
                         <Lock size={16} className="me-2" />
@@ -451,6 +437,7 @@ const SignUp: React.FC = () => {
                       </div>
                     </Form.Group>
 
+                    {/* Confirmar Contraseña */}
                     <Form.Group className="mb-4">
                       <Form.Label className="fw-semibold">
                         <Lock size={16} className="me-2" />
@@ -476,6 +463,7 @@ const SignUp: React.FC = () => {
                       </div>
                     </Form.Group>
 
+                    {/* Botón de Registro */}
                     <Button
                       type="submit"
                       variant="success"

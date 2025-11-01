@@ -142,32 +142,88 @@ const ListUsers: React.FC = () => {
                         <Col>
                             <div className="d-flex justify-content-between align-items-center">
                                 <div>
-                                    <h2 className="h3 fw-bold mb-1" style={{ color: '#10b981' }}>
-                                        Gestión de Usuarios
+                                    <h2 className="h2 fw-bold mb-2" style={{ 
+                                        color: '#065f46',
+                                        fontFamily: '"Segoe UI", sans-serif',
+                                        letterSpacing: '-0.5px'
+                                    }}>
+                                        👥 Gestión de Usuarios
                                     </h2>
-                                    <p className="text-muted mb-0">
+                                    <p className="mb-0" style={{ color: '#047857', fontSize: '1rem' }}>
                                         Listado de todos los usuarios del sistema
-                                        <Badge bg="secondary" className="ms-2">{users.length} usuarios</Badge>
+                                        <Badge 
+                                            bg="success" 
+                                            className="ms-2"
+                                            style={{
+                                                background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                                                padding: '6px 12px',
+                                                fontSize: '0.85rem',
+                                                fontWeight: '700',
+                                                borderRadius: '20px',
+                                                boxShadow: '0 2px 8px rgba(16, 185, 129, 0.3)'
+                                            }}
+                                        >
+                                            {users.length} usuarios
+                                        </Badge>
                                     </p>
                                 </div>
-                                <div className="d-flex gap-2 align-items-center">
+                                <div className="d-flex gap-3 align-items-center">
                                     <ThemeSelector />
                                     <Button 
-                                        variant="outline-secondary"
-                                        size="sm"
+                                        variant="outline-success"
                                         onClick={handleRefresh}
                                         disabled={loading}
                                         className="d-flex align-items-center gap-2"
+                                        style={{
+                                            borderWidth: '2px',
+                                            borderColor: '#10b981',
+                                            color: '#059669',
+                                            fontWeight: '700',
+                                            padding: '10px 20px',
+                                            borderRadius: '10px',
+                                            transition: 'all 0.2s ease'
+                                        }}
+                                        onMouseEnter={(e) => {
+                                            e.currentTarget.style.backgroundColor = '#d1fae5';
+                                            e.currentTarget.style.transform = 'translateY(-2px)';
+                                            e.currentTarget.style.boxShadow = '0 4px 12px rgba(16, 185, 129, 0.3)';
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            e.currentTarget.style.backgroundColor = 'transparent';
+                                            e.currentTarget.style.transform = 'translateY(0)';
+                                            e.currentTarget.style.boxShadow = 'none';
+                                        }}
                                     >
-                                        <RefreshCw size={16} />
+                                        <RefreshCw size={18} />
                                         Actualizar
                                     </Button>
                                     <Button 
                                         variant="success"
                                         onClick={handleCreateNew}
                                         className="d-flex align-items-center gap-2"
+                                        style={{
+                                            background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                                            border: 'none',
+                                            fontWeight: '800',
+                                            padding: '12px 24px',
+                                            borderRadius: '12px',
+                                            textTransform: 'uppercase',
+                                            letterSpacing: '0.5px',
+                                            boxShadow: '0 4px 12px rgba(16, 185, 129, 0.4)',
+                                            transition: 'all 0.2s ease'
+                                        }}
+                                        onMouseEnter={(e) => {
+                                            e.currentTarget.style.background = 'linear-gradient(135deg, #059669 0%, #047857 100%)';
+                                            e.currentTarget.style.transform = 'translateY(-2px) scale(1.02)';
+                                            e.currentTarget.style.boxShadow = '0 8px 20px rgba(5, 150, 105, 0.5)';
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            e.currentTarget.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+                                            e.currentTarget.style.transform = 'translateY(0) scale(1)';
+                                            e.currentTarget.style.boxShadow = '0 4px 12px rgba(16, 185, 129, 0.4)';
+                                        }}
                                     >
-                                        <Plus size={18} />
+                                        <Plus size={20} />
                                         Nuevo Usuario
                                     </Button>
                                 </div>
@@ -180,11 +236,18 @@ const ListUsers: React.FC = () => {
                             variant="success" 
                             dismissible 
                             onClose={() => setSuccessMessage(null)}
-                            className="shadow-sm"
+                            style={{
+                                background: 'linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%)',
+                                border: '2px solid #10b981',
+                                borderRadius: '12px',
+                                color: '#065f46',
+                                fontWeight: '600',
+                                boxShadow: '0 4px 12px rgba(16, 185, 129, 0.2)'
+                            }}
                         >
                             <div className="d-flex align-items-center">
-                                <strong className="me-2">✓</strong>
-                                {successMessage}
+                                <span style={{ fontSize: '1.5rem', marginRight: '12px' }}>✓</span>
+                                <strong>{successMessage}</strong>
                             </div>
                         </Alert>
                     )}
@@ -194,39 +257,66 @@ const ListUsers: React.FC = () => {
                             variant="danger" 
                             dismissible 
                             onClose={() => setError(null)}
-                            className="shadow-sm"
+                            style={{
+                                background: 'linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)',
+                                border: '2px solid #ef4444',
+                                borderRadius: '12px',
+                                color: '#991b1b',
+                                fontWeight: '600',
+                                boxShadow: '0 4px 12px rgba(239, 68, 68, 0.2)'
+                            }}
                         >
-                            <Alert.Heading as="h6">Error</Alert.Heading>
+                            <Alert.Heading as="h6" style={{ fontWeight: '800', color: '#991b1b' }}>
+                                ⚠️ Error
+                            </Alert.Heading>
                             {error}
                         </Alert>
                     )}
 
                     <Row>
                         <Col>
-                            <Card className={themeClasses.card}>
-                                <Card.Body className="p-0">
-                                    {loading ? (
-                                        <div className="text-center py-5">
-                                            <Spinner animation="border" variant="success" />
-                                            <p className="mt-3 text-muted">Cargando usuarios...</p>
-                                        </div>
-                                    ) : (
-                                        <GenericTable
-                                            data={users}
-                                            columns={["id", "name", "email"]}
-                                            actions={[
-                                                { name: "edit", label: "Editar", icon: "edit", variant: "primary" },
-                                                { name: "delete", label: "Eliminar", icon: "delete", variant: "danger" }
-                                            ]}
-                                            onAction={handleAction}
-                                            striped
-                                            hover
-                                            responsive
-                                            emptyMessage="No hay usuarios registrados en el sistema"
-                                        />
-                                    )}
-                                </Card.Body>
-                            </Card>
+                            {loading ? (
+                                <div 
+                                    className="text-center py-5"
+                                    style={{
+                                        background: 'linear-gradient(135deg, #f0fdf4 0%, #d1fae5 100%)',
+                                        borderRadius: '20px',
+                                        border: '4px solid #10b981',
+                                        boxShadow: '0 20px 60px rgba(16, 185, 129, 0.3)'
+                                    }}
+                                >
+                                    <Spinner 
+                                        animation="border" 
+                                        variant="success"
+                                        style={{
+                                            width: '3rem',
+                                            height: '3rem',
+                                            borderWidth: '4px'
+                                        }}
+                                    />
+                                    <p className="mt-4" style={{ 
+                                        color: '#059669',
+                                        fontSize: '1.1rem',
+                                        fontWeight: '700'
+                                    }}>
+                                        ⏳ Cargando usuarios...
+                                    </p>
+                                </div>
+                            ) : (
+                                <GenericTable
+                                    data={users}
+                                    columns={["id", "name", "email"]}
+                                    actions={[
+                                        { name: "edit", label: "Editar", icon: "edit", variant: "outline-primary" },
+                                        { name: "delete", label: "Eliminar", icon: "delete", variant: "outline-danger" }
+                                    ]}
+                                    onAction={handleAction}
+                                    striped
+                                    hover
+                                    responsive
+                                    emptyMessage="📭 No hay usuarios registrados en el sistema"
+                                />
+                            )}
                         </Col>
                     </Row>
                 </Container>

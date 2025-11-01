@@ -34,15 +34,15 @@ const SignIn: React.FC = () => {
 
   return (
     <Container fluid className="min-vh-100 d-flex align-items-center justify-content-center" 
-      style={{ 
-        background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-        padding: '2rem 0'
-      }}
-    >
-      <Row className="w-100 justify-content-center">
-        <Col xs={12} sm={10} md={8} lg={6} xl={5}>
-          <Card className="shadow-lg border-0" style={{ borderRadius: '1rem' }}>
-            <Card.Body className="p-4 p-md-5">
+        style={{ 
+          background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+          padding: '2rem 0'
+        }}
+      >
+        <Row className="w-100 justify-content-center">
+          <Col xs={12} sm={10} md={8} lg={6} xl={5}>
+            <Card className="shadow-lg border-0" style={{ borderRadius: '1rem' }}>
+              <Card.Body className="p-4 p-md-5">
               <div className="text-center mb-4">
                 <div 
                   className="mx-auto mb-3 d-flex align-items-center justify-content-center"

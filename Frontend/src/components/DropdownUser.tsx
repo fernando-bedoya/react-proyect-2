@@ -1,18 +1,96 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 import { useSelector } from "react-redux";
 import { RootState } from "../store/store";
-
-
-import UserOne from '../images/user/user-01.png';
+import SecurityService from '../services/securityService';
 
 const DropdownUser = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const navigate = useNavigate();
   
-  //Esto lee la base de datos global del store
+  // Esto lee la base de datos global del store Redux para obtener el usuario logueado
   const user = useSelector((state: RootState) => state.user.user);
-  //------------------------------------------------------
+  
+  /**
+   * Función para manejar el cierre de sesión del usuario
+   * 
+   * FLUJO DE LOGOUT:
+   * 1. Llama a SecurityService.logout() que:
+   *    - Limpia el token de localStorage (key: 'access_token')
+   *    - Limpia el refresh_token de localStorage (key: 'refresh_token')
+   *    - Limpia los datos del usuario de localStorage (key: 'user')
+   *    - Actualiza Redux con setUser(null) para limpiar el estado global
+   *    - Emite evento 'userChange' para notificar a otros componentes
+   * 2. Cierra el dropdown del usuario
+   * 3. Muestra logs en consola para debugging
+   * 4. Redirige al usuario a la página de login (/auth/signin)
+   * 
+   * NOTA: Este logout es solo del frontend, no hace petición al backend
+   * porque el token JWT es stateless (el backend no mantiene sesiones)
+   */
+  const handleLogout = () => {
+    console.log('🚪 Iniciando proceso de logout...');
+    console.log('   Usuario actual:', user?.name, '(' + user?.email + ')');
+    
+    // Paso 1: Llamar al servicio de seguridad para limpiar todo
+    SecurityService.logout();
+    
+    // Paso 2: Cerrar el dropdown
+    setDropdownOpen(false);
+    
+    console.log('✅ Logout completado');
+    console.log('   - Token eliminado de localStorage');
+    console.log('   - Usuario eliminado de Redux');
+    console.log('   - Redirigiendo al login...');
+    
+    // Paso 3: Redirigir al login
+    navigate('/auth/signin');
+  };
+  
+  /**
+   * Función para generar las iniciales del usuario desde su nombre
+   * Toma las primeras letras de las dos primeras palabras del nombre
+   * Ejemplo: "Juan Pérez" → "JP", "María" → "M"
+   */
+  const getInitials = (name?: string): string => {
+    if (!name) return 'U'; // U de User por defecto
+    const words = name.trim().split(' ');
+    if (words.length >= 2) {
+      return (words[0][0] + words[1][0]).toUpperCase();
+    }
+    return words[0][0].toUpperCase();
+  };
+
+  /**
+   * Función para generar un color de fondo único basado en el nombre del usuario
+   * Usa un algoritmo de hash simple para convertir el nombre en un color consistente
+   * El mismo nombre siempre generará el mismo color
+   */
+  const getAvatarColor = (name?: string): string => {
+    if (!name) return '#10b981'; // Verde por defecto
+    
+    // Paleta de colores profesionales y accesibles
+    const colors = [
+      '#10b981', // Verde esmeralda
+      '#3b82f6', // Azul
+      '#8b5cf6', // Púrpura
+      '#ec4899', // Rosa
+      '#f59e0b', // Ámbar
+      '#ef4444', // Rojo
+      '#06b6d4', // Cyan
+      '#6366f1', // Índigo
+    ];
+    
+    // Algoritmo de hash simple: suma los códigos ASCII de cada carácter
+    let hash = 0;
+    for (let i = 0; i < name.length; i++) {
+      hash += name.charCodeAt(i);
+    }
+    
+    // Usa el módulo del hash para seleccionar un color de la paleta
+    return colors[hash % colors.length];
+  };
 
   const trigger = useRef<any>(null);
   const dropdown = useRef<any>(null);
@@ -51,15 +129,27 @@ const DropdownUser = () => {
         className="flex items-center gap-4"
         to="#"
       >
+        {/* Información del usuario: nombre y email */}
         <span className="hidden text-right lg:block">
           <span className="block text-sm font-medium text-black dark:text-white">
             {user ? user.name : 'Guest'}
           </span>
-          <span className="block text-xs">UX Designer</span>
+          <span className="block text-xs text-gray-500 dark:text-gray-400">
+            {user ? user.email : 'guest@example.com'}
+          </span>
         </span>
 
-        <span className="h-12 w-12 rounded-full">
-          <img src={UserOne} alt="User" />
+        {/* Avatar del usuario con iniciales y color personalizado */}
+        <span 
+          className="h-12 w-12 rounded-full flex items-center justify-center text-white font-bold text-lg"
+          style={{ 
+            backgroundColor: getAvatarColor(user?.name),
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+            transition: 'all 0.3s ease'
+          }}
+          title={user?.name || 'Usuario'}
+        >
+          {getInitials(user?.name)}
         </span>
 
         <svg
@@ -90,6 +180,30 @@ const DropdownUser = () => {
           dropdownOpen === true ? 'block' : 'hidden'
         }`}
       >
+        {/* Sección de información del usuario - Muestra avatar grande, nombre y email */}
+        <div className="flex items-center gap-4 px-6 py-5 border-b border-stroke dark:border-strokedark bg-gray-50 dark:bg-meta-4">
+          {/* Avatar grande con iniciales y color personalizado */}
+          <div 
+            className="h-16 w-16 rounded-full flex items-center justify-center text-white font-bold text-2xl flex-shrink-0"
+            style={{ 
+              backgroundColor: getAvatarColor(user?.name),
+              boxShadow: '0 6px 16px rgba(0, 0, 0, 0.2)'
+            }}
+          >
+            {getInitials(user?.name)}
+          </div>
+          
+          {/* Información del usuario: nombre completo y email */}
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-black dark:text-white truncate" title={user?.name || 'Guest'}>
+              {user?.name || 'Guest'}
+            </p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 truncate" title={user?.email || 'guest@example.com'}>
+              {user?.email || 'guest@example.com'}
+            </p>
+          </div>
+        </div>
+
         <ul className="flex flex-col gap-5 border-b border-stroke px-6 py-7.5 dark:border-strokedark">
           <li>
             <Link
@@ -163,7 +277,22 @@ const DropdownUser = () => {
             </Link>
           </li>
         </ul>
-        <button className="flex items-center gap-3.5 py-4 px-6 text-sm font-medium duration-300 ease-in-out hover:text-primary lg:text-base">
+        {/* 
+          Botón de Logout - Cerrar sesión del usuario
+          
+          Al hacer click:
+          1. Limpia todos los tokens y datos del usuario del localStorage
+          2. Actualiza Redux eliminando el usuario del estado global
+          3. Redirige automáticamente a la página de login
+          
+          IMPORTANTE: Este componente reutiliza el SecurityService para
+          mantener consistencia en el manejo de autenticación en toda la app
+        */}
+        <button 
+          onClick={handleLogout}
+          className="flex items-center gap-3.5 py-4 px-6 text-sm font-medium duration-300 ease-in-out hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 lg:text-base transition-all"
+          title="Cerrar sesión"
+        >
           <svg
             className="fill-current"
             width="22"

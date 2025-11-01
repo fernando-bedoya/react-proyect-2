@@ -3,6 +3,7 @@ import { lazy } from 'react';
 const Calendar = lazy(() => import('./pages/Calendar'));
 const Chart = lazy(() => import('./pages/Chart'));
 const Profile = lazy(() => import('./pages/Profile'));
+const UserProfile = lazy(() => import('./pages/Profile/UserProfile')); // Nueva página de perfil de usuario
 const Settings = lazy(() => import('./pages/Settings'));
 const Tables = lazy(() => import('./pages/Tables'));
 
@@ -40,11 +41,11 @@ const PasswordsList = lazy(() => import('./pages/password/List'));
 const PasswordsCreate = lazy(() => import('./pages/password/Create'));
 const PasswordsUpdate = lazy(() => import('./pages/password/Update'));
 
-// CRUD Views
-const DigitalSignatureView = lazy(() => import('./views/digitalSignature/DigitalSignatureView.jsx'));
-const DeviceView = lazy(() => import('./views/device/DeviceView.jsx'));
-const SecurityQuestionView = lazy(() => import('./views/securityQuestion/SecurityQuestionView.jsx'));
-const AnswerView = lazy(() => import('./views/answer/AnswerView.jsx'));
+// CRUD Views (Con funcionalidad completa - Crear/Editar/Eliminar activados)
+const DigitalSignatureView = lazy(() => import('./views/digitalSignature/DigitalSignatureViewReusable'));
+const DeviceView = lazy(() => import('./views/device/DeviceViewReusable'));
+const SecurityQuestionView = lazy(() => import('./views/securityQuestion/SecurityQuestionViewReusable'));
+const AnswerView = lazy(() => import('./views/answer/AnswerViewReusable'));
 // const SessionView = lazy(() => import('./views/session/SessionView.jsx')); // Archivo no existe aún
 const UserView = lazy(() => import('./views/user/UserView.jsx'));
 
@@ -58,6 +59,11 @@ const coreRoutes = [
     path: '/profile',
     title: 'Profile',
     component: Profile,
+  },
+  {
+    path: '/profile/:id',
+    title: 'User Profile',
+    component: UserProfile,
   },
   {
     path: '/settings',
