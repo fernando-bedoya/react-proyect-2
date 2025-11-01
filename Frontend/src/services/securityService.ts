@@ -1,12 +1,12 @@
 /**
- * SecurityService - Servicio reutilizable para autenticación JWT
+ * SecurityService - Servicio reutilizable para autenticación con Firebase
  * 
- * Este servicio maneja todo el flujo de autenticación con tokens JWT:
+ * Este servicio maneja todo el flujo de autenticación usando Firebase Authentication:
  * 
  * FLUJO DE AUTENTICACIÓN:
  * 1. Usuario ingresa al login con email/password
- * 2. Se llama al endpoint /login del backend
- * 3. El backend responde con un token JWT
+ * 2. Se llama al método signInWithEmailAndPassword de Firebase
+ * 3. Firebase valida las credenciales y responde con un token JWT
  * 4. El frontend guarda el token en localStorage (key: 'access_token')
  * 5. Se actualiza la sesión del usuario en Redux
  * 6. Todas las peticiones subsecuentes envían el token automáticamente via interceptor de Axios (api.js)
@@ -25,10 +25,17 @@
  * - Maneja errores 401 (token inválido) redirigiendo al login
  */
 
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "firebase/auth";
 import axios from "axios";
 import { User } from "../models/User";
 import { store } from "../store/store";
 import { setUser } from "../store/userSlice";
+import app from "../firebase"; // Asegurarse de que Firebase esté inicializado
+
+// Verificar que la app de Firebase esté inicializada antes de usar cualquier servicio
+if (!app) {
+    throw new Error("Firebase app no está inicializada. Verifica la configuración en firebase.ts.");
+}
 
 /**
  * Interfaz para la respuesta del backend al hacer login
@@ -41,6 +48,7 @@ interface LoginResponse {
 }
 
 class SecurityService extends EventTarget {
+    private auth = getAuth();
     // Claves para localStorage
     private readonly TOKEN_KEY = 'access_token';        // Key donde se guarda el JWT
     private readonly REFRESH_TOKEN_KEY = 'refresh_token'; // Key para el refresh token
@@ -75,14 +83,27 @@ class SecurityService extends EventTarget {
         console.log('🔐 SecurityService inicializado');
         console.log('   API URL:', this.API_URL);
         console.log('   Usuario en caché:', this.user.email || 'No autenticado');
+
+        // Escuchar cambios en el estado de autenticación
+        onAuthStateChanged(this.auth, (user) => {
+            if (user) {
+                user.getIdToken().then((token) => {
+                    localStorage.setItem(this.TOKEN_KEY, token);
+                    localStorage.setItem(this.USER_KEY, JSON.stringify(user));
+                });
+            } else {
+                localStorage.removeItem(this.TOKEN_KEY);
+                localStorage.removeItem(this.USER_KEY);
+            }
+        });
     }
 
     /**
      * Método principal de autenticación
      * 
      * FLUJO:
-     * 1. Envía credenciales al endpoint /login del backend
-     * 2. Backend valida credenciales y retorna: { user: {...}, access_token: "..." }
+     * 1. Envía credenciales al método signInWithEmailAndPassword de Firebase
+     * 2. Firebase valida credenciales y retorna un token JWT
      * 3. Guarda el token en localStorage con key 'access_token'
      * 4. Guarda los datos del usuario en localStorage con key 'user'
      * 5. Actualiza el estado del usuario en Redux
@@ -102,61 +123,33 @@ class SecurityService extends EventTarget {
         console.log('   URL:', `${this.API_URL}/login`);
         
         try {
-            // PASO 1 y 2: Enviar credenciales al backend
-            const response = await axios.post<LoginResponse>(
-                `${this.API_URL}/login`, 
-                credentials,
-                {
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                }
-            );
+            // PASO 1 y 2: Enviar credenciales a Firebase
+            const userCredential = await signInWithEmailAndPassword(this.auth, credentials.email, credentials.password);
+            const user = userCredential.user;
+            const token = await user.getIdToken();
 
-            const data = response.data;
+            // Guardar token y usuario en localStorage
+            localStorage.setItem(this.TOKEN_KEY, token);
+            localStorage.setItem(this.USER_KEY, JSON.stringify(user));
             
-            // Validar que la respuesta tenga el formato esperado
-            if (!data.access_token) {
-                throw new Error('El backend no retornó un token válido');
-            }
-
+            // Actualizar el estado del usuario en Redux
+            store.dispatch(setUser(user));
+            
             console.log('✅ LOGIN EXITOSO');
             console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-            console.log('   Usuario:', data.user?.email || 'N/A');
-            console.log('   Token recibido:', data.access_token.substring(0, 50) + '...');
-            console.log('   Expira en:', data.expires_in ? `${data.expires_in} segundos` : 'N/A');
-            
-            // PASO 3: Guardar token en localStorage
-            localStorage.setItem(this.TOKEN_KEY, data.access_token);
-            console.log('   ✓ Token guardado en localStorage (key: access_token)');
-            
-            // Guardar refresh token si existe
-            if (data.refresh_token) {
-                localStorage.setItem(this.REFRESH_TOKEN_KEY, data.refresh_token);
-                console.log('   ✓ Refresh token guardado');
-            }
-            
-            // PASO 4: Guardar datos del usuario en localStorage
-            if (data.user) {
-                localStorage.setItem(this.USER_KEY, JSON.stringify(data.user));
-                this.user = data.user;
-                console.log('   ✓ Usuario guardado en localStorage (key: user)');
-            }
-            
-            // PASO 5: Actualizar Redux store con los datos del usuario
-            store.dispatch(setUser(data.user));
-            console.log('   ✓ Usuario actualizado en Redux store');
+            console.log('   Usuario:', user.email);
+            console.log('   Token recibido:', token.substring(0, 50) + '...');
             
             // Emitir evento personalizado para otros componentes
-            this.dispatchEvent(new CustomEvent("userChange", { detail: data.user }));
+            this.dispatchEvent(new CustomEvent("userChange", { detail: user }));
             
             console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
             console.log('🎉 AUTENTICACIÓN COMPLETADA');
             console.log('   Todas las peticiones futuras incluirán automáticamente:');
-            console.log('   Header: Authorization: Bearer ' + data.access_token.substring(0, 30) + '...');
+            console.log('   Header: Authorization: Bearer ' + token.substring(0, 30) + '...');
             console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
             
-            return data;
+            return { user, access_token: token } as LoginResponse;
             
         } catch (error: any) {
             console.error('❌ ERROR EN LOGIN');
@@ -196,30 +189,42 @@ class SecurityService extends EventTarget {
      * NOTA: El interceptor de Axios dejará de enviar el token automáticamente
      * porque ya no existirá en localStorage
      */
-    logout(): void {
+    async logout(): Promise<void> {
         console.log('🚪 CERRANDO SESIÓN');
         console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
         
-        // Limpiar tokens del localStorage
-        localStorage.removeItem(this.TOKEN_KEY);
-        localStorage.removeItem(this.REFRESH_TOKEN_KEY);
-        localStorage.removeItem(this.USER_KEY);
-        console.log('   ✓ Tokens eliminados del localStorage');
-        
-        // Limpiar usuario de la memoria
-        this.user = {};
-        console.log('   ✓ Usuario limpiado de la memoria');
-        
-        // Actualizar Redux store
-        store.dispatch(setUser(null));
-        console.log('   ✓ Redux store actualizado (user = null)');
-        
-        // Emitir evento
-        this.dispatchEvent(new CustomEvent("userChange", { detail: null }));
-        console.log('   ✓ Evento userChange emitido');
-        
-        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-        console.log('✅ SESIÓN CERRADA EXITOSAMENTE');
+        try {
+            // Cerrar sesión en Firebase
+            await signOut(this.auth);
+            
+            // Limpiar tokens del localStorage
+            localStorage.removeItem(this.TOKEN_KEY);
+            localStorage.removeItem(this.REFRESH_TOKEN_KEY);
+            localStorage.removeItem(this.USER_KEY);
+            console.log('   ✓ Tokens eliminados del localStorage');
+            
+            // Limpiar usuario de la memoria
+            this.user = {};
+            console.log('   ✓ Usuario limpiado de la memoria');
+            
+            // Actualizar Redux store
+            store.dispatch(setUser(null));
+            console.log('   ✓ Redux store actualizado (user = null)');
+            
+            // Emitir evento
+            this.dispatchEvent(new CustomEvent("userChange", { detail: null }));
+            console.log('   ✓ Evento userChange emitido');
+            
+            console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+            console.log('✅ SESIÓN CERRADA EXITOSAMENTE');
+        } catch (error) {
+            console.error('❌ ERROR AL CERRAR SESIÓN');
+            console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+            console.error('   Error:', error.message);
+            console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+            
+            throw error;
+        }
     }
 
     /**
@@ -265,6 +270,20 @@ class SecurityService extends EventTarget {
         console.log('🔄 Token actualizado en localStorage');
     }
 }
+
+// Configurar interceptor de Axios para incluir el token en cada solicitud
+axios.interceptors.request.use(
+    (config) => {
+        const token = localStorage.getItem("access_token");
+        if (token) {
+            config.headers["Authorization"] = `Bearer ${token}`;
+        }
+        return config;
+    },
+    (error) => {
+        return Promise.reject(error);
+    }
+);
 
 // Exportar instancia singleton del servicio
 // De esta forma se comparte la misma instancia en toda la aplicación
