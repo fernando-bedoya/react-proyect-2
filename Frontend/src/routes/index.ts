@@ -17,6 +17,8 @@ const Roles = lazy(() => import('../pages/Roles/List'));
 const RolesCreate = lazy(() => import('../pages/Roles/Create'));
 const RolesUpdate = lazy(() => import('../pages/Roles/Update'));
 const Permissions = lazy(() => import('../pages/Permissions/List'));
+const AdministratorList = lazy(() => import('../pages/Administrator/List'));
+const AdministratorPermissions = lazy(() => import('../pages/Administrator/Permissions'));
 const Sessions = lazy(() => import('../pages/Session/List'));
 const SessionsCreate = lazy(() => import('../pages/Session/Create'));
 
@@ -105,6 +107,16 @@ const coreRoutes = [
     path: '/permissions/list',
     title: 'List Permissions',
     component: Permissions,
+  },
+  {
+    path: '/administrator/list',
+    title: 'Administrator List',
+    component: AdministratorList,
+  },
+  {
+    path: '/administrator/permissions',
+    title: 'Administrator Permissions',
+    component: AdministratorPermissions,
   },
   {
     path: '/sessions/list',

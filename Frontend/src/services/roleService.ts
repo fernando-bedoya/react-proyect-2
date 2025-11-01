@@ -1,33 +1,60 @@
-export type Role = {
-  id: number;
-  name: string;
-  description?: string;
-  created_at?: string;
-  updated_at?: string;
-};
+import axios from "axios";
+import { Role } from "../models/Role";
 
-function getBaseUrl(): string {
-  const meta: any = (typeof import.meta !== 'undefined' ? import.meta : {});
-  return (meta.env && meta.env.VITE_API_BASE_URL) || process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000';
+const VITE_API_URL = (import.meta as any).env?.VITE_API_URL || '';
+const API_URL = VITE_API_URL + "/roles";
+
+class RoleService {
+    async getRoles(): Promise<Role[]> {
+        try {
+            const response = await axios.get<Role[]>(API_URL);
+            return response.data;
+        } catch (error) {
+            console.error("Error al obtener roles:", error);
+            throw error;
+        }
+    }
+
+    async getRoleById(id: number): Promise<Role | null> {
+        try {
+            const response = await axios.get<Role>(`${API_URL}/${id}`);
+            return response.data;
+        } catch (error) {
+            console.error("Role no encontrado:", error);
+            return null;
+        }
+    }
+
+    async createRole(role: Omit<Role, "id">): Promise<Role | null> {
+        try {
+            const response = await axios.post<Role>(API_URL, role);
+            return response.data;
+        } catch (error) {
+            console.error("Error al crear role:", error);
+            throw error;
+        }
+    }
+
+    async updateRole(id: number, role: Partial<Role>): Promise<Role | null> {
+        try {
+            const response = await axios.put<Role>(`${API_URL}/${id}`, role);
+            return response.data;
+        } catch (error) {
+            console.error("Error al actualizar role:", error);
+            throw error;
+        }
+    }
+
+    async deleteRole(id: number): Promise<boolean> {
+        try {
+            await axios.delete(`${API_URL}/${id}`);
+            return true;
+        } catch (error) {
+            console.error("Error al eliminar role:", error);
+            return false;
+        }
+    }
 }
 
-async function fetchJson(input: RequestInfo, init?: RequestInit) {
-  const res = await fetch(input, init);
-  if (!res.ok) {
-    let body: any = null;
-    try { body = await res.json(); } catch (_) { body = await res.text(); }
-    const err: any = new Error(body?.message || res.statusText || 'Request failed');
-    err.status = res.status; err.body = body;
-    throw err;
-  }
-  const contentType = res.headers.get('content-type') || '';
-  if (contentType.includes('application/json')) return res.json();
-  return res.text();
-}
-
-export async function getRoles(): Promise<Role[]> {
-  const url = `${getBaseUrl().replace(/\/+$/, '')}/roles`;
-  return fetchJson(url) as Promise<Role[]>;
-}
-
-export default { getRoles };
+const roleService = new RoleService();
+export default roleService;

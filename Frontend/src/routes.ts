@@ -22,6 +22,10 @@ const UserRoleManager = lazy(() => import('./components/UserRoleManager'));
 const PermissionsList = lazy(() => import('./pages/Permissions/List'));
 const PermissionsCreate = lazy(() => import('./pages/Permissions/Create'));
 
+// Administrator
+const AdministratorList = lazy(() => import('./pages/Administrator/List'));
+const AdministratorPermissions = lazy(() => import('./pages/Administrator/Permissions'));
+
 //Sessions
 const SessionsList = lazy(() => import('./pages/Session/List'));
 const SessionsCreate = lazy(() => import('./pages/Session/Create'));
@@ -112,6 +116,16 @@ const coreRoutes = [
     path: '/permissions/create',
     title: 'Create Permission',
     component: PermissionsCreate,
+  },
+  {
+    path: '/administrator/list',
+    title: 'Administrator List',
+    component: AdministratorList,
+  },
+  {
+    path: '/administrator/permissions',
+    title: 'Administrator Permissions',
+    component: AdministratorPermissions,
   },
   // Permissions update handled via Create page with ?edit=<id>
   {
