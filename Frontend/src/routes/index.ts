@@ -17,6 +17,8 @@ const Roles = lazy(() => import('../pages/Roles/List'));
 const RolesCreate = lazy(() => import('../pages/Roles/Create'));
 const RolesUpdate = lazy(() => import('../pages/Roles/Update'));
 const Permissions = lazy(() => import('../pages/Permissions/List'));
+const Sessions = lazy(() => import('../pages/Session/List'));
+const SessionsCreate = lazy(() => import('../pages/Session/Create'));
 
 const coreRoutes = [
   {
@@ -103,6 +105,16 @@ const coreRoutes = [
     path: '/permissions/list',
     title: 'List Permissions',
     component: Permissions,
+  },
+  {
+    path: '/sessions/list',
+    title: 'List Sessions',
+    component: Sessions,
+  },
+  {
+    path: '/sessions/create',
+    title: 'Create Session',
+    component: SessionsCreate,
   },
 ];
 
