@@ -1,14 +1,52 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 import { useSelector } from "react-redux";
 import { RootState } from "../store/store";
+import SecurityService from '../services/securityService';
 
 const DropdownUser = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const navigate = useNavigate();
   
   // Esto lee la base de datos global del store Redux para obtener el usuario logueado
   const user = useSelector((state: RootState) => state.user.user);
+  
+  /**
+   * Función para manejar el cierre de sesión del usuario
+   * 
+   * FLUJO DE LOGOUT:
+   * 1. Llama a SecurityService.logout() que:
+   *    - Limpia el token de localStorage (key: 'access_token')
+   *    - Limpia el refresh_token de localStorage (key: 'refresh_token')
+   *    - Limpia los datos del usuario de localStorage (key: 'user')
+   *    - Actualiza Redux con setUser(null) para limpiar el estado global
+   *    - Emite evento 'userChange' para notificar a otros componentes
+   * 2. Cierra el dropdown del usuario
+   * 3. Muestra logs en consola para debugging
+   * 4. Redirige al usuario a la página de login (/auth/signin)
+   * 
+   * NOTA: Este logout es solo del frontend, no hace petición al backend
+   * porque el token JWT es stateless (el backend no mantiene sesiones)
+   */
+  const handleLogout = () => {
+    console.log('🚪 Iniciando proceso de logout...');
+    console.log('   Usuario actual:', user?.name, '(' + user?.email + ')');
+    
+    // Paso 1: Llamar al servicio de seguridad para limpiar todo
+    SecurityService.logout();
+    
+    // Paso 2: Cerrar el dropdown
+    setDropdownOpen(false);
+    
+    console.log('✅ Logout completado');
+    console.log('   - Token eliminado de localStorage');
+    console.log('   - Usuario eliminado de Redux');
+    console.log('   - Redirigiendo al login...');
+    
+    // Paso 3: Redirigir al login
+    navigate('/auth/signin');
+  };
   
   /**
    * Función para generar las iniciales del usuario desde su nombre
@@ -239,7 +277,22 @@ const DropdownUser = () => {
             </Link>
           </li>
         </ul>
-        <button className="flex items-center gap-3.5 py-4 px-6 text-sm font-medium duration-300 ease-in-out hover:text-primary lg:text-base">
+        {/* 
+          Botón de Logout - Cerrar sesión del usuario
+          
+          Al hacer click:
+          1. Limpia todos los tokens y datos del usuario del localStorage
+          2. Actualiza Redux eliminando el usuario del estado global
+          3. Redirige automáticamente a la página de login
+          
+          IMPORTANTE: Este componente reutiliza el SecurityService para
+          mantener consistencia en el manejo de autenticación en toda la app
+        */}
+        <button 
+          onClick={handleLogout}
+          className="flex items-center gap-3.5 py-4 px-6 text-sm font-medium duration-300 ease-in-out hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 lg:text-base transition-all"
+          title="Cerrar sesión"
+        >
           <svg
             className="fill-current"
             width="22"
