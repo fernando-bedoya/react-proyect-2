@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Container, Row, Col, Card, Button, Alert, Spinner, Badge } from "react-bootstrap";
-import { Plus, RefreshCw } from "lucide-react";
+import { Plus, RefreshCw, Edit, Trash2, Eye } from "lucide-react";
+import GenericList from "../../components/GenericsMaterial/GenericList";
 import GenericTable from "../../components/GenericTable";
 import ThemeSelector from "../../components/ThemeSelector";
 import { User } from "../../models/User";
@@ -402,17 +403,21 @@ const ListUsers: React.FC = () => {
                                     <p className="mt-4 text-gray-700 text-lg font-medium">Cargando usuarios...</p>
                                 </div>
                             ) : (
-                                <GenericTable
+                                <GenericList
                                     data={users}
-                                    columns={["id", "name", "email"]}
+                                    columns={[
+                                        { key: 'id', label: 'ID' },
+                                        { key: 'name', label: 'Nombre' },
+                                        { key: 'email', label: 'Correo' },
+                                    ]}
+                                    loading={loading}
+                                    selectable
+                                    idKey="id"
                                     actions={[
-                                        { name: "edit", label: "Editar", icon: "edit", variant: "primary" },
-                                        { name: "delete", label: "Eliminar", icon: "delete", variant: "danger" }
+                                        { name: 'edit', icon: <Edit />, tooltip: 'Editar', color: 'warning' },
+                                        { name: 'delete', icon: <Trash2 />, tooltip: 'Eliminar', color: 'error' },
                                     ]}
                                     onAction={handleAction}
-                                    striped
-                                    hover
-                                    responsive
                                     emptyMessage="No hay usuarios registrados en el sistema"
                                 />
                             )}

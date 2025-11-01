@@ -10,6 +10,8 @@ const Tables = lazy(() => import('./pages/Tables'));
 const UsersList = lazy(() => import('./pages/Users/List'));
 const UsersCreate = lazy(() => import('./pages/Users/Create'));
 const UsersUpdate = lazy(() => import('./pages/Users/Update'));
+const UsersRolesList = lazy(() => import('./pages/Users-Roles/List'));
+const UsersRolesUpdate = lazy(() => import('./pages/Users-Roles/Update'));
 
 // Roles
 const RolesList = lazy(() => import('./pages/Roles/List'));
@@ -88,9 +90,19 @@ const coreRoutes = [
     component: UsersUpdate,
   },
   {
+    path: '/user-roles/update/:id',
+    title: 'Update User Roles',
+    component: UsersRolesUpdate,
+  },
+  {
     path: '/users/assign-roles',
     title: 'Assign Roles',
     component: UserRoleManager,
+  },
+  {
+    path: '/user-roles',
+    title: 'Users - Roles',
+    component: UsersRolesList,
   },
   {
     path: '/roles/list',
