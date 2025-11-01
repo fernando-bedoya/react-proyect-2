@@ -771,7 +771,7 @@ const GenericForm: React.FC<GenericFormProps> = ({
 
             <button
               type="submit"
-              disabled={loading || !isFormValid()}
+              disabled={loading || Object.keys(errors).length > 0}
               className="px-6 py-3 bg-gradient-to-r from-amber-500 to-yellow-600 text-white font-black uppercase tracking-wider 
                 rounded-xl border-3 border-amber-700 shadow-lg hover:shadow-2xl hover:scale-105 
                 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
