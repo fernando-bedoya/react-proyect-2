@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Container, Row, Col, Card, Button, Alert, Spinner, Badge, Modal, Form } from "react-bootstrap";
 import { Plus, RefreshCw, Shield } from "lucide-react";
-import GenericTable from "../../components/GenericTable";
+import GenericTable from "../../components/tailwindGenerics/GenericTableTailwind";
 import ThemeSelector from "../../components/ThemeSelector";
 import { Role } from "../../models/Role";
 import { roleService } from "../../services/Role/roleService";

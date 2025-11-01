@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import { Container, Row, Col, Card, Button, Alert, Spinner, Modal } from "react-bootstrap";
 import { ArrowLeft, Plus } from "lucide-react";
 import Breadcrumb from '../../components/Breadcrumb';
 import Swal from 'sweetalert2';
@@ -163,80 +162,92 @@ const CreatePermission: React.FC = () => {
     };
 
     return (
-        <Container fluid className="py-4">
-            <Row className="mb-4">
-                <Col>
-                    <Breadcrumb pageName="Crear Permiso" />
-                    <div className="d-flex align-items-center gap-3 mt-3">
-                        <button
-                            onClick={() => navigate('/permissions/list')}
-                            className="btn btn-outline-secondary btn-sm d-flex align-items-center gap-2"
-                        >
-                            <ArrowLeft size={16} />
-                            Volver
-                        </button>
-                        <div>
-                            <h2 className="h3 fw-bold mb-1" style={{ color: '#10b981' }}>
-                                Crear Nuevo Permiso
-                            </h2>
-                            <p className="text-muted mb-0">Complete los campos para crear un permiso</p>
-                        </div>
+        <div className="py-4 px-4">
+            <div className="mb-4">
+                <Breadcrumb pageName="Crear Permiso" />
+                <div className="flex items-center gap-3 mt-3">
+                    <button
+                        onClick={() => navigate('/permissions/list')}
+                        className="inline-flex items-center gap-2 px-2 py-1 border rounded text-sm text-body bg-white"
+                    >
+                        <ArrowLeft size={16} />
+                        Volver
+                    </button>
+                    <div>
+                        <h2 className="text-title-sm font-bold mb-1" style={{ color: '#10b981' }}>
+                            Crear Nuevo Permiso
+                        </h2>
+                        <p className="text-muted mb-0">Complete los campos para crear un permiso</p>
                     </div>
-                </Col>
-            </Row>
+                </div>
+            </div>
 
             {error && (
-                <Alert variant="danger" dismissible onClose={() => setError(null)} className="shadow-sm mb-4">
-                    {error}
-                </Alert>
+                <div className="mb-4">
+                    <div className="rounded-md bg-red-50 p-3 text-sm text-red-800 shadow-sm">
+                        {error}
+                        <button onClick={() => setError(null)} className="ml-3 text-red-600 underline text-xs">Cerrar</button>
+                    </div>
+                </div>
             )}
 
-            <Row>
-                <Col lg={8} xl={6}>
-                    <Card className="shadow-sm border-0">
-                        <Card.Body className="p-4">
-                            <div className="d-flex justify-content-between align-items-center mb-3">
+            <div className="mb-6">
+                <div className="max-w-xl">
+                    <div className="shadow-card rounded-lg bg-white dark:bg-boxdark">
+                        <div className="p-4">
+                            <div className="flex justify-between items-center mb-3">
                                 <h5 className="mb-0">Formulario rápido</h5>
-                                <Button variant="success" size="sm" onClick={() => setShowModal(true)}>
+                                <button
+                                    onClick={() => setShowModal(true)}
+                                    className="inline-flex items-center gap-2 bg-meta-3 text-white px-3 py-1 rounded text-sm"
+                                >
                                     <Plus size={14} /> Abrir formulario
-                                </Button>
+                                </button>
                             </div>
-                            <p className="small text-muted">Al guardar, el permiso será enviado al backend.</p>
-                        </Card.Body>
-                    </Card>
-                </Col>
-            </Row>
+                            <p className="text-sm text-body text-muted">Al guardar, el permiso será enviado al backend.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-            <Modal show={showModal} onHide={handleClose} centered>
-                <Modal.Header closeButton className="bg-light">
-                    <Modal.Title>Nuevo Permiso</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                        {loadingEdit ? (
-                            <div className="text-center py-4">
-                                <Spinner animation="border" />
+            {showModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center">
+                    <div className="absolute inset-0 bg-black/50" onClick={handleClose} />
+                    <div role="dialog" aria-modal="true" className="relative z-10 w-full max-w-2xl mx-4">
+                        <div className="bg-white dark:bg-boxdark rounded-lg shadow-lg overflow-hidden">
+                            <div className="flex items-center justify-between p-4 border-b border-stroke">
+                                <h3 className="text-lg font-semibold">Nuevo Permiso</h3>
+                                <button onClick={handleClose} className="text-body text-sm px-2 py-1">Cancelar</button>
                             </div>
-                        ) : (
-                            <GenericEntityForm
-                                key={editMode ? `edit-${editingPermission?.id}` : 'create'}
-                                mode={(editMode ? 2 : 1) as 1 | 2}
-                                fields={fields}
-                                initialValues={editMode && editingPermission ? {
-                                    id: String(editingPermission.id),
-                                    url: editingPermission.url || '',
-                                    method: editingPermission.method || '',
-                                    entity: editingPermission.entity || ''
-                                } : undefined}
-                                onCreate={handleCreate}
-                                onUpdate={handleUpdate}
-                            />
-                        )}
-                </Modal.Body>
-                <Modal.Footer className="bg-light">
-                    <Button variant="outline-secondary" onClick={handleClose}>Cancelar</Button>
-                </Modal.Footer>
-            </Modal>
-        </Container>
+                            <div className="p-4">
+                                {loadingEdit ? (
+                                    <div className="flex justify-center py-6">
+                                        <span className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full" />
+                                    </div>
+                                ) : (
+                                    <GenericEntityForm
+                                        key={editMode ? `edit-${editingPermission?.id}` : 'create'}
+                                        mode={(editMode ? 2 : 1) as 1 | 2}
+                                        fields={fields}
+                                        initialValues={editMode && editingPermission ? {
+                                            id: String(editingPermission.id),
+                                            url: editingPermission.url || '',
+                                            method: editingPermission.method || '',
+                                            entity: editingPermission.entity || ''
+                                        } : undefined}
+                                        onCreate={handleCreate}
+                                        onUpdate={handleUpdate}
+                                    />
+                                )}
+                            </div>
+                            <div className="p-4 border-t border-stroke flex justify-end">
+                                <button className="px-4 py-2 rounded-md border text-sm" onClick={handleClose}>Cerrar</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
     );
 };
 

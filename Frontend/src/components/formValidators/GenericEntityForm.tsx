@@ -70,37 +70,67 @@ const GenericEntityForm: React.FC<GenericEntityFormProps> = ({ mode, fields, ini
       {({ isSubmitting }) => (
         <Form>
           {fields.map((f) => (
-            <div key={f.name} className="mb-3">
-              <label className="form-label" htmlFor={f.name}>{f.label}</label>
+            <div key={f.name} className="mb-4">
+              <label className="block text-sm font-medium text-body dark:text-bodydark1 mb-2" htmlFor={f.name}>
+                {f.label}
+              </label>
+
               {f.readOnly ? (
-                // show read-only field as disabled input
-                <Field id={f.name} name={f.name} className="form-control" placeholder={f.placeholder} disabled />
+                // read-only field as disabled input
+                <Field
+                  id={f.name}
+                  name={f.name}
+                  className="block w-full rounded-md border border-stroke bg-white py-2 px-3 text-sm text-body disabled:opacity-60"
+                  placeholder={f.placeholder}
+                  disabled
+                />
               ) : f.type === 'textarea' ? (
-                <Field as="textarea" id={f.name} name={f.name} className="form-control" placeholder={f.placeholder} />
+                <Field
+                  as="textarea"
+                  id={f.name}
+                  name={f.name}
+                  className="block w-full rounded-md border border-stroke bg-white py-2 px-3 text-sm text-body"
+                  placeholder={f.placeholder}
+                />
               ) : f.type === 'select' ? (
-                <Field as="select" id={f.name} name={f.name} className="form-select">
+                <Field
+                  as="select"
+                  id={f.name}
+                  name={f.name}
+                  className="block w-full rounded-md border border-stroke bg-white py-2 px-3 text-sm text-body"
+                >
                   <option value="">-- Seleccione --</option>
                   {(f.options || []).map((o) => (
                     <option key={String(o.value)} value={o.value}>{o.label}</option>
                   ))}
                 </Field>
               ) : f.type === 'checkbox' ? (
-                <div className="form-check">
-                  <Field className="form-check-input" type="checkbox" id={f.name} name={f.name} />
-                  <label className="form-check-label" htmlFor={f.name}>{f.placeholder || f.label}</label>
+                <div className="flex items-center gap-2">
+                  <Field className="h-4 w-4 text-primary border border-stroke rounded" type="checkbox" id={f.name} name={f.name} />
+                  <label className="text-sm text-body" htmlFor={f.name}>{f.placeholder || f.label}</label>
                 </div>
               ) : (
-                <Field id={f.name} name={f.name} className="form-control" placeholder={f.placeholder} />
+                <Field
+                  id={f.name}
+                  name={f.name}
+                  className="block w-full rounded-md border border-stroke bg-white py-2 px-3 text-sm text-body"
+                  placeholder={f.placeholder}
+                />
               )}
-              <ErrorMessage name={f.name} component="div" className="text-danger small" />
+
+              <ErrorMessage name={f.name} component="div" className="text-sm text-red-600 mt-1" />
             </div>
           ))}
 
-          <div className="d-flex justify-content-end gap-2">
-            <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
+          <div className="flex justify-end gap-2">
+            <button
+              type="submit"
+              className="inline-flex items-center px-4 py-2 bg-primary text-white rounded-md hover:opacity-95 disabled:opacity-60"
+              disabled={isSubmitting}
+            >
               {isSubmitting ? (
                 <>
-                  <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true" />
+                  <span className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2" aria-hidden="true" />
                   {mode === 1 ? 'Creando...' : 'Actualizando...'}
                 </>
               ) : (
