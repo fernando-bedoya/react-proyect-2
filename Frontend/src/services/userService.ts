@@ -58,3 +58,6 @@ class UserService {
 
 // Exportamos una instancia de la clase para reutilizarla
 export const userService = new UserService();
+
+// También exportamos como default para mayor compatibilidad
+export default userService;

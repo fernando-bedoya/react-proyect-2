@@ -16,6 +16,9 @@ const RolesList = lazy(() => import('./pages/Roles/List'));
 const RolesCreate = lazy(() => import('./pages/Roles/Create'));
 const RolesUpdate = lazy(() => import('./pages/Roles/Update'));
 
+// User role manager (assign roles to users)
+const UserRoleManager = lazy(() => import('./components/UserRoleManager'));
+
 const PermissionsList = lazy(() => import('./pages/Permissions/List'));
 const PermissionsCreate = lazy(() => import('./pages/Permissions/Create'));
 // Firebase Demo
@@ -75,6 +78,11 @@ const coreRoutes = [
     path: '/users/update/:id',
     title: 'Update User',
     component: UsersUpdate,
+  },
+  {
+    path: '/users/assign-roles',
+    title: 'Assign Roles',
+    component: UserRoleManager,
   },
   {
     path: '/roles/list',
