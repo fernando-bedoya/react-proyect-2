@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Container, Row, Col, Card, Button, Alert, Spinner, Badge, Modal, Form } from "react-bootstrap";
-import { Plus, RefreshCw, Shield } from "lucide-react";
+import { Plus, RefreshCw, Shield, Edit, Trash2 } from "lucide-react";
+import GenericList from "../../components/GenericsMaterial/GenericList";
 import GenericTableTailwind from "../../components/tailwindGenerics/GenericTableTailwind";
 import GenericTableBootstrap from "../../components/GenericTable";
 import useLocalStorage from "../../hooks/useLocalStorage";
@@ -240,9 +241,24 @@ const Roles: React.FC = () => {
                 <>
                   {tableStyle === 'material' && (
                     <div className="p-3">
-                      <div className="rounded-md bg-warning bg-opacity-10 p-3 text-sm text-warning">
-                        <strong>Nota:</strong> La implementación de la tabla Material UI no está disponible. Se usará la variante Bootstrap como fallback.
-                      </div>
+                      <GenericList
+                        data={roles}
+                        columns={[
+                          { key: 'id', label: 'ID' },
+                          { key: 'name', label: 'Nombre' },
+                          { key: 'description', label: 'Descripción' },
+                        ]}
+                        loading={loading}
+                        selectable
+                        idKey="id"
+                        actions={[
+                          { name: 'assignPermissions', icon: <Shield />, tooltip: 'Asignar Permisos', color: 'info' },
+                          { name: 'edit', icon: <Edit />, tooltip: 'Editar', color: 'warning' },
+                          { name: 'delete', icon: <Trash2 />, tooltip: 'Eliminar', color: 'error' },
+                        ]}
+                        onAction={handleAction}
+                        emptyMessage="No hay roles registrados en el sistema"
+                      />
                     </div>
                   )}
 

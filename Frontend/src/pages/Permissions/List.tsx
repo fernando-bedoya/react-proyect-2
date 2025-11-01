@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { Plus, RefreshCw } from "lucide-react";
+import { Plus, RefreshCw, Eye, Edit, Trash2 } from "lucide-react";
+import GenericList from "../../components/GenericsMaterial/GenericList";
 import GenericTableTailwind from "../../components/tailwindGenerics/GenericTableTailwind";
 import GenericTableBootstrap from "../../components/GenericTable";
 import useLocalStorage from "../../hooks/useLocalStorage";
@@ -170,9 +171,25 @@ const ListPermissions: React.FC = () => {
                             <>
                                 {tableStyle === 'material' && (
                                     <div className="p-3">
-                                        <div className="rounded-md bg-yellow-50 p-3 text-sm text-yellow-800 shadow-sm">
-                                            <strong>Nota:</strong> La implementación de la tabla Material UI no está disponible. Se usará la variante Bootstrap como fallback.
-                                        </div>
+                                        <GenericList
+                                            data={permissions as any}
+                                            columns={[
+                                                { key: 'id', label: 'ID' },
+                                                { key: 'url', label: 'URL' },
+                                                { key: 'method', label: 'Método' },
+                                                { key: 'entity', label: 'Entidad' },
+                                            ]}
+                                            loading={loading}
+                                            selectable={false}
+                                            idKey="id"
+                                            actions={[
+                                                { name: 'view', icon: <Eye />, tooltip: 'Ver', color: 'info' },
+                                                { name: 'edit', icon: <Edit />, tooltip: 'Editar', color: 'warning' },
+                                                { name: 'delete', icon: <Trash2 />, tooltip: 'Eliminar', color: 'error' },
+                                            ]}
+                                            onAction={handleAction}
+                                            emptyMessage="No hay permisos registrados en el sistema"
+                                        />
                                     </div>
                                 )}
 

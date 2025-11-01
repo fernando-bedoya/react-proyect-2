@@ -5,6 +5,8 @@ import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import Breadcrumb from '../../components/Breadcrumb';
 import GenericEntityForm, { FieldDef } from '../../components/formValidators/GenericEntityForm';
+import GenericFormMaterial from '../../components/GenericsMaterial/GenericFormMaterial';
+import { useTheme } from '../../context/ThemeContext';
 import { Role } from '../../models/Role';
 import { roleService } from '../../services/Role/roleService';
 
@@ -90,18 +92,50 @@ const CreateRole: React.FC = () => {
               <h5 className="mb-0 fw-semibold">Información del Rol</h5>
             </Card.Header>
             <Card.Body className="p-4">
-              <GenericEntityForm
-                mode={1}
-                fields={[
-                  { name: 'name', label: 'Nombre', type: 'text', required: true, placeholder: 'Nombre del rol' },
-                  { name: 'description', label: 'Descripción', type: 'textarea', required: false, placeholder: 'Descripción corta (opcional)' },
-                ] as FieldDef[]}
-                onCreate={async (values: any) => {
-                  // adapt values to Role payload
-                  const payload = { name: (values.name || '').trim(), description: values.description };
-                  return await handleCreateRole(payload as any);
-                }}
-              />
+              {/* Render Material UI form when selected, otherwise keep existing Bootstrap form */}
+              {/** Get current design library from context **/}
+              {(() => {
+                try {
+                  const { designLibrary } = useTheme();
+                  if (designLibrary === 'material') {
+                    return (
+                      <GenericFormMaterial
+                        mode={"create"}
+                        initialValues={{ name: '', description: '' }}
+                        fields={[
+                          { name: 'name', label: 'Nombre', type: 'text', required: true, placeholder: 'Nombre del rol' },
+                          { name: 'description', label: 'Descripción', type: 'textarea', required: false, placeholder: 'Descripción corta (opcional)' },
+                        ]}
+                        loading={loading}
+                        onCancel={() => handleBack()}
+                        onSubmit={async (values: any) => {
+                          const payload = { name: (values.name || '').trim(), description: values.description };
+                          await handleCreateRole(payload as any);
+                        }}
+                        submitLabel="Crear Rol"
+                      />
+                    );
+                  }
+                } catch (e) {
+                  // in case ThemeContext isn't available, fall back to bootstrap form
+                  console.debug('ThemeContext not available, using bootstrap form for Roles Create');
+                }
+
+                return (
+                  <GenericEntityForm
+                    mode={1}
+                    fields={[
+                      { name: 'name', label: 'Nombre', type: 'text', required: true, placeholder: 'Nombre del rol' },
+                      { name: 'description', label: 'Descripción', type: 'textarea', required: false, placeholder: 'Descripción corta (opcional)' },
+                    ] as FieldDef[]}
+                    onCreate={async (values: any) => {
+                      // adapt values to Role payload
+                      const payload = { name: (values.name || '').trim(), description: values.description };
+                      return await handleCreateRole(payload as any);
+                    }}
+                  />
+                );
+              })()}
             </Card.Body>
           </Card>
 

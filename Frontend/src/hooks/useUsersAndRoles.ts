@@ -1,8 +1,9 @@
 import { useEffect, useState, useCallback } from 'react';
 import { userService } from '../services/userService';
-import { Role, getRoles as fetchRoles } from '../services/roleService';
+import { Role } from '../models/Role';
+import roleService from '../services/roleService';
 import { User } from '../models/User';
-import { getUserRoles as fetchUserRoles, assignRolesBulk } from '../services/userRoleService';
+import userRoleService from '../services/userRoleService';
 
 type UseUsersAndRolesResult = {
   users: User[];
@@ -24,7 +25,7 @@ export function useUsersAndRoles(): UseUsersAndRolesResult {
     setLoading(true);
     setError(null);
     try {
-      const [u, r] = await Promise.all([userService.getUsers(), fetchRoles()]);
+      const [u, r] = await Promise.all([userService.getUsers(), roleService.getRoles()]);
       setUsers(u || []);
       setRoles(r || []);
     } catch (err: any) {
@@ -40,15 +41,16 @@ export function useUsersAndRoles(): UseUsersAndRolesResult {
 
   async function getUserRoles(userId: number | string) {
     try {
-      return await fetchUserRoles(userId);
+      return await userRoleService.getByUserId(Number(userId));
     } catch (err) {
       throw err;
     }
   }
 
-  async function assignRoles(userId: number | string, roleIds: Array<number | string>, opts?: { startAt?: string; endAt?: string }) {
+  async function assignRoles(userId: number | string, roleIds: Array<number | string>) {
     try {
-      const res = await assignRolesBulk({ user_id: userId, role_ids: roleIds, startAt: opts?.startAt, endAt: opts?.endAt });
+      // userRoleService.assignRoles expects (userId, roleIds)
+      const res = await userRoleService.assignRoles(Number(userId), (roleIds as Array<any>).map((r) => Number(r)));
       // revalidate lists (roles per user might have changed)
       await load();
       return res;
