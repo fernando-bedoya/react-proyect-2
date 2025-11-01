@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { Container, Row, Col, Card, Button, Alert, Spinner, Badge, Modal, Form } from "react-bootstrap";
 import { Plus, RefreshCw, Shield } from "lucide-react";
-import GenericTable from "../../components/tailwindGenerics/GenericTableTailwind";
-import ThemeSelector from "../../components/ThemeSelector";
+import GenericTableTailwind from "../../components/tailwindGenerics/GenericTableTailwind";
+import GenericTableBootstrap from "../../components/GenericTable";
+import useLocalStorage from "../../hooks/useLocalStorage";
 import { Role } from "../../models/Role";
 import { roleService } from "../../services/Role/roleService";
 import Swal from "sweetalert2";
@@ -15,6 +16,7 @@ const Roles: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [showModal, setShowModal] = useState<boolean>(false);
   const [selectedRole, setSelectedRole] = useState<Role | null>(null);
+  const [tableStyle, setTableStyle] = useLocalStorage<'tailwind' | 'bootstrap' | 'material'>('tableStyle', 'tailwind');
   const [permissions, setPermissions] = useState<any[]>([]);
   const [selectedPermissions, setSelectedPermissions] = useState<Array<number | string>>([]);
   const [loadingPermissions, setLoadingPermissions] = useState<boolean>(false);
@@ -153,7 +155,29 @@ const Roles: React.FC = () => {
               </p>
             </div>
             <div className="d-flex gap-2 align-items-center">
-              <ThemeSelector />
+              <div className="d-flex align-items-center gap-1 me-2">
+                <button
+                  onClick={() => setTableStyle('tailwind')}
+                  className={`btn btn-sm ${tableStyle === 'tailwind' ? 'btn-success text-white' : 'btn-light text-dark'}`}
+                  title="Tailwind"
+                >
+                  Tailwind
+                </button>
+                <button
+                  onClick={() => setTableStyle('material')}
+                  className={`btn btn-sm ${tableStyle === 'material' ? 'btn-info text-white' : 'btn-light text-dark'}`}
+                  title="Material UI"
+                >
+                  Material
+                </button>
+                <button
+                  onClick={() => setTableStyle('bootstrap')}
+                  className={`btn btn-sm ${tableStyle === 'bootstrap' ? 'btn-primary text-white' : 'btn-light text-dark'}`}
+                  title="Bootstrap"
+                >
+                  Bootstrap
+                </button>
+              </div>
               <Button 
                 variant="outline-secondary"
                 size="sm"
@@ -213,35 +237,49 @@ const Roles: React.FC = () => {
                   <p className="mt-3 text-muted">Cargando roles...</p>
                 </div>
               ) : (
-                <GenericTable
-                  data={roles}
-                  columns={["id", "name", "description"]}
-                  actions={[
-                    { 
-                      name: "assignPermissions", 
-                      label: "Asignar Permisos",
-                      icon: "edit",
-                      variant: "primary"
-                    },
-                    { 
-                      name: "edit", 
-                      label: "Editar",
-                      icon: "edit",
-                      variant: "warning"
-                    },
-                    { 
-                      name: "delete", 
-                      label: "Eliminar",
-                      icon: "delete",
-                      variant: "danger"
-                    },
-                  ]}
-                  onAction={handleAction}
-                  striped
-                  hover
-                  responsive
-                  emptyMessage="No hay roles registrados en el sistema"
-                />
+                <>
+                  {tableStyle === 'material' && (
+                    <div className="p-3">
+                      <div className="rounded-md bg-warning bg-opacity-10 p-3 text-sm text-warning">
+                        <strong>Nota:</strong> La implementación de la tabla Material UI no está disponible. Se usará la variante Bootstrap como fallback.
+                      </div>
+                    </div>
+                  )}
+
+                  {tableStyle === 'tailwind' && (
+                    <GenericTableTailwind
+                      data={roles}
+                      columns={["id", "name", "description"]}
+                      actions={[
+                        { name: "assignPermissions", label: "Asignar Permisos", variant: "primary" },
+                        { name: "edit", label: "Editar", variant: "warning" },
+                        { name: "delete", label: "Eliminar", variant: "danger" },
+                      ]}
+                      onAction={handleAction}
+                      striped
+                      hover
+                      responsive
+                      emptyMessage="No hay roles registrados en el sistema"
+                    />
+                  )}
+
+                  {tableStyle === 'bootstrap' && (
+                    <GenericTableBootstrap
+                      data={roles}
+                      columns={["id", "name", "description"]}
+                      actions={[
+                        { name: "assignPermissions", label: "Asignar Permisos", icon: 'edit', variant: "outline-primary" },
+                        { name: "edit", label: "Editar", icon: 'edit', variant: "outline-warning" },
+                        { name: "delete", label: "Eliminar", icon: 'delete', variant: "outline-danger" },
+                      ]}
+                      onAction={handleAction}
+                      striped
+                      hover
+                      responsive
+                      emptyMessage="No hay roles registrados en el sistema"
+                    />
+                  )}
+                </>
               )}
             </Card.Body>
           </Card>

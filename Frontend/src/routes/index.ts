@@ -14,12 +14,9 @@ const ListUsers = lazy(() => import('../pages/Users/List'));
 const CreateUser = lazy(() => import('../pages/Users/Create'));
 const UpdateUser = lazy(() => import('../pages/Users/Update'));
 const Roles = lazy(() => import('../pages/Roles/List'));
-<<<<<<< HEAD
 const RolesCreate = lazy(() => import('../pages/Roles/Create'));
 const RolesUpdate = lazy(() => import('../pages/Roles/Update'));
-=======
 const Permissions = lazy(() => import('../pages/Permissions/List'));
->>>>>>> e4750c98b6e0938455352bee1d0f8cb082a080b4
 
 const coreRoutes = [
   {
