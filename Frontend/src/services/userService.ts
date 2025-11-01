@@ -31,7 +31,7 @@ class UserService {
             return response.data;
         } catch (error) {
             console.error("Error al crear usuario:", error);
-            return null;
+            throw error; // Lanzar el error para que sea capturado en SignUp
         }
     }
 

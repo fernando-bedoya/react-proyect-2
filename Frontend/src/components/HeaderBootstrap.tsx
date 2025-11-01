@@ -6,7 +6,6 @@ import Logo from '../images/logo/logo-icon.svg';
 import DropdownMessage from './DropdownMessage';
 import DropdownNotification from './DropdownNotification';
 import DropdownUser from './DropdownUser';
-import DesignLibrarySwitcher from './DesignLibrarySwitcher';
 
 interface HeaderProps {
   sidebarOpen: boolean;
@@ -69,9 +68,6 @@ const HeaderBootstrap = ({ sidebarOpen, setSidebarOpen }: HeaderProps) => {
 
         {/* Right Side Actions */}
         <Nav className="ms-auto d-flex align-items-center gap-2 gap-sm-3">
-          {/* Design Library Switcher */}
-          <DesignLibrarySwitcher />
-          
           {/* Dark Mode Toggle */}
           <Nav.Link 
             onClick={toggleDarkMode}

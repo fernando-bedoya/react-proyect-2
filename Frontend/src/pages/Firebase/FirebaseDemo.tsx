@@ -245,11 +245,46 @@ const FirebaseDemo: React.FC = () => {
   };
 
   return (
-    <Container fluid className="p-4">
+    <Container fluid className="py-4">
       <div className="d-flex justify-content-between align-items-center mb-4">
-        <h1 className="text-emerald-600">🔥 Firebase Demo</h1>
+        <div>
+          <h2 className="h2 fw-bold mb-2" style={{ 
+            color: '#065f46',
+            fontFamily: '"Segoe UI", sans-serif',
+            letterSpacing: '-0.5px'
+          }}>
+            🔥 Firebase Demo
+          </h2>
+          <p className="mb-0" style={{ color: '#047857', fontSize: '1rem' }}>
+            Autenticación y Base de Datos en Tiempo Real
+            <Badge 
+              bg="success" 
+              className="ms-2"
+              style={{
+                background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                padding: '6px 12px',
+                fontSize: '0.85rem',
+                fontWeight: '700',
+                borderRadius: '20px',
+                boxShadow: '0 2px 8px rgba(16, 185, 129, 0.3)'
+              }}
+            >
+              {user ? '✓ Conectado' : '○ Desconectado'}
+            </Badge>
+          </p>
+        </div>
         <Link to="/firebase/checker">
-          <Button variant="outline-info">
+          <Button 
+            variant="outline-success"
+            style={{
+              borderWidth: '2px',
+              borderColor: '#10b981',
+              color: '#059669',
+              fontWeight: '700',
+              padding: '10px 20px',
+              borderRadius: '10px'
+            }}
+          >
             🔧 Verificar Configuración
           </Button>
         </Link>
@@ -258,9 +293,15 @@ const FirebaseDemo: React.FC = () => {
       <Row>
         {/* Authentication Section */}
         <Col lg={6} className="mb-4">
-          <Card className="shadow-sm">
-            <Card.Header className="bg-emerald-600 text-white">
-              <h4 className="mb-0">🔐 Authentication</h4>
+          <Card className="shadow-sm" style={{ borderRadius: '16px', overflow: 'hidden' }}>
+            <Card.Header 
+              className="text-white"
+              style={{
+                background: 'linear-gradient(135deg, #047857 0%, #10b981 100%)',
+                padding: '16px 20px'
+              }}
+            >
+              <h4 className="mb-0 fw-bold">🔐 Authentication</h4>
             </Card.Header>
             <Card.Body>
               {authMessage && (
@@ -376,9 +417,15 @@ const FirebaseDemo: React.FC = () => {
 
         {/* Firestore Section */}
         <Col lg={6} className="mb-4">
-          <Card className="shadow-sm">
-            <Card.Header className="bg-emerald-600 text-white">
-              <h4 className="mb-0">📄 Firestore Database</h4>
+          <Card className="shadow-sm" style={{ borderRadius: '16px', overflow: 'hidden' }}>
+            <Card.Header 
+              className="text-white"
+              style={{
+                background: 'linear-gradient(135deg, #047857 0%, #10b981 100%)',
+                padding: '16px 20px'
+              }}
+            >
+              <h4 className="mb-0 fw-bold">📄 Firestore Database</h4>
             </Card.Header>
             <Card.Body>
               {firestoreMessage && (

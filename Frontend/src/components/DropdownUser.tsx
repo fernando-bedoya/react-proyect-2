@@ -4,15 +4,55 @@ import { Link } from 'react-router-dom';
 import { useSelector } from "react-redux";
 import { RootState } from "../store/store";
 
-
-import UserOne from '../images/user/user-01.png';
-
 const DropdownUser = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   
-  //Esto lee la base de datos global del store
+  // Esto lee la base de datos global del store Redux para obtener el usuario logueado
   const user = useSelector((state: RootState) => state.user.user);
-  //------------------------------------------------------
+  
+  /**
+   * Función para generar las iniciales del usuario desde su nombre
+   * Toma las primeras letras de las dos primeras palabras del nombre
+   * Ejemplo: "Juan Pérez" → "JP", "María" → "M"
+   */
+  const getInitials = (name?: string): string => {
+    if (!name) return 'U'; // U de User por defecto
+    const words = name.trim().split(' ');
+    if (words.length >= 2) {
+      return (words[0][0] + words[1][0]).toUpperCase();
+    }
+    return words[0][0].toUpperCase();
+  };
+
+  /**
+   * Función para generar un color de fondo único basado en el nombre del usuario
+   * Usa un algoritmo de hash simple para convertir el nombre en un color consistente
+   * El mismo nombre siempre generará el mismo color
+   */
+  const getAvatarColor = (name?: string): string => {
+    if (!name) return '#10b981'; // Verde por defecto
+    
+    // Paleta de colores profesionales y accesibles
+    const colors = [
+      '#10b981', // Verde esmeralda
+      '#3b82f6', // Azul
+      '#8b5cf6', // Púrpura
+      '#ec4899', // Rosa
+      '#f59e0b', // Ámbar
+      '#ef4444', // Rojo
+      '#06b6d4', // Cyan
+      '#6366f1', // Índigo
+    ];
+    
+    // Algoritmo de hash simple: suma los códigos ASCII de cada carácter
+    let hash = 0;
+    for (let i = 0; i < name.length; i++) {
+      hash += name.charCodeAt(i);
+    }
+    
+    // Usa el módulo del hash para seleccionar un color de la paleta
+    return colors[hash % colors.length];
+  };
 
   const trigger = useRef<any>(null);
   const dropdown = useRef<any>(null);
@@ -51,15 +91,27 @@ const DropdownUser = () => {
         className="flex items-center gap-4"
         to="#"
       >
+        {/* Información del usuario: nombre y email */}
         <span className="hidden text-right lg:block">
           <span className="block text-sm font-medium text-black dark:text-white">
             {user ? user.name : 'Guest'}
           </span>
-          <span className="block text-xs">UX Designer</span>
+          <span className="block text-xs text-gray-500 dark:text-gray-400">
+            {user ? user.email : 'guest@example.com'}
+          </span>
         </span>
 
-        <span className="h-12 w-12 rounded-full">
-          <img src={UserOne} alt="User" />
+        {/* Avatar del usuario con iniciales y color personalizado */}
+        <span 
+          className="h-12 w-12 rounded-full flex items-center justify-center text-white font-bold text-lg"
+          style={{ 
+            backgroundColor: getAvatarColor(user?.name),
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+            transition: 'all 0.3s ease'
+          }}
+          title={user?.name || 'Usuario'}
+        >
+          {getInitials(user?.name)}
         </span>
 
         <svg
@@ -90,6 +142,30 @@ const DropdownUser = () => {
           dropdownOpen === true ? 'block' : 'hidden'
         }`}
       >
+        {/* Sección de información del usuario - Muestra avatar grande, nombre y email */}
+        <div className="flex items-center gap-4 px-6 py-5 border-b border-stroke dark:border-strokedark bg-gray-50 dark:bg-meta-4">
+          {/* Avatar grande con iniciales y color personalizado */}
+          <div 
+            className="h-16 w-16 rounded-full flex items-center justify-center text-white font-bold text-2xl flex-shrink-0"
+            style={{ 
+              backgroundColor: getAvatarColor(user?.name),
+              boxShadow: '0 6px 16px rgba(0, 0, 0, 0.2)'
+            }}
+          >
+            {getInitials(user?.name)}
+          </div>
+          
+          {/* Información del usuario: nombre completo y email */}
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-black dark:text-white truncate" title={user?.name || 'Guest'}>
+              {user?.name || 'Guest'}
+            </p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 truncate" title={user?.email || 'guest@example.com'}>
+              {user?.email || 'guest@example.com'}
+            </p>
+          </div>
+        </div>
+
         <ul className="flex flex-col gap-5 border-b border-stroke px-6 py-7.5 dark:border-strokedark">
           <li>
             <Link
