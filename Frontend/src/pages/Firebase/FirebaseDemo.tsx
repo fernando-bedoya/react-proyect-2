@@ -10,7 +10,8 @@ import {
   GoogleAuthProvider,
   GithubAuthProvider,
   OAuthProvider,
-  signInWithPopup
+  signInWithPopup,
+  fetchSignInMethodsForEmail
 } from 'firebase/auth';
 import { 
   collection, 
@@ -141,15 +142,13 @@ const FirebaseDemo: React.FC = () => {
     } catch (error: any) {
       console.error('Error en GitHub login:', error);
       let errorMsg = error.message;
-      if (error.code === 'auth/operation-not-allowed') {
-        errorMsg = '❌ GitHub Sign-In no está habilitado. Ve a Firebase Console → Authentication → Sign-in method → GitHub → Enable';
-      } else if (error.code === 'auth/popup-blocked') {
-        errorMsg = '❌ El popup fue bloqueado. Permite popups para este sitio';
-      } else if (error.code === 'auth/popup-closed-by-user') {
-        errorMsg = '⚠️ Login cancelado';
-      } else if (error.code === 'auth/account-exists-with-different-credential') {
-        errorMsg = '❌ Ya existe una cuenta con este email usando otro método de login';
+
+      if (error.code === 'auth/account-exists-with-different-credential') {
+        errorMsg = 'Ya existe una cuenta con este email usando otro método. Por favor, inicia sesión con ese método y vincula tu cuenta.';
+        const existingProvider = await fetchSignInMethodsForEmail(auth, error.customData.email);
+        console.log('Método existente:', existingProvider);
       }
+
       setAuthMessage({ type: 'danger', text: errorMsg });
     }
   };

@@ -7,13 +7,14 @@ import { Container, Row, Col, Card, Form, Button, Alert, Spinner } from 'react-b
 import { Link, useNavigate } from 'react-router-dom';
 import { Formik, Field, ErrorMessage, Form as FormikForm } from 'formik';
 import * as Yup from 'yup';
-import { UserPlus, Mail, User as UserIcon, Lock, Eye, EyeOff } from 'lucide-react';
+import { UserPlus, Mail, User as UserIcon } from 'lucide-react';
 import { 
   createUserWithEmailAndPassword,
   GoogleAuthProvider,
   GithubAuthProvider,
   OAuthProvider,
-  signInWithPopup
+  signInWithPopup,
+  fetchSignInMethodsForEmail
 } from 'firebase/auth';
 import { auth } from '../../firebase';
 import { User } from '../../models/User';
@@ -27,8 +28,6 @@ const SignUp: React.FC = () => {
   const dispatch = useDispatch(); // Hook de Redux para despachar acciones
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // Función para guardar usuario en el backend
   const saveUserToBackend = async (userData: { name: string; email: string }) => {
@@ -173,56 +172,56 @@ const SignUp: React.FC = () => {
   const handleGithubLogin = async () => {
     setLoading(true);
     setError(null);
-    
+
     try {
-      const provider = new GithubAuthProvider();
-      const result = await signInWithPopup(auth, provider);
-      const user = result.user;
-      
-      // Guardar en backend (o recuperar si ya existe)
-      const backendResult = await saveUserToBackend({
-        name: user.displayName || user.email?.split('@')[0] || 'Usuario de GitHub',
-        email: user.email!
-      });
-      
-      // IMPORTANTE: Guardar el usuario en Redux para que se muestre en el header
-      dispatch(setUser(backendResult.user));
-      
-      if (backendResult.isNew) {
-        // Usuario nuevo creado
-        Swal.fire({
-          title: '¡Registro Exitoso!',
-          text: 'Cuenta creada con GitHub',
-          icon: 'success',
-          timer: 2000,
-          showConfirmButton: false
+        const provider = new GithubAuthProvider();
+        const result = await signInWithPopup(auth, provider);
+        const user = result.user;
+
+        // Guardar en backend (o recuperar si ya existe)
+        const backendResult = await saveUserToBackend({
+            name: user.displayName || user.email?.split('@')[0] || 'Usuario de GitHub',
+            email: user.email!
         });
-      } else {
-        // Usuario ya existía
-        Swal.fire({
-          title: '¡Bienvenido de nuevo!',
-          text: 'Sesión iniciada correctamente',
-          icon: 'success',
-          timer: 2000,
-          showConfirmButton: false
-        });
-      }
-      
-      setTimeout(() => navigate('/'), 2000);
+
+        // IMPORTANTE: Guardar el usuario en Redux para que se muestre en el header
+        dispatch(setUser(backendResult.user));
+
+        if (backendResult.isNew) {
+            // Usuario nuevo creado
+            Swal.fire({
+                title: '¡Registro Exitoso!',
+                text: 'Cuenta creada con GitHub',
+                icon: 'success',
+                timer: 2000,
+                showConfirmButton: false
+            });
+        } else {
+            // Usuario ya existía
+            Swal.fire({
+                title: '¡Bienvenido de nuevo!',
+                text: 'Sesión iniciada correctamente',
+                icon: 'success',
+                timer: 2000,
+                showConfirmButton: false
+            });
+        }
+
+        setTimeout(() => navigate('/'), 2000);
     } catch (error: any) {
-      console.error('Error en GitHub login:', error);
-      let errorMsg = 'Error al iniciar sesión con GitHub';
-      
-      if (error.code === 'auth/popup-blocked') {
-        errorMsg = 'El popup fue bloqueado. Permite popups para este sitio';
-      } else if (error.code === 'auth/account-exists-with-different-credential') {
-        errorMsg = 'Ya existe una cuenta con este email usando otro método';
-      }
-      
-      setError(errorMsg);
-      Swal.fire('Error', errorMsg, 'error');
+        console.error('Error en GitHub login:', error);
+        let errorMsg = 'Error al iniciar sesión con GitHub';
+
+        if (error.code === 'auth/account-exists-with-different-credential') {
+            errorMsg = 'Ya existe una cuenta con este email usando otro método. Por favor, inicia sesión con ese método y vincula tu cuenta.';
+            const existingProvider = await fetchSignInMethodsForEmail(auth, error.customData.email);
+            console.log('Método existente:', existingProvider);
+        }
+
+        setError(errorMsg);
+        Swal.fire('Error', errorMsg, 'error');
     } finally {
-      setLoading(false);
+        setLoading(false);
     }
   };
 
@@ -405,114 +404,75 @@ const SignUp: React.FC = () => {
                         name="email"
                         type="email"
                         className={`form-control ${errors.email && touched.email ? 'is-invalid' : ''}`}
-                        placeholder="tucorreo@ejemplo.com"
+                        placeholder="Ingresa tu correo electrónico"
                         disabled={loading}
                       />
                       <ErrorMessage name="email" component="div" className="invalid-feedback" />
                     </Form.Group>
 
                     {/* Contraseña */}
-                    <Form.Group className="mb-3">
+                    <Form.Group className="mb-4">
                       <Form.Label className="fw-semibold">
-                        <Lock size={16} className="me-2" />
                         Contraseña
                       </Form.Label>
-                      <div className="position-relative">
-                        <Field
-                          name="password"
-                          type={showPassword ? 'text' : 'password'}
-                          className={`form-control ${errors.password && touched.password ? 'is-invalid' : ''}`}
-                          placeholder="Ingresa tu contraseña"
-                          disabled={loading}
-                        />
-                        <button
-                          type="button"
-                          className="btn btn-link position-absolute end-0 top-50 translate-middle-y"
-                          onClick={() => setShowPassword(!showPassword)}
-                          style={{ textDecoration: 'none', color: '#6c757d' }}
-                        >
-                          {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                        </button>
-                        <ErrorMessage name="password" component="div" className="invalid-feedback" />
-                      </div>
+                      <Field
+                        name="password"
+                        type="password"
+                        className={`form-control ${errors.password && touched.password ? 'is-invalid' : ''}`}
+                        placeholder="Crea una contraseña"
+                        disabled={loading}
+                      />
+                      <ErrorMessage name="password" component="div" className="invalid-feedback" />
                     </Form.Group>
 
                     {/* Confirmar Contraseña */}
                     <Form.Group className="mb-4">
                       <Form.Label className="fw-semibold">
-                        <Lock size={16} className="me-2" />
                         Confirmar Contraseña
                       </Form.Label>
-                      <div className="position-relative">
-                        <Field
-                          name="confirmPassword"
-                          type={showConfirmPassword ? 'text' : 'password'}
-                          className={`form-control ${errors.confirmPassword && touched.confirmPassword ? 'is-invalid' : ''}`}
-                          placeholder="Confirma tu contraseña"
-                          disabled={loading}
-                        />
-                        <button
-                          type="button"
-                          className="btn btn-link position-absolute end-0 top-50 translate-middle-y"
-                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                          style={{ textDecoration: 'none', color: '#6c757d' }}
-                        >
-                          {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                        </button>
-                        <ErrorMessage name="confirmPassword" component="div" className="invalid-feedback" />
-                      </div>
+                      <Field
+                        name="confirmPassword"
+                        type="password"
+                        className={`form-control ${errors.confirmPassword && touched.confirmPassword ? 'is-invalid' : ''}`}
+                        placeholder="Confirma tu contraseña"
+                        disabled={loading}
+                      />
+                      <ErrorMessage name="confirmPassword" component="div" className="invalid-feedback" />
                     </Form.Group>
 
                     {/* Botón de Registro */}
-                    <Button
-                      type="submit"
-                      variant="success"
-                      className="w-100 py-3 fw-semibold"
-                      disabled={loading}
-                      style={{
-                        background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                        border: 'none'
-                      }}
-                    >
-                      {loading ? (
-                        <>
-                          <Spinner
-                            as="span"
-                            animation="border"
-                            size="sm"
-                            role="status"
-                            aria-hidden="true"
-                            className="me-2"
-                          />
-                          Creando cuenta...
-                        </>
-                      ) : (
-                        <>
-                          <UserPlus size={20} className="me-2" />
-                          Crear Cuenta
-                        </>
-                      )}
-                    </Button>
+                    <div className="d-grid gap-2 mb-4">
+                      <Button 
+                        type="submit" 
+                        variant="success" 
+                        size="lg"
+                        disabled={loading}
+                        className="fw-semibold"
+                      >
+                        {loading ? (
+                          <>
+                            <Spinner animation="border" size="sm" className="me-2" />
+                            Registrando...
+                          </>
+                        ) : (
+                          'Crear Cuenta'
+                        )}
+                      </Button>
+                    </div>
+
+                    <div className="text-center">
+                      <span className="text-muted">
+                        ¿Ya tienes una cuenta?{' '}
+                        <Link to="/auth/signin" className="text-decoration-none fw-semibold" style={{ color: '#10b981' }}>
+                          Inicia sesión
+                        </Link>
+                      </span>
+                    </div>
                   </FormikForm>
                 )}
               </Formik>
-
-              <div className="text-center mt-4">
-                <p className="text-muted mb-0">
-                  ¿Ya tienes una cuenta?{' '}
-                  <Link to="/auth/signin" className="text-success fw-semibold text-decoration-none">
-                    Iniciar Sesión
-                  </Link>
-                </p>
-              </div>
             </Card.Body>
           </Card>
-
-          <div className="text-center mt-3">
-            <p className="text-white small">
-              Al registrarte, aceptas nuestros términos y condiciones
-            </p>
-          </div>
         </Col>
       </Row>
     </Container>
