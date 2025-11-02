@@ -85,9 +85,16 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
       {user ? (
         <aside
           ref={sidebar}
-          className={`absolute left-0 top-0 z-9999 flex h-screen w-72.5 flex-col overflow-y-hidden bg-gradient-to-b from-gray-800 to-gray-900 duration-300 ease-linear border-r-2 border-gray-700 shadow-xl lg:static lg:translate-x-0 ${
+          className={`absolute left-0 top-0 z-9999 flex h-screen w-72.5 flex-col overflow-y-hidden duration-300 ease-linear lg:static lg:translate-x-0 ${
             sidebarOpen ? 'translate-x-0' : '-translate-x-full'
           }`}
+          style={{
+            // border uses CSS var so it adapts to light/dark mode
+            borderRight: '2px solid var(--bs-sidebar-hover)',
+            // Soft teal background and text to match requested palette
+            background: 'linear-gradient(to bottom, #effdfa, #dff6f0)',
+            color: '#07373a'
+          }}
         >
           {/* SIDEBAR HEADER - Logo de la aplicación */}
           <div className="flex items-center justify-between gap-2 px-6 py-5.5 lg:py-6.5 border-b border-gray-700">
@@ -125,7 +132,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
             <nav className="mt-5 py-4 px-4 lg:mt-9 lg:px-6">
               {/* Menu Group - Administración */}
               <div>
-                <h3 className="mb-4 ml-4 text-sm font-semibold text-gray-400 uppercase tracking-wider">
+                <h3 className="mb-4 ml-4 text-sm font-semibold text-black-400 uppercase tracking-wider">
                   ADMINISTRACIÓN
                 </h3>
 
@@ -137,10 +144,14 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                     <NavLink
                       to="/users"
                       className={({ isActive }) =>
-                        `group relative flex items-center gap-3 rounded-lg py-3 px-4 font-medium text-gray-300 transition-all duration-300 ease-in-out hover:bg-gray-700 hover:text-white hover:shadow-lg ${
-                          isActive ? 'bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg' : ''
+                        `group relative flex items-center gap-3 rounded-lg py-3 px-4 font-medium transition-all duration-300 ease-in-out hover:shadow-lg ${
+                          isActive ? 'bg-gradient-to-r from-blue-600 to-blue-500 shadow-lg' : ''
                         }`
                       }
+                      style={({ isActive }) => ({
+                        color: '#07373a',
+                        fontWeight: isActive ? 600 : 500,
+                      })}
                     >
                       {/* Icono de Users - Grupo de personas */}
                       <svg
@@ -177,10 +188,14 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                     <NavLink
                       to="/roles/list"
                       className={({ isActive }) =>
-                        `group relative flex items-center gap-3 rounded-lg py-3 px-4 font-medium text-gray-300 transition-all duration-300 ease-in-out hover:bg-gray-700 hover:text-white hover:shadow-lg ${
-                          isActive ? 'bg-gradient-to-r from-green-600 to-green-500 text-white shadow-lg' : ''
+                        `group relative flex items-center gap-3 rounded-lg py-3 px-4 font-medium transition-all duration-300 ease-in-out hover:shadow-lg ${
+                          isActive ? 'bg-gradient-to-r from-green-600 to-green-500 shadow-lg' : ''
                         }`
                       }
+                      style={({ isActive }) => ({
+                        color: '#07373a',
+                        fontWeight: isActive ? 600 : 500,
+                      })}
                     >
                       {/* Icono de Shield (Escudo) para Roles - Representa protección y permisos */}
                       <svg
@@ -213,10 +228,14 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                     <NavLink
                       to="/permissions/list"
                       className={({ isActive }) =>
-                        `group relative flex items-center gap-3 rounded-lg py-3 px-4 font-medium text-gray-300 transition-all duration-300 ease-in-out hover:bg-gray-700 hover:text-white hover:shadow-lg ${
-                          isActive ? 'bg-gradient-to-r from-purple-600 to-purple-500 text-white shadow-lg' : ''
+                        `group relative flex items-center gap-3 rounded-lg py-3 px-4 font-medium transition-all duration-300 ease-in-out hover:shadow-lg ${
+                          isActive ? 'bg-gradient-to-r from-purple-600 to-purple-500 shadow-lg' : ''
                         }`
                       }
+                      style={({ isActive }) => ({
+                        color: '#07373a',
+                        fontWeight: isActive ? 600 : 500,
+                      })}
                     >
                       {/* Icono de Key (Llave) para Permissions - Representa acceso y autorizaciones */}
                       <svg

@@ -19,8 +19,10 @@ Notes:
 @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
 
 :root {
-  --mui-primary: #1976d2; /* blue 600 */
-  --mui-primary-contrast: #ffffff;
+  /* Cambiado: Material UI primary ahora amarillo (amber) */
+  --mui-primary: #f59e0b; /* amber-500 */
+  /* contraste más oscuro para amarillos */
+  --mui-primary-contrast: #000000;
   --mui-secondary: #9c27b0; /* purple 500 */
   --mui-background: #f5f5f5;
   --mui-surface: #ffffff;
@@ -91,4 +93,4 @@ body {
 .mui-container { max-width: 1200px; margin: 0 auto; padding: 16px; }
 
 /* Focus visible similar to MUI's focus ring */
-.mui-button:focus-visible, .mui-card:focus-visible { outline: 3px solid rgba(25,118,210,0.25); outline-offset: 2px; }
+.mui-button:focus-visible, .mui-card:focus-visible { outline: 3px solid rgba(245,158,11,0.25); outline-offset: 2px; }

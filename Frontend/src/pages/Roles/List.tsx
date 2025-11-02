@@ -4,7 +4,8 @@ import { Plus, RefreshCw, Shield, Edit, Trash2 } from "lucide-react";
 import GenericList from "../../components/GenericsMaterial/GenericList";
 import GenericTableTailwind from "../../components/tailwindGenerics/GenericTableTailwind";
 import GenericTableBootstrap from "../../components/GenericTable";
-import useLocalStorage from "../../hooks/useLocalStorage";
+import ThemeSelector from '../../components/ThemeSelector';
+import { useTheme } from '../../context/ThemeContext';
 import { Role } from "../../models/Role";
 import { roleService } from "../../services/Role/roleService";
 import Swal from "sweetalert2";
@@ -17,7 +18,7 @@ const Roles: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [showModal, setShowModal] = useState<boolean>(false);
   const [selectedRole, setSelectedRole] = useState<Role | null>(null);
-  const [tableStyle, setTableStyle] = useLocalStorage<'tailwind' | 'bootstrap' | 'material'>('tableStyle', 'tailwind');
+  // el estilo de la tabla se controla desde ThemeContext (designLibrary)
   const [permissions, setPermissions] = useState<any[]>([]);
   const [selectedPermissions, setSelectedPermissions] = useState<Array<number | string>>([]);
   const [loadingPermissions, setLoadingPermissions] = useState<boolean>(false);
@@ -27,6 +28,9 @@ const Roles: React.FC = () => {
     fetchData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Usar el tema global para decidir qué componente de tabla renderizar
+  const { designLibrary, setDesignLibrary } = useTheme();
 
   const fetchData = async () => {
     try {
@@ -157,27 +161,8 @@ const Roles: React.FC = () => {
             </div>
             <div className="d-flex gap-2 align-items-center">
               <div className="d-flex align-items-center gap-1 me-2">
-                <button
-                  onClick={() => setTableStyle('tailwind')}
-                  className={`btn btn-sm ${tableStyle === 'tailwind' ? 'btn-success text-white' : 'btn-light text-dark'}`}
-                  title="Tailwind"
-                >
-                  Tailwind
-                </button>
-                <button
-                  onClick={() => setTableStyle('material')}
-                  className={`btn btn-sm ${tableStyle === 'material' ? 'btn-info text-white' : 'btn-light text-dark'}`}
-                  title="Material UI"
-                >
-                  Material
-                </button>
-                <button
-                  onClick={() => setTableStyle('bootstrap')}
-                  className={`btn btn-sm ${tableStyle === 'bootstrap' ? 'btn-primary text-white' : 'btn-light text-dark'}`}
-                  title="Bootstrap"
-                >
-                  Bootstrap
-                </button>
+                {/* Solo mostrar el ThemeSelector; el selector controla el tema global */}
+                <ThemeSelector />
               </div>
               <Button 
                 variant="outline-secondary"
@@ -239,7 +224,7 @@ const Roles: React.FC = () => {
                 </div>
               ) : (
                 <>
-                  {tableStyle === 'material' && (
+                  {designLibrary === 'material' && (
                     <div className="p-3">
                       <GenericList
                         data={roles}
@@ -262,7 +247,7 @@ const Roles: React.FC = () => {
                     </div>
                   )}
 
-                  {tableStyle === 'tailwind' && (
+                  {designLibrary === 'tailwind' && (
                     <GenericTableTailwind
                       data={roles}
                       columns={["id", "name", "description"]}
@@ -279,7 +264,7 @@ const Roles: React.FC = () => {
                     />
                   )}
 
-                  {tableStyle === 'bootstrap' && (
+                  {designLibrary === 'bootstrap' && (
                     <GenericTableBootstrap
                       data={roles}
                       columns={["id", "name", "description"]}

@@ -18,22 +18,23 @@ const ThemeSelector: React.FC = () => {
   };
 
   // Colores y gradientes de cada tema
+  // NOTE: Tailwind -> azul, Material -> amarillo (solicitud)
   const themeColors: Record<string, string> = {
     bootstrap: '#10b981',
-    tailwind: '#f59e0b',
-    material: '#1976d2'
+    tailwind: '#3b82f6', // blue-500
+    material: '#f59e0b'  // amber-500 (amarillo)
   };
 
   const themeGradients: Record<string, string> = {
     bootstrap: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-    tailwind: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
-    material: 'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)'
+    tailwind: 'linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%)',
+    material: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)'
   };
 
   const themeEmojis: Record<string, string> = {
     bootstrap: '🟢',
-    tailwind: '🟡',
-    material: '🔵'
+    tailwind: '🔵',
+    material: '🟡'
   };
 
   return (
@@ -151,14 +152,14 @@ const ThemeSelector: React.FC = () => {
               borderRadius: '10px',
               padding: '12px 16px',
               marginBottom: '6px',
-              border: designLibrary === 'tailwind' ? '2px solid #f59e0b' : '2px solid transparent',
-              background: designLibrary === 'tailwind' ? 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)' : 'transparent',
+              border: designLibrary === 'tailwind' ? '2px solid #3b82f6' : '2px solid transparent',
+              background: designLibrary === 'tailwind' ? 'linear-gradient(135deg, #bfdbfe 0%, #93c5fd 100%)' : 'transparent',
               fontWeight: designLibrary === 'tailwind' ? '700' : '600',
               transition: 'all 0.2s ease'
             }}
             onMouseEnter={(e) => {
               if (designLibrary !== 'tailwind') {
-                e.currentTarget.style.background = '#fffbeb';
+                e.currentTarget.style.background = '#eff6ff';
                 e.currentTarget.style.transform = 'translateX(4px)';
               }
             }}
@@ -169,7 +170,7 @@ const ThemeSelector: React.FC = () => {
               }
             }}
           >
-            <span className="me-2" style={{ fontSize: '1.3rem' }}>🟡</span>
+              <span className="me-2" style={{ fontSize: '1.3rem' }}>�</span>
             <div 
               className="me-2"
               style={{
@@ -177,12 +178,12 @@ const ThemeSelector: React.FC = () => {
                 height: '20px',
                 borderRadius: '6px',
                 background: themeGradients.tailwind,
-                boxShadow: '0 2px 8px rgba(245, 158, 11, 0.4)'
+                boxShadow: '0 2px 8px rgba(59, 130, 246, 0.4)'
               }}
             />
             <span style={{ flex: 1 }}>Tailwind CSS</span>
             {designLibrary === 'tailwind' && (
-              <span className="ms-auto" style={{ color: '#f59e0b', fontSize: '1.2rem', fontWeight: '800' }}>✓</span>
+              <span className="ms-auto" style={{ color: '#3b82f6', fontSize: '1.2rem', fontWeight: '800' }}>✓</span>
             )}
           </Dropdown.Item>
 
@@ -194,8 +195,8 @@ const ThemeSelector: React.FC = () => {
               borderRadius: '10px',
               padding: '12px 16px',
               marginBottom: '6px',
-              border: designLibrary === 'material' ? '2px solid #1976d2' : '2px solid transparent',
-              background: designLibrary === 'material' ? 'linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%)' : 'transparent',
+              border: designLibrary === 'material' ? '2px solid #f59e0b' : '2px solid transparent',
+              background: designLibrary === 'material' ? 'linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%)' : 'transparent',
               fontWeight: designLibrary === 'material' ? '700' : '600',
               transition: 'all 0.2s ease'
             }}
@@ -212,7 +213,7 @@ const ThemeSelector: React.FC = () => {
               }
             }}
           >
-            <span className="me-2" style={{ fontSize: '1.3rem' }}>🔵</span>
+            <span className="me-2" style={{ fontSize: '1.3rem' }}>�</span>
             <div 
               className="me-2"
               style={{
@@ -220,12 +221,12 @@ const ThemeSelector: React.FC = () => {
                 height: '20px',
                 borderRadius: '6px',
                 background: themeGradients.material,
-                boxShadow: '0 2px 8px rgba(25, 118, 210, 0.4)'
+                boxShadow: '0 2px 8px rgba(245, 158, 11, 0.4)'
               }}
             />
             <span style={{ flex: 1 }}>Material UI</span>
             {designLibrary === 'material' && (
-              <span className="ms-auto" style={{ color: '#1976d2', fontSize: '1.2rem', fontWeight: '800' }}>✓</span>
+              <span className="ms-auto" style={{ color: '#f59e0b', fontSize: '1.2rem', fontWeight: '800' }}>✓</span>
             )}
           </Dropdown.Item>
 

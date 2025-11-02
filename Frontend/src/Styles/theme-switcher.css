@@ -107,6 +107,7 @@ body.theme-tailwind::before {
   left: 0;
   right: 0;
   height: 3px;
+  /* Acento azul para Tailwind */
   background: linear-gradient(90deg, #06b6d4, #3b82f6);
   z-index: 9999;
   pointer-events: none;

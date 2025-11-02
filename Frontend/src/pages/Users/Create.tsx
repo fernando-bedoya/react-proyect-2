@@ -1,10 +1,5 @@
-<<<<<<< HEAD
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Alert, Spinner } from 'react-bootstrap';
-=======
-import React, { useState } from 'react';
 import { Container, Row, Col, Alert, Spinner } from 'react-bootstrap';
->>>>>>> 52f8dd9b02cb32096ff5b6662812cace13b5b6f8
 import { ArrowLeft } from 'lucide-react';
 import { User } from '../../models/User';
 import GenericForm, { FieldConfig } from '../../components/GenericForm';
@@ -24,8 +19,24 @@ const CreateUser: React.FC = () => {
     const { designLibrary } = useTheme();
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
+    const [rolesOptions, setRolesOptions] = useState<Array<{label:string,value:any}>>([]);
 
-    // Configuración de campos del formulario
+    // Cargar roles al montar el componente
+    useEffect(() => {
+        let mounted = true;
+        (async () => {
+            try {
+                const roles = await roleService.getRoles();
+                if (!mounted) return;
+                setRolesOptions((roles || []).map(r => ({ label: r.name || String(r.id), value: r.id })));
+            } catch (e) {
+                console.error('No se pudieron cargar roles', e);
+            }
+        })();
+        return () => { mounted = false; };
+    }, []);
+
+    // Configuración de campos del formulario para Bootstrap
     const formFields: FieldConfig[] = [
         {
             name: 'name',
@@ -45,7 +56,17 @@ const CreateUser: React.FC = () => {
         }
     ];
 
-    // Lógica de creación
+    // Configuración de campos para Material UI
+    const materialFields = [
+        { name: 'name', label: 'Nombre', type: 'text', required: true },
+        { name: 'email', label: 'Correo electrónico', type: 'email', required: true },
+        { name: 'password', label: 'Contraseña', type: 'password', required: true },
+        { name: 'roles', label: 'Roles', type: 'multiselect', options: rolesOptions }
+    ];
+
+    const initialValues: Partial<User & { roles: any[] }> = { name: '', email: '', password: '', roles: [] };
+
+    // Lógica de creación para Bootstrap
     const handleCreateUser = async (formData: Record<string, any>) => {
         setLoading(true);
         setError(null);
@@ -93,10 +114,124 @@ const CreateUser: React.FC = () => {
         }
     };
 
+    // Lógica de creación para Material UI
+    const handleMaterialSubmit = async (values: any) => {
+        setLoading(true);
+        setError(null);
+        try {
+            const payload: Omit<User, 'id'> = {
+                name: values.name?.trim(),
+                email: values.email?.trim(),
+                password: values.password,
+            };
+
+            const created = await userService.createUser(payload);
+            if (created && created.id) {
+                // assign roles if any (values.roles contain option objects)
+                const roleIds = (values.roles ?? []).map((r: any) => (r && r.value) ? Number(r.value) : Number(r));
+                if (roleIds.length) {
+                    await userRoleService.assignRoles(Number(created.id), roleIds);
+                }
+
+                Swal.fire({ 
+                    title: '¡Completado!', 
+                    text: 'El usuario se ha creado correctamente', 
+                    icon: 'success', 
+                    timer: 1500, 
+                    showConfirmButton: false 
+                });
+                setTimeout(() => navigate('/users/list'), 1500);
+            } else {
+                setError('Hubo un problema al crear el usuario.');
+                Swal.fire({ 
+                    title: 'Error', 
+                    text: 'Existe un problema al momento de crear el registro', 
+                    icon: 'error' 
+                });
+            }
+        } catch (err) {
+            console.error(err);
+            setError('Error al conectar con el servidor.');
+            Swal.fire({ 
+                title: 'Error', 
+                text: 'Existe un problema al momento de crear el registro', 
+                icon: 'error' 
+            });
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const handleBack = () => {
         navigate("/users/list");
     };
 
+    // Renderizado condicional según la librería de diseño
+    if (designLibrary === 'material') {
+        return (
+            <Box sx={{ p: 3 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                        <Button variant="outlined" onClick={handleBack} disabled={loading}>
+                            <ArrowLeft size={18} style={{ marginRight: '8px' }} />
+                            Volver
+                        </Button>
+                        <Box>
+                            <Typography variant="h4" sx={{ color: '#ffb300' }}>Crear Nuevo Usuario</Typography>
+                            <Typography variant="body2" color="text.secondary">
+                                Complete el formulario para agregar un nuevo usuario al sistema
+                            </Typography>
+                        </Box>
+                    </Box>
+                    <ThemeSelector />
+                </Box>
+
+                {error && (
+                    <Paper sx={{ p:2, mb:2, bgcolor: '#ffebee' }}>
+                        <Typography color="error" variant="subtitle1">⚠️ Error al crear usuario</Typography>
+                        <Typography>{error}</Typography>
+                    </Paper>
+                )}
+
+                {loading && (
+                    <Paper sx={{ p:2, mb:2 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                            <CircularProgress size={20} />
+                            <Box>
+                                <Typography><strong>⏳ Creando usuario...</strong></Typography>
+                                <Typography variant="body2">Por favor espere mientras se procesa la información</Typography>
+                            </Box>
+                        </Box>
+                    </Paper>
+                )}
+
+                <Paper sx={{ p: 3, maxWidth: 800 }}>
+                    <GenericFormMaterial
+                        mode="create"
+                        initialValues={initialValues}
+                        fields={materialFields}
+                        onSubmit={handleMaterialSubmit}
+                        onCancel={handleBack}
+                        submitLabel="Crear Usuario"
+                        loading={loading}
+                    />
+                    
+                    <Paper sx={{ p: 2, mt: 3, bgcolor: '#f0fdf4', border: '2px solid #10b981' }}>
+                        <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 2, color: '#065f46' }}>
+                            💡 Información Importante
+                        </Typography>
+                        <Box component="ul" sx={{ color: '#047857', pl: 3 }}>
+                            <li>Todos los campos marcados con <strong style={{ color: '#dc2626' }}>*</strong> son obligatorios</li>
+                            <li>El correo electrónico debe ser <strong>único</strong> en el sistema</li>
+                            <li>Asegúrese de verificar la información antes de enviar</li>
+                        </Box>
+                    </Paper>
+                </Paper>
+            </Box>
+        );
+    }
+
+    // Renderizado Bootstrap (por defecto)
     return (
         <Container fluid className="py-4">
             <Row className="mb-4">
@@ -227,199 +362,10 @@ const CreateUser: React.FC = () => {
                             <li>Asegúrese de verificar la información antes de enviar</li>
                         </ul>
                     </div>
-<<<<<<< HEAD
-                </div>
-            );
-        } else if (designLibrary === 'material') {
-            // Material UI implementation using GenericFormMaterial
-            const [rolesOptions, setRolesOptions] = React.useState<Array<{label:string,value:any}>>([]);
-
-            useEffect(() => {
-                let mounted = true;
-                (async () => {
-                    try {
-                        const roles = await roleService.getRoles();
-                        if (!mounted) return;
-                        setRolesOptions((roles || []).map(r => ({ label: r.name || String(r.id), value: r.id })));
-                    } catch (e) {
-                        console.error('No se pudieron cargar roles', e);
-                    }
-                })();
-                return () => { mounted = false; };
-            }, []);
-
-            const fields = [
-                { name: 'name', label: 'Nombre', type: 'text', required: true },
-                { name: 'email', label: 'Correo electrónico', type: 'email', required: true },
-                { name: 'password', label: 'Contraseña', type: 'password', required: true },
-                { name: 'roles', label: 'Roles', type: 'multiselect', options: rolesOptions }
-            ];
-
-            const initialValues: Partial<User & { roles: any[] }> = { name: '', email: '', password: '', roles: [] };
-
-            const onSubmit = async (values: any) => {
-                setLoading(true);
-                setError(null);
-                try {
-                    const payload: Omit<User, 'id'> = {
-                        name: values.name?.trim(),
-                        email: values.email?.trim(),
-                        password: values.password,
-                    };
-
-                    const created = await userService.createUser(payload);
-                    if (created && created.id) {
-                        // assign roles if any (values.roles contain option objects)
-                        const roleIds = (values.roles ?? []).map((r: any) => (r && r.value) ? Number(r.value) : Number(r));
-                        if (roleIds.length) {
-                            await userRoleService.assignRoles(Number(created.id), roleIds);
-                        }
-
-                        Swal.fire({ title: '¡Completado!', text: 'El usuario se ha creado correctamente', icon: 'success', timer: 1500, showConfirmButton: false });
-                        setTimeout(() => navigate('/users/list'), 1500);
-                    } else {
-                        setError('Hubo un problema al crear el usuario.');
-                        Swal.fire({ title: 'Error', text: 'Existe un problema al momento de crear el registro', icon: 'error' });
-                    }
-                } catch (err) {
-                    console.error(err);
-                    setError('Error al conectar con el servidor.');
-                    Swal.fire({ title: 'Error', text: 'Existe un problema al momento de crear el registro', icon: 'error' });
-                } finally {
-                    setLoading(false);
-                }
-            };
-
-            return (
-                <Box sx={{ p: 3 }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                            <Button variant="outlined" onClick={handleBack} disabled={loading}>Volver</Button>
-                            <Box>
-                                <Typography variant="h4" sx={{ color: '#ffb300' }}>Crear Nuevo Usuario</Typography>
-                                <Typography variant="body2" color="text.secondary">Complete el formulario para agregar un nuevo usuario al sistema</Typography>
-                            </Box>
-                        </Box>
-                        <ThemeSelector />
-                    </Box>
-
-                    {error && (
-                        <Paper sx={{ p:2, mb:2, bgcolor: '#ffebee' }}>
-                            <Typography color="error" variant="subtitle1">Error al crear usuario</Typography>
-                            <Typography>{error}</Typography>
-                        </Paper>
-                    )}
-
-                    {loading && (
-                        <Paper sx={{ p:2, mb:2 }}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                <CircularProgress size={20} />
-                                <Box>
-                                    <Typography><strong>Creando usuario...</strong></Typography>
-                                    <Typography variant="body2">Por favor espere mientras se procesa la información</Typography>
-                                </Box>
-                            </Box>
-                        </Paper>
-                    )}
-
-                    <Paper sx={{ p: 3, maxWidth: 800 }}>
-                        <GenericFormMaterial
-                            mode="create"
-                            initialValues={initialValues}
-                            fields={fields}
-                            onSubmit={onSubmit}
-                            onCancel={handleBack}
-                            submitLabel="Crear Usuario"
-                            loading={loading}
-                        />
-                    </Paper>
-                </Box>
-            );
-
-        } else {
-            return (
-                <div className="container mx-auto py-8">
-                    <div className="mb-8">
-                        <div className="flex justify-between items-center">
-                            <div className="flex items-center gap-6">
-                                <button
-                                    onClick={handleBack}
-                                    disabled={loading}
-                                    className="border-2 border-gray-400 hover:bg-gray-50 px-4 py-2 rounded-md flex items-center gap-2 text-sm font-medium"
-                                >
-                                    <ArrowLeft size={18} />
-                                    Volver
-                                </button>
-                                <div>
-                                    <h2 className="text-4xl font-bold text-green-600 mb-2">
-                                        Crear Nuevo Usuario
-                                    </h2>
-                                    <p className="text-gray-700 text-lg">
-                                        Complete el formulario para agregar un nuevo usuario al sistema
-                                    </p>
-                                </div>
-                            </div>
-                            <ThemeSelector />
-                        </div>
-                    </div>
-
-                    {error && (
-                        <div className="bg-red-50 border-l-4 border-red-600 text-red-900 p-6 mb-6 rounded shadow-sm">
-                            <div className="flex justify-between items-start">
-                                <div>
-                                    <h6 className="font-bold text-lg mb-2">Error al crear usuario</h6>
-                                    <p className="font-medium">{error}</p>
-                                </div>
-                                <button onClick={() => setError(null)} className="text-red-900 hover:text-red-700 text-2xl">
-                                    ×
-                                </button>
-                            </div>
-                        </div>
-                    )}
-
-                    {loading && (
-                        <div className="bg-blue-50 border-l-4 border-blue-600 text-blue-900 p-6 mb-6 rounded shadow-sm">
-                            <div className="flex items-center gap-4">
-                                <div className="animate-spin rounded-full h-8 w-8 border-4 border-blue-600 border-t-transparent"></div>
-                                <div>
-                                    <strong className="text-lg">Creando usuario...</strong>
-                                    <p className="text-sm">Por favor espere mientras se procesa la información</p>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    <div className="max-w-5xl">
-                        <div className="bg-white rounded-lg shadow-lg mb-6">
-                            <div className="bg-gray-100 border-b-2 px-8 py-5">
-                                <h5 className="font-bold text-xl">Información del Usuario</h5>
-                            </div>
-                            <div className="p-8">
-                                <UserFormValidator handleCreate={handleCreateUser} mode={1} />
-                            </div>
-                        </div>
-
-                        <div className="bg-gray-100 rounded-lg shadow-lg p-8">
-                            <h6 className="font-bold text-lg mb-3">💡 Información</h6>
-                            <ul className="text-gray-700 list-disc pl-6 space-y-2">
-                                <li>Todos los campos marcados con * son obligatorios</li>
-                                <li>La contraseña debe tener al menos 8 caracteres</li>
-                                <li>El correo electrónico debe ser único en el sistema</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            );
-        }
-    };
-
-    return renderContent();
-=======
                 </Col>
             </Row>
         </Container>
     );
->>>>>>> 52f8dd9b02cb32096ff5b6662812cace13b5b6f8
 };
 
 export default CreateUser;

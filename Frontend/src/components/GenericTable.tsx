@@ -133,7 +133,7 @@ const GenericTable: React.FC<GenericTableProps> = ({
     return value;
   };
 
-  // Renderizado condicional: Material UI (AZUL), Tailwind (AMARILLO), Bootstrap (VERDE)
+  // Renderizado condicional: Material UI (AMBAR/AMARILLO), Tailwind (AZUL), Bootstrap (VERDE)
   if (designLibrary === 'material') {
     return (
       <TableContainer 
@@ -143,13 +143,13 @@ const GenericTable: React.FC<GenericTableProps> = ({
         sx={{
           borderRadius: '12px',
           overflow: 'hidden',
-          border: '2px solid #1976d2',
+          border: '2px solid #f59e0b',
           fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
         }}
       >
         <MuiTable size={size === 'sm' ? 'small' : 'medium'}>
           <TableHead>
-            <TableRow sx={{ background: 'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)' }}>
+            <TableRow sx={{ background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' }}>
               {columns.map((col) => (
                 <TableCell 
                   key={col}
@@ -159,7 +159,7 @@ const GenericTable: React.FC<GenericTableProps> = ({
                     fontSize: '0.85rem',
                     letterSpacing: '1px',
                     color: '#ffffff',
-                    borderBottom: '2px solid #0d47a1',
+                    borderBottom: '2px solid #b45309',
                     fontFamily: '"Roboto Condensed", sans-serif',
                   }}
                 >
@@ -186,17 +186,17 @@ const GenericTable: React.FC<GenericTableProps> = ({
             </TableRow>
           </TableHead>
           <TableBody>
-            {data.length === 0 ? (
+              {data.length === 0 ? (
               <TableRow>
                 <TableCell 
                   colSpan={columns.length + (actions.length > 0 ? 1 : 0)}
                   align="center"
                   sx={{ 
                     py: 6, 
-                    color: '#1976d2',
-                    fontSize: '1.1rem',
-                    fontWeight: 500,
-                    backgroundColor: '#e3f2fd'
+                      color: '#92400e',
+                      fontSize: '1.1rem',
+                      fontWeight: 500,
+                      backgroundColor: '#fff7ed'
                   }}
                 >
                   {emptyMessage}
@@ -208,9 +208,9 @@ const GenericTable: React.FC<GenericTableProps> = ({
                   key={index}
                   hover={hover}
                   sx={{ 
-                    '&:nth-of-type(odd)': striped ? { backgroundColor: '#e3f2fd' } : {},
+                    '&:nth-of-type(odd)': striped ? { backgroundColor: '#fff7ed' } : {},
                     '&:nth-of-type(even)': striped ? { backgroundColor: '#ffffff' } : {},
-                    '&:hover': { backgroundColor: '#bbdefb !important' },
+                    '&:hover': { backgroundColor: '#ffedd5 !important' },
                     transition: 'background-color 0.3s ease',
                   }}
                 >
@@ -218,10 +218,10 @@ const GenericTable: React.FC<GenericTableProps> = ({
                     <TableCell 
                       key={col}
                       sx={{ 
-                        color: '#0d47a1',
+                        color: '#92400e',
                         fontSize: '0.95rem',
                         fontWeight: 500,
-                        borderBottom: '1px solid #90caf9',
+                        borderBottom: '1px solid #fde68a',
                       }}
                     >
                       {typeof item[col] === 'boolean' ? (
@@ -231,19 +231,19 @@ const GenericTable: React.FC<GenericTableProps> = ({
                           size="small"
                           sx={{ 
                             fontWeight: 600,
-                            backgroundColor: item[col] ? '#1976d2' : '#90caf9',
+                            backgroundColor: item[col] ? '#f59e0b' : '#fde68a',
                             color: '#ffffff'
                           }}
                         />
                       ) : item[col] === null || item[col] === undefined ? (
-                        <span style={{ color: '#64b5f6' }}>-</span>
+                        <span style={{ color: '#f59e0b' }}>-</span>
                       ) : (
                         item[col]
                       )}
                     </TableCell>
                   ))}
                   {actions.length > 0 && (
-                    <TableCell align="center" sx={{ borderBottom: '1px solid #90caf9' }}>
+                    <TableCell align="center" sx={{ borderBottom: '1px solid #fde68a' }}>
                       <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
                         {actions.map((action) => (
                           action.icon ? (
@@ -254,8 +254,8 @@ const GenericTable: React.FC<GenericTableProps> = ({
                               onClick={() => onAction(action.name, item)}
                               title={action.label}
                               sx={{
-                                backgroundColor: '#e3f2fd',
-                                '&:hover': { backgroundColor: '#1976d2', color: '#ffffff' },
+                                backgroundColor: '#fff7ed',
+                                '&:hover': { backgroundColor: '#f59e0b', color: '#ffffff' },
                                 transition: 'all 0.3s ease',
                               }}
                             >
@@ -286,18 +286,18 @@ const GenericTable: React.FC<GenericTableProps> = ({
     );
   }
 
-  // Renderizado TAILWIND (AMARILLO/AMBER)
+  // Renderizado TAILWIND (AZUL)
   if (designLibrary === 'tailwind') {
     return (
-      <div className={`overflow-hidden rounded-xl border-4 border-amber-500 shadow-2xl ${className}`} style={{ fontFamily: '"Inter", "system-ui", sans-serif' }}>
+      <div className={`overflow-hidden rounded-xl border-4 border-blue-500 shadow-2xl ${className}`} style={{ fontFamily: '"Inter", "system-ui", sans-serif' }}>
         <div className="overflow-x-auto">
-          <table className="min-w-full bg-gradient-to-r from-amber-50 to-yellow-50">
-            <thead className="bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 text-white">
+          <table className="min-w-full bg-gradient-to-r from-blue-50 to-indigo-50">
+            <thead className="bg-gradient-to-r from-blue-500 via-cyan-500 to-indigo-600 text-white" style={{ background: 'linear-gradient(90deg, #3b82f6 0%, #06b6d4 100%)' }}>
               <tr>
                 {columns.map((col) => (
                   <th 
                     key={col}
-                    className="px-6 py-4 text-left text-xs font-black uppercase tracking-wider border-b-4 border-amber-700"
+                    className="px-6 py-4 text-left text-xs font-black uppercase tracking-wider border-b-4 border-blue-700"
                     style={{ fontFamily: '"Poppins", sans-serif', letterSpacing: '2px' }}
                   >
                     {formatColumnName(col)}
@@ -305,7 +305,7 @@ const GenericTable: React.FC<GenericTableProps> = ({
                 ))}
                 {actions.length > 0 && (
                   <th 
-                    className="px-6 py-4 text-center text-xs font-black uppercase tracking-wider border-b-4 border-amber-700"
+                    className="px-6 py-4 text-center text-xs font-black uppercase tracking-wider border-b-4 border-blue-700"
                     style={{ fontFamily: '"Poppins", sans-serif', letterSpacing: '2px', width: `${actions.length * 60}px` }}
                   >
                     Acciones
@@ -313,12 +313,12 @@ const GenericTable: React.FC<GenericTableProps> = ({
                 )}
               </tr>
             </thead>
-            <tbody className="divide-y divide-amber-300">
+            <tbody className="divide-y divide-blue-300">
               {data.length === 0 ? (
                 <tr>
                   <td 
                     colSpan={columns.length + (actions.length > 0 ? 1 : 0)}
-                    className="px-6 py-8 text-center text-amber-700 bg-amber-100 font-bold text-lg"
+                    className="px-6 py-8 text-center text-blue-700 bg-blue-100 font-bold text-lg"
                   >
                     {emptyMessage}
                   </td>
@@ -328,23 +328,23 @@ const GenericTable: React.FC<GenericTableProps> = ({
                   <tr 
                     key={index}
                     className={`
-                      ${striped && index % 2 === 0 ? 'bg-amber-100' : 'bg-white'}
-                      ${hover ? 'hover:bg-yellow-200 hover:shadow-lg transition-all duration-300' : ''}
-                      border-l-4 border-amber-400
+                      ${striped && index % 2 === 0 ? 'bg-blue-100' : 'bg-white'}
+                      ${hover ? 'hover:bg-blue-200 hover:shadow-lg transition-all duration-300' : ''}
+                      border-l-4 border-blue-400
                     `}
                   >
                     {columns.map((col) => (
                       <td 
                         key={col}
-                        className="px-6 py-4 text-sm font-semibold text-amber-900"
+                        className="px-6 py-4 text-sm font-semibold text-blue-900"
                         style={{ fontFamily: '"Inter", sans-serif' }}
                       >
                         {typeof item[col] === 'boolean' ? (
-                          <span className={`px-3 py-1 rounded-full text-xs font-bold ${item[col] ? 'bg-amber-500 text-white' : 'bg-amber-200 text-amber-800'}`}>
+                          <span className={`px-3 py-1 rounded-full text-xs font-bold ${item[col] ? 'bg-blue-500 text-white' : 'bg-blue-200 text-blue-800'}`}>
                             {item[col] ? 'Activo' : 'Inactivo'}
                           </span>
                         ) : item[col] === null || item[col] === undefined ? (
-                          <span className="text-amber-400">-</span>
+                          <span className="text-blue-400">-</span>
                         ) : (
                           item[col]
                         )}
@@ -358,7 +358,7 @@ const GenericTable: React.FC<GenericTableProps> = ({
                               key={action.name}
                               onClick={() => onAction(action.name, item)}
                               title={action.label}
-                              className="px-3 py-2 rounded-lg font-bold text-xs uppercase tracking-wide bg-amber-500 text-white hover:bg-amber-600 hover:scale-110 transform transition-all duration-200 shadow-md hover:shadow-xl"
+                              className="px-3 py-2 rounded-lg font-bold text-xs uppercase tracking-wide bg-blue-500 text-white hover:bg-blue-600 hover:scale-110 transform transition-all duration-200 shadow-md hover:shadow-xl"
                               style={{ fontFamily: '"Poppins", sans-serif' }}
                             >
                               {action.icon && getActionIcon(action.icon)}

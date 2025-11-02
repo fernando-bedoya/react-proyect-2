@@ -195,18 +195,18 @@ const UserProfile: React.FC = () => {
       icon: 'text-emerald-600'
     },
     tailwind: {
-      bg: 'bg-gradient-to-br from-amber-50 to-yellow-100',
-      card: 'bg-white border-4 border-amber-500 shadow-2xl',
-      button: 'bg-gradient-to-r from-amber-600 to-yellow-600 hover:from-amber-700 hover:to-yellow-700',
-      text: 'text-amber-900',
-      icon: 'text-amber-600'
-    },
-    material: {
       bg: 'bg-gradient-to-br from-blue-50 to-indigo-100',
       card: 'bg-white border-4 border-blue-500 shadow-2xl',
       button: 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700',
       text: 'text-blue-900',
       icon: 'text-blue-600'
+    },
+    material: {
+      bg: 'bg-gradient-to-br from-amber-50 to-yellow-100',
+      card: 'bg-white border-4 border-amber-500 shadow-2xl',
+      button: 'bg-gradient-to-r from-amber-600 to-yellow-600 hover:from-amber-700 hover:to-yellow-700',
+      text: 'text-amber-900',
+      icon: 'text-amber-600'
     }
   };
   
