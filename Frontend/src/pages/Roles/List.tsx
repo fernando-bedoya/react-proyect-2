@@ -49,56 +49,36 @@ const Roles: React.FC = () => {
 
   const handleAction = async (action: string, item: Role) => {
     if (action === "assignPermissions") {
-      setSelectedRole(item);
-      setShowModal(true);
-      setLoadingPermissions(true);
-      try {
-        // obtener todos los permisos disponibles desde el backend
-        const perms = await roleService.getPermissions();
-        setPermissions(perms || []);
-
-        // obtener permisos ya asignados al rol (si la API devuelve campo `permissions`)
-        const roleDetails = await roleService.getRoleById(item.id as number);
-        let assigned: Array<number | string> = [];
-        if (roleDetails && Array.isArray((roleDetails as any).permissions)) {
-          assigned = (roleDetails as any).permissions.map((p: any) => p.id ?? p);
-        }
-        setSelectedPermissions(assigned);
-      } catch (err) {
-        console.error('Error al cargar permisos:', err);
-        setError('No se pudieron cargar los permisos');
-      } finally {
-        setLoadingPermissions(false);
-      }
+        navigate(`/administrator/permissions?roleId=${item.id}`);
     } else if (action === "edit") {
-      navigate(`/roles/update/${item.id}`);
+        navigate(`/roles/update/${item.id}`);
     } else if (action === "delete") {
-      Swal.fire({
-        title: "Eliminación",
-        text: "¿Está seguro de querer eliminar el registro?",
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonColor: "#10b981",
-        cancelButtonColor: "#d33",
-        confirmButtonText: "Sí, eliminar",
-        cancelButtonText: "No"
-      }).then(async (result) => {
-        if (result.isConfirmed) {
-          const success = await roleService.deleteRole(item.id as number);
-          if (success) {
-            setSuccessMessage("El rol se ha eliminado correctamente");
-            setTimeout(() => setSuccessMessage(null), 3000);
-            Swal.fire({
-              title: "Eliminado",
-              text: "El registro se ha eliminado",
-              icon: "success",
-              timer: 2000,
-              showConfirmButton: false
-            });
-          }
-          fetchData();
-        }
-      });
+        Swal.fire({
+            title: "Eliminación",
+            text: "¿Está seguro de querer eliminar el registro?",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#10b981",
+            cancelButtonColor: "#d33",
+            confirmButtonText: "Sí, eliminar",
+            cancelButtonText: "No"
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                const success = await roleService.deleteRole(item.id as number);
+                if (success) {
+                    setSuccessMessage("El rol se ha eliminado correctamente");
+                    setTimeout(() => setSuccessMessage(null), 3000);
+                    Swal.fire({
+                        title: "Eliminado",
+                        text: "El registro se ha eliminado",
+                        icon: "success",
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                }
+                fetchData();
+            }
+        });
     }
   };
 
