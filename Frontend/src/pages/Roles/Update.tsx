@@ -4,7 +4,7 @@ import { ArrowLeft } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import Breadcrumb from '../../components/Breadcrumb';
-import RoleFormValidator from '../../components/RoleFormValidator';
+import GenericFormMaterial from '../../components/GenericsMaterial/GenericFormMaterial';
 import { Role } from '../../models/Role';
 import { roleService } from '../../services/Role/roleService';
 
@@ -114,7 +114,18 @@ const UpdateRole: React.FC = () => {
             </Card.Header>
             <Card.Body className="p-4">
               {error && <Alert variant="danger">{error}</Alert>}
-              <RoleFormValidator mode={2} role={role} handleUpdate={handleUpdateRole} />
+              <GenericFormMaterial
+                mode="edit"
+                initialValues={role}
+                fields={[
+                  { name: 'name', label: 'Nombre', required: true },
+                  { name: 'description', label: 'Descripción', type: 'textarea' },
+                ]}
+                submitLabel="Actualizar"
+                loading={saving}
+                onSubmit={(values) => handleUpdateRole(values as any)}
+                onCancel={() => navigate('/roles/list')}
+              />
             </Card.Body>
           </Card>
         </Col>

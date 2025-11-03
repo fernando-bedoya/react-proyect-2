@@ -60,8 +60,6 @@ const CreateUser: React.FC = () => {
     const materialFields = [
         { name: 'name', label: 'Nombre', type: 'text', required: true },
         { name: 'email', label: 'Correo electrónico', type: 'email', required: true },
-        { name: 'password', label: 'Contraseña', type: 'password', required: true },
-        { name: 'roles', label: 'Roles', type: 'multiselect', options: rolesOptions }
     ];
 
     const initialValues: Partial<User & { roles: any[] }> = { name: '', email: '', password: '', roles: [] };

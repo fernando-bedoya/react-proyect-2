@@ -6,6 +6,7 @@ import { userService } from "../../services/userService";
 import Swal from "sweetalert2";
 import { User } from '../../models/User';
 import UserFormValidator from '../../components/UserFormValidator';
+import GenericFormMaterial from '../../components/GenericsMaterial/GenericFormMaterial';
 import ThemeSelector from '../../components/ThemeSelector';
 import Breadcrumb from "../../components/Breadcrumb";
 
@@ -180,10 +181,18 @@ const UpdateUser: React.FC = () => {
                         </Card.Header>
                         <Card.Body className="p-4">
                             {user && (
-                                <UserFormValidator
-                                    handleUpdate={handleUpdateUser}
-                                    mode={2} // 2 significa actualización
-                                    user={user}
+                                <GenericFormMaterial
+                                    mode="edit"
+                                    initialValues={user}
+                                    fields={[
+                                        { name: 'name', label: 'Nombre', required: true },
+                                        { name: 'email', label: 'Email', type: 'email', required: true },
+                                        { name: 'phone', label: 'Teléfono' },
+                                    ]}
+                                    submitLabel="Actualizar"
+                                    loading={updating}
+                                    onSubmit={(values) => handleUpdateUser(values as any)}
+                                    onCancel={() => navigate('/users/list')}
                                 />
                             )}
                         </Card.Body>

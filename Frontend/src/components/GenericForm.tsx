@@ -457,10 +457,11 @@ const GenericForm: React.FC<GenericFormProps> = ({
         className={className} 
         sx={{ 
           p: 4,
-          background: 'linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%)',
+          // Cambiado a tonos ámbar/amarillo
+          background: 'linear-gradient(135deg, #fff8e1 0%, #fff3cd 100%)',
           borderRadius: '16px',
-          border: '3px solid #1976d2',
-          boxShadow: '0 8px 24px rgba(25, 118, 210, 0.3)',
+          border: '3px solid #ffb300',
+          boxShadow: '0 8px 24px rgba(255, 179, 0, 0.28)',
           fontFamily: '"Roboto", sans-serif'
         }}
       >
@@ -484,7 +485,8 @@ const GenericForm: React.FC<GenericFormProps> = ({
             severity="error" 
             sx={{ 
               mt: 3,
-              backgroundColor: '#1976d2',
+              // alerta en tonos ámbar
+              backgroundColor: '#ffb300',
               color: '#ffffff',
               fontWeight: 600,
               '& .MuiAlert-icon': { color: '#ffffff' }
@@ -501,7 +503,7 @@ const GenericForm: React.FC<GenericFormProps> = ({
             disabled={loading}
             startIcon={loading ? undefined : <SaveIcon />}
             sx={{
-              backgroundColor: '#1976d2',
+              backgroundColor: '#ffb300',
               fontWeight: 700,
               fontSize: '1rem',
               px: 4,
@@ -509,11 +511,11 @@ const GenericForm: React.FC<GenericFormProps> = ({
               borderRadius: '10px',
               textTransform: 'uppercase',
               letterSpacing: '1px',
-              boxShadow: '0 4px 12px rgba(25, 118, 210, 0.4)',
+              boxShadow: '0 4px 12px rgba(255, 179, 0, 0.35)',
               '&:hover': {
-                backgroundColor: '#1565c0',
+                backgroundColor: '#f59e0b',
                 transform: 'translateY(-2px)',
-                boxShadow: '0 6px 16px rgba(25, 118, 210, 0.5)',
+                boxShadow: '0 6px 16px rgba(255, 153, 0, 0.45)',
               },
               transition: 'all 0.3s ease'
             }}
@@ -529,8 +531,8 @@ const GenericForm: React.FC<GenericFormProps> = ({
               disabled={loading}
               startIcon={<RefreshIcon />}
               sx={{
-                borderColor: '#1976d2',
-                color: '#1976d2',
+                borderColor: '#ffb300',
+                color: '#ffb300',
                 fontWeight: 700,
                 fontSize: '1rem',
                 px: 4,
@@ -539,9 +541,9 @@ const GenericForm: React.FC<GenericFormProps> = ({
                 borderWidth: '2px',
                 textTransform: 'uppercase',
                 '&:hover': {
-                  backgroundColor: '#e3f2fd',
+                  backgroundColor: '#fff8e1',
                   borderWidth: '2px',
-                  borderColor: '#1565c0'
+                  borderColor: '#f59e0b'
                 }
               }}
             >
@@ -557,8 +559,8 @@ const GenericForm: React.FC<GenericFormProps> = ({
               disabled={loading}
               startIcon={<CloseIcon />}
               sx={{
-                borderColor: '#0d47a1',
-                color: '#0d47a1',
+                borderColor: '#b45309',
+                color: '#b45309',
                 fontWeight: 700,
                 fontSize: '1rem',
                 px: 4,
@@ -567,9 +569,9 @@ const GenericForm: React.FC<GenericFormProps> = ({
                 borderWidth: '2px',
                 textTransform: 'uppercase',
                 '&:hover': {
-                  backgroundColor: '#e3f2fd',
+                  backgroundColor: '#fff8e1',
                   borderWidth: '2px',
-                  borderColor: '#0d47a1'
+                  borderColor: '#b45309'
                 }
               }}
             >
@@ -587,9 +589,10 @@ const GenericForm: React.FC<GenericFormProps> = ({
       <div className="w-full">
         <form 
           onSubmit={handleSubmit} 
-          className={`p-6 rounded-2xl border-4 border-amber-500 shadow-2xl ${className}`}
+          className={`p-6 rounded-2xl border-4 border-blue-500 shadow-2xl ${className}`}
           style={{
-            background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)',
+            // Tailwind section ahora en tonos azules
+            background: 'linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%)',
             fontFamily: '"Inter", "Poppins", sans-serif'
           }}
         >
@@ -603,7 +606,7 @@ const GenericForm: React.FC<GenericFormProps> = ({
                   {field.type !== 'checkbox' && (
                     <label 
                       htmlFor={field.name}
-                      className="block text-amber-900 font-bold text-sm uppercase tracking-wide mb-2"
+                      className="block text-blue-900 font-bold text-sm uppercase tracking-wide mb-2"
                       style={{ fontFamily: '"Poppins", sans-serif' }}
                     >
                       {field.label}
@@ -620,8 +623,8 @@ const GenericForm: React.FC<GenericFormProps> = ({
                       onChange={handleChange}
                       onBlur={() => handleBlur(field.name)}
                       disabled={field.disabled || loading}
-                      className={`w-full px-4 py-3 rounded-lg border-3 border-amber-400 bg-white text-amber-900 font-semibold 
-                        focus:border-amber-600 focus:ring-4 focus:ring-amber-300 focus:outline-none
+                      className={`w-full px-4 py-3 rounded-lg border-3 border-blue-400 bg-white text-blue-900 font-semibold 
+                        focus:border-blue-600 focus:ring-4 focus:ring-blue-300 focus:outline-none
                         disabled:bg-gray-100 disabled:cursor-not-allowed transition-all duration-300
                         ${hasError ? 'border-red-500 focus:border-red-500 focus:ring-red-300' : ''}`}
                     >
@@ -645,8 +648,8 @@ const GenericForm: React.FC<GenericFormProps> = ({
                       placeholder={field.placeholder}
                       disabled={field.disabled || loading}
                       rows={field.rows || 3}
-                      className={`w-full px-4 py-3 rounded-lg border-3 border-amber-400 bg-white text-amber-900 font-semibold 
-                        focus:border-amber-600 focus:ring-4 focus:ring-amber-300 focus:outline-none resize-y
+                      className={`w-full px-4 py-3 rounded-lg border-3 border-blue-400 bg-white text-blue-900 font-semibold 
+                        focus:border-blue-600 focus:ring-4 focus:ring-blue-300 focus:outline-none resize-y
                         disabled:bg-gray-100 disabled:cursor-not-allowed transition-all duration-300
                         ${hasError ? 'border-red-500 focus:border-red-500 focus:ring-red-300' : ''}`}
                     />
@@ -662,11 +665,11 @@ const GenericForm: React.FC<GenericFormProps> = ({
                         checked={!!formData[field.name]}
                         onChange={handleChange}
                         disabled={field.disabled || loading}
-                        className="w-5 h-5 text-amber-600 border-3 border-amber-400 rounded focus:ring-4 focus:ring-amber-300 transition-all"
+                        className="w-5 h-5 text-blue-600 border-3 border-blue-400 rounded focus:ring-4 focus:ring-blue-300 transition-all"
                       />
                       <label 
                         htmlFor={field.name}
-                        className="ml-3 text-amber-900 font-bold uppercase tracking-wide"
+                        className="ml-3 text-blue-900 font-bold uppercase tracking-wide"
                       >
                         {field.label}
                         {field.required && <span className="text-red-600 ml-1">*</span>}
@@ -687,7 +690,7 @@ const GenericForm: React.FC<GenericFormProps> = ({
                             checked={formData[field.name] === option.value}
                             onChange={handleChange}
                             disabled={field.disabled || loading}
-                            className="w-5 h-5 text-amber-600 border-3 border-amber-400 focus:ring-4 focus:ring-amber-300 transition-all"
+                            className="w-5 h-5 text-blue-600 border-3 border-blue-400 focus:ring-4 focus:ring-blue-300 transition-all"
                           />
                           <label 
                             htmlFor={`${field.name}-${option.value}`}
@@ -714,10 +717,10 @@ const GenericForm: React.FC<GenericFormProps> = ({
                       min={field.min}
                       max={field.max}
                       step={field.step}
-                      className={`w-full px-4 py-3 rounded-lg border-3 border-amber-400 bg-white text-amber-900 font-semibold 
-                        focus:border-amber-600 focus:ring-4 focus:ring-amber-300 focus:outline-none placeholder-amber-400
-                        disabled:bg-gray-100 disabled:cursor-not-allowed transition-all duration-300
-                        ${hasError ? 'border-red-500 focus:border-red-500 focus:ring-red-300' : ''}`}
+            className={`w-full px-4 py-3 rounded-lg border-3 border-blue-400 bg-white text-blue-900 font-semibold 
+              focus:border-blue-600 focus:ring-4 focus:ring-blue-300 focus:outline-none placeholder-blue-400
+              disabled:bg-gray-100 disabled:cursor-not-allowed transition-all duration-300
+              ${hasError ? 'border-red-500 focus:border-red-500 focus:ring-red-300' : ''}`}
                     />
                   )}
 
@@ -730,7 +733,7 @@ const GenericForm: React.FC<GenericFormProps> = ({
 
                   {/* HELP TEXT */}
                   {field.helpText && !hasError && (
-                    <div className="mt-2 text-amber-700 text-xs font-semibold italic">
+                    <div className="mt-2 text-blue-700 text-xs font-semibold italic">
                       {field.helpText}
                     </div>
                   )}
@@ -772,8 +775,8 @@ const GenericForm: React.FC<GenericFormProps> = ({
             <button
               type="submit"
               disabled={loading || Object.keys(errors).length > 0}
-              className="px-6 py-3 bg-gradient-to-r from-amber-500 to-yellow-600 text-white font-black uppercase tracking-wider 
-                rounded-xl border-3 border-amber-700 shadow-lg hover:shadow-2xl hover:scale-105 
+              className="px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white font-black uppercase tracking-wider 
+                rounded-xl border-3 border-blue-700 shadow-lg hover:shadow-2xl hover:scale-105 
                 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
             >
               <Save className="inline-block w-5 h-5 mr-2" />
@@ -785,8 +788,8 @@ const GenericForm: React.FC<GenericFormProps> = ({
                 type="button"
                 onClick={onCancel}
                 disabled={loading}
-                className="px-6 py-3 bg-transparent border-3 border-amber-600 text-amber-900 font-black uppercase tracking-wider 
-                  rounded-xl shadow-lg hover:bg-amber-100 hover:shadow-2xl hover:scale-105 
+                className="px-6 py-3 bg-transparent border-3 border-blue-600 text-blue-900 font-black uppercase tracking-wider 
+                  rounded-xl shadow-lg hover:bg-blue-100 hover:shadow-2xl hover:scale-105 
                   disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
               >
                 <X className="inline-block w-5 h-5 mr-2" />
