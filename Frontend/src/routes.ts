@@ -136,8 +136,8 @@ const coreRoutes = [
     component: PermissionsCreate,
   },
   {
-    path: '/administrator/list',
-    title: 'Administrator List',
+    path: '/permissions-roles/list',
+    title: 'Permisos a Roles - List',
     component: AdministratorList,
   },
   {
