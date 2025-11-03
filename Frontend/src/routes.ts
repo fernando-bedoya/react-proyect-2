@@ -54,6 +54,12 @@ const AnswerView = lazy(() => import('./views/answer/AnswerViewReusable'));
 // const SessionView = lazy(() => import('./views/session/SessionView.jsx')); // Archivo no existe aún
 const UserView = lazy(() => import('./views/user/UserView.jsx'));
 
+// 🆕 NUEVAS RUTAS PARA SIDEBAR MEJORADO
+// Rutas para gestión de permisos de roles y historial de contraseñas
+const RolePermissionsList = lazy(() => import('./pages/Administrator/List')); // Reutilizando componente existente
+const PasswordHistoryList = lazy(() => import('./pages/password/List')); // Reutilizando componente existente  
+const UserAnswersList = lazy(() => import('./views/answer/AnswerViewReusable')); // Reutilizando componente existente
+
 const coreRoutes = [
   {
     path: '/calendar',
@@ -235,6 +241,22 @@ const coreRoutes = [
     path: '/users',
     title: 'Gestión de Usuarios',
     component: UserView,
+  },
+  // 🆕 RUTAS ADICIONALES PARA NUEVO SIDEBAR
+  {
+    path: '/role-permissions',
+    title: 'Role Permissions',
+    component: RolePermissionsList, // Asignación de permisos a roles
+  },
+  {
+    path: '/password-history',
+    title: 'Password History',
+    component: PasswordHistoryList, // Historial de contraseñas
+  },
+  {
+    path: '/user-answers',
+    title: 'User Answers',
+    component: UserAnswersList, // Respuestas de usuarios a preguntas de seguridad
   },
 ];
 

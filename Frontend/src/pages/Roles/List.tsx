@@ -2,8 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Container, Row, Col, Card, Button, Alert, Spinner, Badge, Modal, Form } from "react-bootstrap";
 import { Plus, RefreshCw, Shield, Edit, Trash2 } from "lucide-react";
 import GenericList from "../../components/GenericsMaterial/GenericList";
-import GenericTableTailwind from "../../components/tailwindGenerics/GenericTableTailwind";
-import GenericTableBootstrap from "../../components/GenericTable";
+import GenericTable from "../../components/GenericTable";
 import ThemeSelector from '../../components/ThemeSelector';
 import { useTheme } from '../../context/ThemeContext';
 import { Role } from "../../models/Role";
@@ -228,25 +227,9 @@ const Roles: React.FC = () => {
                     </div>
                   )}
 
-                  {designLibrary === 'tailwind' && (
-                    <GenericTableTailwind
-                      data={roles}
-                      columns={["id", "name", "description"]}
-                      actions={[
-                        { name: "assignPermissions", label: "Permissions", variant: "primary" },
-                        { name: "edit", label: "Editar", variant: "warning" },
-                        { name: "delete", label: "Eliminar", variant: "danger" },
-                      ]}
-                      onAction={handleAction}
-                      striped
-                      hover
-                      responsive
-                      emptyMessage="No hay roles registrados en el sistema"
-                    />
-                  )}
-
-                  {designLibrary === 'bootstrap' && (
-                    <GenericTableBootstrap
+                  {/* 📊 Bootstrap y Tailwind: usa tabla genérica unificada */}
+                  {(designLibrary === 'tailwind' || designLibrary === 'bootstrap') && (
+                    <GenericTable
                       data={roles}
                       columns={["id", "name", "description"]}
                       actions={[

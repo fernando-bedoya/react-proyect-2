@@ -9,6 +9,7 @@ import { Formik, Field, ErrorMessage, Form as FormikForm } from 'formik';
 import * as Yup from 'yup';
 import { UserPlus, Mail, User as UserIcon } from 'lucide-react';
 import AuthLayout from '../../components/AuthLayout';
+import ThemeSelector from '../../components/ThemeSelector';
 import { 
   createUserWithEmailAndPassword,
   GoogleAuthProvider,
@@ -332,6 +333,10 @@ const SignUp: React.FC = () => {
       <Card className="shadow-lg border-0" style={{ borderRadius: '1rem' }}>
               <Card.Body className="p-4 p-md-5">
               <div className="text-center mb-4">
+                <div className="d-flex justify-content-end mb-2">
+                  {/* 🎨 Selector de tema unificado */}
+                  <ThemeSelector />
+                </div>
                 <div 
                   className="mx-auto mb-3 d-flex align-items-center justify-content-center"
                   style={{

@@ -4,6 +4,7 @@ import { ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import Breadcrumb from '../../components/Breadcrumb';
+import ThemeSelector from '../../components/ThemeSelector';
 import GenericEntityForm, { FieldDef } from '../../components/formValidators/GenericEntityForm';
 import GenericFormMaterial from '../../components/GenericsMaterial/GenericFormMaterial';
 import { useTheme } from '../../context/ThemeContext';
@@ -58,10 +59,12 @@ const CreateRole: React.FC = () => {
               <ArrowLeft size={16} />
               Volver
             </button>
-            <div>
+            <div className="flex-grow-1">
               <h2 className="h3 fw-bold mb-1" style={{ color: '#10b981' }}>Crear Nuevo Rol</h2>
               <p className="text-muted mb-0">Complete el formulario para agregar un nuevo rol al sistema</p>
             </div>
+            {/* 🎨 Selector de tema unificado */}
+            <ThemeSelector />
           </div>
         </Col>
       </Row>

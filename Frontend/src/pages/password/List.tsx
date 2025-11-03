@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Container, Row, Col, Card, Table, Button, Spinner } from 'react-bootstrap';
 import Breadcrumb from '../../components/Breadcrumb';
+import ThemeSelector from '../../components/ThemeSelector';
 import { passwordService } from '../../services/Password/passwordService';
 import Swal from 'sweetalert2';
 import { useNavigate } from 'react-router-dom';
@@ -57,7 +58,11 @@ const ListPasswords: React.FC = () => {
           </div>
         </Col>
         <Col className="text-end align-self-center">
-          <Button variant="success" onClick={() => navigate('/passwords/create')}>Crear nueva</Button>
+          <div className="d-flex gap-2 justify-content-end align-items-center">
+            {/* 🎨 Selector de tema unificado */}
+            <ThemeSelector />
+            <Button variant="success" onClick={() => navigate('/passwords/create')}>Crear nueva</Button>
+          </div>
         </Col>
       </Row>
 
