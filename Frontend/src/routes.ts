@@ -14,6 +14,11 @@ const UsersUpdate = lazy(() => import('./pages/Users/Update'));
 const UsersRolesList = lazy(() => import('./pages/Users-Roles/List'));
 const UsersRolesUpdate = lazy(() => import('./pages/Users-Roles/Update'));
 
+// Address pages
+// Load the Create page we added under src/pages/Adrdess/Create.tsx
+const AddressCreate = lazy(() => import('./pages/Address/Create'));
+const AddressUpdate = lazy(() => import('./pages/Address/Update'));
+
 // Roles
 const RolesList = lazy(() => import('./pages/Roles/List'));
 const RolesCreate = lazy(() => import('./pages/Roles/Create'));
@@ -109,6 +114,16 @@ const coreRoutes = [
     path: '/user-roles',
     title: 'Users - Roles',
     component: UsersRolesList,
+  },
+  {
+    path: '/addresses/create',
+    title: 'Create Address',
+    component: AddressCreate,
+  },
+  {
+    path: '/addresses/update/:id',
+    title: 'Update Address',
+    component: AddressUpdate,
   },
   {
     path: '/roles/list',
