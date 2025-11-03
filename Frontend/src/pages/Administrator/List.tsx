@@ -77,15 +77,16 @@ const AdministratorList: React.FC = () => {
     };
 
     const columns = [
-        { key: "id", label: "ID" },
+        // Ocultar el atributo `id` largo
+        { key: "id", label: "ID", hidden: true },
         { 
             key: "role_id", 
             label: "Rol",
             render: (row: RolePermission) => {
                 if (row.role) {
-                    return `${row.role.name} (ID: ${row.role_id})`;
+                    return `${row.role.name} (ID: ${row.role_id})`; // Mostrar el nombre y el ID del rol
                 }
-                return `ID: ${row.role_id}`;
+                return `${row.role_id}`; // Mostrar solo el ID si no hay nombre
             }
         },
         { 
@@ -93,9 +94,9 @@ const AdministratorList: React.FC = () => {
             label: "Permiso",
             render: (row: RolePermission) => {
                 if (row.permission) {
-                    return `${row.permission.method?.toUpperCase()} ${row.permission.url} (ID: ${row.permission_id})`;
+                    return `${row.permission.method?.toUpperCase()} ${row.permission.url} (ID: ${row.permission_id})`; // Mostrar el permiso y su ID
                 }
-                return `ID: ${row.permission_id}`;
+                return `ID: ${row.permission_id}`; // Mostrar solo el ID si no hay detalles
             }
         },
         {
@@ -108,6 +109,8 @@ const AdministratorList: React.FC = () => {
             }
         }
     ];
+
+    const visibleColumns = columns.filter(column => column.key !== "id"); // Excluir la columna `id` antes de pasarla al componente
 
     const actions = [
         {
@@ -161,7 +164,7 @@ const AdministratorList: React.FC = () => {
                 ) : (
                     <GenericTableTailwind
                         data={rolePermissions}
-                        columns={columns}
+                        columns={visibleColumns} // Usar las columnas visibles
                         actions={actions}
                         onAction={handleAction}
                         striped
