@@ -25,6 +25,22 @@ class PermissionService {
         }
     }
 
+    /**
+     * Obtener permisos asociados a un role (agrupados según backend).
+     * Se asume que el backend expone un endpoint similar a: GET /permissions/grouped/:roleId
+     * que devuelve un array agrupado por entidad con un flag `has_permission` en cada permiso.
+     */
+    async getPermissionsByRole(roleId: number): Promise<any[]> {
+        try {
+            const response = await axios.get<any[]>(`${API_URL}/grouped/role/${roleId}`);
+            return response.data;
+        } catch (error) {
+            console.error(`Error al obtener permisos para role ${roleId}:`, error);
+            // Devolver array vacío como fallback para que el frontend no rompa
+            return [];
+        }
+    }
+
     async createPermission(permission: Omit<Permission, "id">): Promise<Permission | null> {
         try {
             const response = await axios.post<Permission>(API_URL, permission);

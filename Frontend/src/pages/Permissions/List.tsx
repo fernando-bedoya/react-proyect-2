@@ -7,21 +7,49 @@ import useLocalStorage from "../../hooks/useLocalStorage";
 import { Permission } from "../../models/Permission";
 import { permissionService } from "../../services/permissionService";
 import Swal from "sweetalert2";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams, useParams } from "react-router-dom";
 
 const ListPermissions: React.FC = () => {
     const navigate = useNavigate();
     const [permissions, setPermissions] = useState<Permission[]>([]);
+    const [groupedPermissions, setGroupedPermissions] = useState<any[] | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
     const [showModal, setShowModal] = useState<boolean>(false);
     const [selectedPermission, setSelectedPermission] = useState<Permission | null>(null);
     const [tableStyle, setTableStyle] = useLocalStorage<'tailwind' | 'bootstrap' | 'material'>('tableStyle', 'tailwind');
+    const [searchParams] = useSearchParams();
+    const params = useParams();
+    const [roleId, setRoleId] = useState<number | null>(null);
 
     useEffect(() => {
+        // Primero revisar params de ruta (/permissions/list/:roleId)
+        const routeRid = params?.roleId;
+        if (routeRid) {
+            const id = parseInt(routeRid as string, 10);
+            if (!isNaN(id)) {
+                setRoleId(id);
+                fetchPermissionsByRole(id);
+                return;
+            }
+        }
+
+        // Si viene roleId (query param 'roleId' o 'role'), usar endpoint por role
+        const rid = searchParams.get('roleId') || searchParams.get('role');
+        if (rid) {
+            const id = parseInt(rid, 10);
+            if (!isNaN(id)) {
+                setRoleId(id);
+                fetchPermissionsByRole(id);
+                return;
+            }
+        }
+
+        // default: traer todos los permisos del sistema
         fetchData();
-    }, []);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [searchParams, params]);
 
     const fetchData = async () => {
         try {
@@ -32,6 +60,29 @@ const ListPermissions: React.FC = () => {
         } catch (err) {
             console.error("Error fetching permissions:", err);
             setError("Error al cargar los permisos. Por favor, intente nuevamente.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const fetchPermissionsByRole = async (id: number) => {
+        try {
+            setLoading(true);
+            setError(null);
+            const data = await permissionService.getPermissionsByRole(id);
+            // data expected to be grouped: [{ entity: 'X', permissions: [ { ... , has_permission: true } ] }, ...]
+            setGroupedPermissions(data);
+            // also populate a flat permissions array for counts / compatibility
+            const flat: Permission[] = [];
+            data?.forEach((g: any) => {
+                if (Array.isArray(g.permissions)) {
+                    g.permissions.forEach((p: any) => flat.push(p));
+                }
+            });
+            setPermissions(flat as Permission[]);
+        } catch (err) {
+            console.error("Error fetching permissions by role:", err);
+            setError("Error al cargar los permisos del role. Por favor, intente nuevamente.");
         } finally {
             setLoading(false);
         }
@@ -76,7 +127,8 @@ const ListPermissions: React.FC = () => {
     const handleRefresh = () => {
         setSuccessMessage(null);
         setError(null);
-        fetchData();
+        if (roleId) fetchPermissionsByRole(roleId);
+        else fetchData();
     };
 
     const handleCloseModal = () => {
@@ -90,10 +142,10 @@ const ListPermissions: React.FC = () => {
                 <div className="flex justify-between items-center">
                     <div>
                         <h2 className="text-title-sm font-bold mb-1" style={{ color: '#10b981' }}>
-                            Gestión de Permisos
+                            {roleId ? `Permisos (role #${roleId})` : 'Gestión de Permisos'}
                         </h2>
                         <p className="text-muted mb-0">
-                            Listado de permisos del sistema
+                            {roleId ? 'Listado de permisos para el role' : 'Listado de permisos del sistema'}
                             <span className="inline-block ml-2 bg-gray-200 text-gray-800 px-2 py-0.5 rounded text-xs">{permissions.length} permisos</span>
                         </p>
                     </div>
@@ -169,28 +221,74 @@ const ListPermissions: React.FC = () => {
                             </div>
                         ) : (
                             <>
-                                {tableStyle === 'material' && (
-                                    <div className="p-3">
-                                        <GenericList
-                                            data={permissions as any}
-                                            columns={[
-                                                { key: 'id', label: 'ID' },
-                                                { key: 'url', label: 'URL' },
-                                                { key: 'method', label: 'Método' },
-                                                { key: 'entity', label: 'Entidad' },
-                                            ]}
-                                            loading={loading}
-                                            selectable={false}
-                                            idKey="id"
-                                            actions={[
-                                                { name: 'view', icon: <Eye />, tooltip: 'Ver', color: 'info' },
-                                                { name: 'edit', icon: <Edit />, tooltip: 'Editar', color: 'warning' },
-                                                { name: 'delete', icon: <Trash2 />, tooltip: 'Eliminar', color: 'error' },
-                                            ]}
-                                            onAction={handleAction}
-                                            emptyMessage="No hay permisos registrados en el sistema"
-                                        />
+                                {/* If viewing a specific role, render grouped permissions */}
+                                {roleId && groupedPermissions ? (
+                                    <div className="p-3 space-y-4">
+                                        <div className="mb-2">
+                                            <h3 className="text-lg font-semibold">Permisos para el role #{roleId}</h3>
+                                            <p className="text-sm text-muted">{permissions.length} permisos (marcados los que tiene el role)</p>
+                                        </div>
+                                        {groupedPermissions.map((group: any) => (
+                                            <div key={group.entity} className="border rounded-md p-3 bg-white dark:bg-boxdark">
+                                                <div className="flex items-center justify-between mb-2">
+                                                    <h4 className="font-medium">{group.entity}</h4>
+                                                    <span className="text-sm text-muted">{group.permissions?.length ?? 0} permisos</span>
+                                                </div>
+                                                <div className="overflow-x-auto">
+                                                    <table className="min-w-full text-sm">
+                                                        <thead>
+                                                            <tr className="text-left text-xs text-gray-500">
+                                                                <th className="py-1">URL</th>
+                                                                <th className="py-1">Método</th>
+                                                                <th className="py-1">Tiene</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            {group.permissions.map((p: any) => (
+                                                                <tr key={p.id} className="border-t">
+                                                                    <td className="py-2">{p.url}</td>
+                                                                    <td className="py-2">{p.method}</td>
+                                                                    <td className="py-2">
+                                                                        {p.has_permission ? (
+                                                                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs bg-green-100 text-green-800">Sí</span>
+                                                                        ) : (
+                                                                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs bg-gray-100 text-gray-700">No</span>
+                                                                        )}
+                                                                    </td>
+                                                                </tr>
+                                                            ))}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        ))}
                                     </div>
+                                ) : (
+                                    <>
+                                        {tableStyle === 'material' && (
+                                            <div className="p-3">
+                                                <GenericList
+                                                    data={permissions as any}
+                                                    columns={[
+                                                        { key: 'id', label: 'ID' },
+                                                        { key: 'url', label: 'URL' },
+                                                        { key: 'method', label: 'Método' },
+                                                        { key: 'entity', label: 'Entidad' },
+                                                    ]}
+                                                    loading={loading}
+                                                    selectable={false}
+                                                    idKey="id"
+                                                    actions={[
+                                                        { name: 'view', icon: <Eye />, tooltip: 'Ver', color: 'info' },
+                                                        { name: 'edit', icon: <Edit />, tooltip: 'Editar', color: 'warning' },
+                                                        { name: 'delete', icon: <Trash2 />, tooltip: 'Eliminar', color: 'error' },
+                                                    ]}
+                                                    onAction={handleAction}
+                                                    emptyMessage="No hay permisos registrados en el sistema"
+                                                />
+                                            </div>
+                                        )}
+                                    </>
                                 )}
 
                                 {tableStyle === 'tailwind' && (
@@ -223,7 +321,7 @@ const ListPermissions: React.FC = () => {
                                         columns={["id", "url", "method", "entity"]}
                                         actions={[
                                             { name: "view", label: "Ver", variant: "outline-primary", icon: 'view' },
-                                            { name: "edit", label: "Editar", variant: "outline-warning", icon: 'edit' },
+                                            { name: "edit", label: "Editar", variant: "warning", icon: 'edit' },
                                             { name: "delete", label: "Eliminar", variant: "outline-danger", icon: 'delete' },
                                         ]}
                                         onAction={handleAction}

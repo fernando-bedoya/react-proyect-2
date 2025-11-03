@@ -48,8 +48,9 @@ const Roles: React.FC = () => {
   };
 
   const handleAction = async (action: string, item: Role) => {
-    if (action === "assignPermissions") {
-        navigate(`/administrator/permissions?roleId=${item.id}`);
+  if (action === "assignPermissions") {
+    // Redirect to the new permissions-by-role page (route param)
+    navigate(`/permissions/list/${item.id}`);
     } else if (action === "edit") {
         navigate(`/roles/update/${item.id}`);
     } else if (action === "delete") {
@@ -217,7 +218,7 @@ const Roles: React.FC = () => {
                         selectable
                         idKey="id"
                         actions={[
-                          { name: 'assignPermissions', icon: <Shield />, tooltip: 'Asignar Permisos', color: 'info' },
+                          { name: 'assignPermissions', icon: <Shield />, tooltip: 'Permissions', color: 'info' },
                           { name: 'edit', icon: <Edit />, tooltip: 'Editar', color: 'warning' },
                           { name: 'delete', icon: <Trash2 />, tooltip: 'Eliminar', color: 'error' },
                         ]}
@@ -232,7 +233,7 @@ const Roles: React.FC = () => {
                       data={roles}
                       columns={["id", "name", "description"]}
                       actions={[
-                        { name: "assignPermissions", label: "Asignar Permisos", variant: "primary" },
+                        { name: "assignPermissions", label: "Permissions", variant: "primary" },
                         { name: "edit", label: "Editar", variant: "warning" },
                         { name: "delete", label: "Eliminar", variant: "danger" },
                       ]}
@@ -249,7 +250,7 @@ const Roles: React.FC = () => {
                       data={roles}
                       columns={["id", "name", "description"]}
                       actions={[
-                        { name: "assignPermissions", label: "Asignar Permisos", icon: 'edit', variant: "outline-primary" },
+                        { name: "assignPermissions", label: "Permissions", icon: 'edit', variant: "outline-primary" },
                         { name: "edit", label: "Editar", icon: 'edit', variant: "outline-warning" },
                         { name: "delete", label: "Eliminar", icon: 'delete', variant: "outline-danger" },
                       ]}

@@ -116,6 +116,11 @@ const coreRoutes = [
     component: UsersRolesList,
   },
   {
+    path: '/user-roles/:roleId',
+    title: 'Users - Roles (por rol)',
+    component: UsersRolesList,
+  },
+  {
     path: '/addresses/create',
     title: 'Create Address',
     component: AddressCreate,
@@ -143,6 +148,11 @@ const coreRoutes = [
   {
     path: '/permissions/list',
     title: 'Permissions List',
+    component: PermissionsList,
+  },
+  {
+    path: '/permissions/list/:roleId',
+    title: 'Permissions List (por role)',
     component: PermissionsList,
   },
   {
