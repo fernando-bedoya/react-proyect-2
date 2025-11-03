@@ -21,6 +21,17 @@ const CreateUser: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
     const [rolesOptions, setRolesOptions] = useState<Array<{label:string,value:any}>>([]);
 
+    // Helper para detectar error de correo duplicado a partir de la respuesta del servidor
+    const isDuplicateEmailError = (err: any) => {
+        const resp = err?.response;
+        if (!resp) return false;
+        // Caso ideal: backend responde 409 Conflict (o 400 con mensaje claro)
+        if (resp.status === 409) return true;
+        // Fallback: inspeccionar mensajes comunes (es/en) -- incluir 'registered'
+        const msg = String(resp.data?.error || resp.data?.message || resp.data || '');
+        return /correo.*existe|email.*existe|already exists|already registered|email.*exists|duplicate.*email|correo.*duplicado|duplicate|registered/i.test(msg);
+    };
+
     // Cargar roles al montar el componente
     useEffect(() => {
         let mounted = true;
@@ -99,14 +110,20 @@ const CreateUser: React.FC = () => {
                 });
             }
         } catch (error: any) {
-            const errorMsg = error.response?.data?.error || "Error al conectar con el servidor.";
-            setError(errorMsg);
-            Swal.fire({
-                title: "Error",
-                text: errorMsg,
-                icon: "error",
-                confirmButtonColor: "#10b981"
-            });
+            if (isDuplicateEmailError(error)) {
+                const dupMsg = 'El correo ya está registrado. Use otro correo.';
+                setError(dupMsg);
+                Swal.fire({ title: 'Error', text: dupMsg, icon: 'error', confirmButtonColor: '#10b981' });
+            } else {
+                const errorMsg = error.response?.data?.error || "Error al conectar con el servidor.";
+                setError(errorMsg);
+                Swal.fire({
+                    title: "Error",
+                    text: errorMsg,
+                    icon: "error",
+                    confirmButtonColor: "#10b981"
+                });
+            }
         } finally {
             setLoading(false);
         }
@@ -149,12 +166,18 @@ const CreateUser: React.FC = () => {
             }
         } catch (err) {
             console.error(err);
-            setError('Error al conectar con el servidor.');
-            Swal.fire({ 
-                title: 'Error', 
-                text: 'Existe un problema al momento de crear el registro', 
-                icon: 'error' 
-            });
+            if (isDuplicateEmailError(err)) {
+                const dupMsg = 'El correo ya está registrado. Use otro correo.';
+                setError(dupMsg);
+                Swal.fire({ title: 'Error', text: dupMsg, icon: 'error' });
+            } else {
+                setError('Error al conectar con el servidor.');
+                Swal.fire({ 
+                    title: 'Error', 
+                    text: 'Existe un problema al momento de crear el registro', 
+                    icon: 'error' 
+                });
+            }
         } finally {
             setLoading(false);
         }

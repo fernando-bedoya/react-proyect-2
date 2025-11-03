@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { Container, Row, Col, Card, Button, Alert, Spinner, Badge, Modal, Form } from "react-bootstrap";
-import { Plus, RefreshCw, Shield, Edit, Trash2 } from "lucide-react";
+import { Plus, RefreshCw, Shield, Edit, Trash2, Eye } from "lucide-react";
 import GenericList from "../../components/GenericsMaterial/GenericList";
 import GenericTableTailwind from "../../components/tailwindGenerics/GenericTableTailwind";
 import GenericTableBootstrap from "../../components/GenericTable";
 import ThemeSelector from '../../components/ThemeSelector';
+import GenericViewModal from '../../components/GenericsMaterial/GenericViewModal';
 import { useTheme } from '../../context/ThemeContext';
 import { Role } from "../../models/Role";
 import { roleService } from "../../services/Role/roleService";
@@ -17,6 +18,7 @@ const Roles: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [showModal, setShowModal] = useState<boolean>(false);
+  const [showViewModal, setShowViewModal] = useState<boolean>(false);
   const [selectedRole, setSelectedRole] = useState<Role | null>(null);
   // el estilo de la tabla se controla desde ThemeContext (designLibrary)
   const [permissions, setPermissions] = useState<any[]>([]);
@@ -48,6 +50,25 @@ const Roles: React.FC = () => {
   };
 
   const handleAction = async (action: string, item: Role) => {
+  if (action === "view") {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await roleService.getRoleById(item.id as number);
+      if (data) {
+        setSelectedRole(data);
+        setShowViewModal(true);
+      } else {
+        setError('No se pudo obtener la información del rol');
+      }
+    } catch (err) {
+      console.error('Error al obtener rol:', err);
+      setError('Error al obtener la información del rol');
+    } finally {
+      setLoading(false);
+    }
+    return;
+  }
   if (action === "assignPermissions") {
     // Redirect to the new permissions-by-role page (route param)
     navigate(`/permissions/list/${item.id}`);
@@ -81,6 +102,11 @@ const Roles: React.FC = () => {
             }
         });
     }
+  };
+
+  const handleCloseViewModal = () => {
+    setShowViewModal(false);
+    setSelectedRole(null);
   };
 
   const handleCreateNew = () => {
@@ -218,6 +244,7 @@ const Roles: React.FC = () => {
                         selectable
                         idKey="id"
                         actions={[
+                          { name: 'view', icon: <Eye />, tooltip: 'Ver', color: 'primary' },
                           { name: 'assignPermissions', icon: <Shield />, tooltip: 'Permissions', color: 'info' },
                           { name: 'edit', icon: <Edit />, tooltip: 'Editar', color: 'warning' },
                           { name: 'delete', icon: <Trash2 />, tooltip: 'Eliminar', color: 'error' },
@@ -233,6 +260,7 @@ const Roles: React.FC = () => {
                       data={roles}
                       columns={["id", "name", "description"]}
                       actions={[
+                        { name: "view", label: "Ver", variant: "info" },
                         { name: "assignPermissions", label: "Permissions", variant: "primary" },
                         { name: "edit", label: "Editar", variant: "warning" },
                         { name: "delete", label: "Eliminar", variant: "danger" },
@@ -250,6 +278,7 @@ const Roles: React.FC = () => {
                       data={roles}
                       columns={["id", "name", "description"]}
                       actions={[
+                        { name: "view", label: "Ver", icon: 'eye', variant: "outline-primary" },
                         { name: "assignPermissions", label: "Permissions", icon: 'edit', variant: "outline-primary" },
                         { name: "edit", label: "Editar", icon: 'edit', variant: "outline-warning" },
                         { name: "delete", label: "Eliminar", icon: 'delete', variant: "outline-danger" },
@@ -336,6 +365,19 @@ const Roles: React.FC = () => {
           </Button>
         </Modal.Footer>
       </Modal>
+      {/* Modal reutilizable para ver detalles del rol */}
+      <GenericViewModal
+        show={showViewModal}
+        onClose={handleCloseViewModal}
+        title={`Ver Rol - ${selectedRole?.name ?? ''}`}
+        data={selectedRole}
+        fields={[
+          { label: 'ID', key: 'id' },
+          { label: 'Nombre', key: 'name' },
+          { label: 'Descripción', key: 'description' },
+          { label: 'Permisos', key: 'permissions' },
+        ]}
+      />
     </Container>
   );
 };

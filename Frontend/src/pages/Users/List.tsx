@@ -328,8 +328,12 @@ const ListUsers: React.FC = () => {
                     <div className="mb-6">
                         <div className="flex justify-between items-center">
                             <div>
-                                <h2 className="text-3xl font-bold mb-1 text-green-500">
-                                    Gestión de Usuarios
+                                <h2 className="text-3xl font-bold mb-1 text-green-500" style={{ 
+                                        color: '#06195fff',
+                                        fontFamily: '"Segoe UI", sans-serif',
+                                        letterSpacing: '-0.5px'
+                                    }}>
+                                    👥 Gestión de Usuarios
                                 </h2>
                                 <p className="text-gray-600">
                                     Listado de todos los usuarios del sistema
@@ -351,6 +355,21 @@ const ListUsers: React.FC = () => {
                                 <button
                                     onClick={handleCreateNew}
                                     className={`${themeClasses.button} ${themeClasses.buttonPrimary} flex items-center gap-2`}
+                                    style={{
+                                        background: 'linear-gradient(90deg, #3b82f6 0%, #06b6d4 100%)',
+                                        color: '#ffffff',
+                                        border: 'none'
+                                    }}
+                                    onMouseEnter={(e) => {
+                                        (e.currentTarget as HTMLButtonElement).style.background = 'linear-gradient(90deg, #2563eb 0%, #0891b2 100%)';
+                                        (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(-2px) scale(1.02)';
+                                        (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 8px 20px rgba(59,130,246,0.28)';
+                                    }}
+                                    onMouseLeave={(e) => {
+                                        (e.currentTarget as HTMLButtonElement).style.background = 'linear-gradient(90deg, #3b82f6 0%, #06b6d4 100%)';
+                                        (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(0) scale(1)';
+                                        (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 4px 12px rgba(59,130,246,0.2)';
+                                    }}
                                 >
                                     <Plus size={18} />
                                     Nuevo Usuario
@@ -420,8 +439,12 @@ const ListUsers: React.FC = () => {
                     <div className="mb-8">
                         <div className="flex justify-between items-center">
                             <div>
-                                <h2 className="text-4xl font-bold mb-2 text-green-600">
-                                    Gestión de Usuarios
+                                <h2 className="text-4xl font-bold mb-2 text-green-600" style={{ 
+                                        color: '#926a05ff',
+                                        fontFamily: '"Segoe UI", sans-serif',
+                                        letterSpacing: '-0.5px'
+                                    }}>
+                                    👥 Gestión de Usuarios
                                 </h2>
                                 <p className="text-gray-700 text-lg">
                                     Listado de todos los usuarios del sistema
@@ -443,6 +466,21 @@ const ListUsers: React.FC = () => {
                                 <button
                                     onClick={handleCreateNew}
                                     className={`${themeClasses.button} ${themeClasses.buttonPrimary} flex items-center gap-2`}
+                                    style={{
+                                        background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                                        color: '#ffffff',
+                                        border: 'none'
+                                    }}
+                                    onMouseEnter={(e) => {
+                                        (e.currentTarget as HTMLButtonElement).style.background = 'linear-gradient(135deg, #d97706 0%, #b45309 100%)';
+                                        (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(-2px) scale(1.02)';
+                                        (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 8px 20px rgba(245,158,11,0.35)';
+                                    }}
+                                    onMouseLeave={(e) => {
+                                        (e.currentTarget as HTMLButtonElement).style.background = 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)';
+                                        (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(0) scale(1)';
+                                        (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 4px 12px rgba(245,158,11,0.25)';
+                                    }}
                                 >
                                     <Plus size={20} />
                                     Nuevo Usuario
