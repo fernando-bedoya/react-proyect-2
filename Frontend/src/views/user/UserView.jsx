@@ -35,6 +35,7 @@ import {
 import GenericTable from '../../components/GenericTable';
 import ThemeSelector from '../../components/ThemeSelector';
 import { getAll, remove } from '../../services/baseService';
+import addressService from '../../services/addressService';
 import { useThemeStyles } from '../../hooks/useThemeStyles';
 import Swal from 'sweetalert2';
 
@@ -158,8 +159,25 @@ const UserView = () => {
   /**
    * Navega a la vista de direcciones del usuario
    */
-  const handleAddress = (user) => {
-    navigate(`/addresses?userId=${user.id}`);
+  const handleAddress = async (user) => {
+    // Check if user already has an address; if so navigate to update, otherwise to create
+    setLoading(true);
+    try {
+      const addr = await addressService.getAddressByUserId(Number(user.id));
+      if (addr && addr.id) {
+        // navigate to update page for this address
+        navigate(`/addresses/update/${addr.id}`);
+      } else {
+        // no address found -> go to create with userId
+        navigate(`/addresses/create?userId=${user.id}`);
+      }
+    } catch (err) {
+      console.error('Error checking address for user', err);
+      // fallback to create page
+      navigate(`/addresses?userId=${user.id}`);
+    } finally {
+      setLoading(false);
+    }
   };
 
   /**
