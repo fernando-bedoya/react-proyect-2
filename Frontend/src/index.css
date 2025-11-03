@@ -161,3 +161,8 @@ span.flatpickr-weekday,
 [x-cloak] {
   display: none !important;
 }
+
+/* Bootstrap Sidebar Layout - YA NO ES NECESARIO */
+/* Ahora se usa el componente Sidebar genérico que maneja su propio posicionamiento */
+/* El Sidebar.tsx usa position: absolute en mobile y se comporta como static en desktop (lg+) */
+/* Esto asegura consistencia visual entre todas las librerías de diseño (Bootstrap, Tailwind, Material) */

@@ -257,6 +257,66 @@ const SignUp: React.FC = () => {
       console.error('Error en Microsoft login:', error);
       let errorMsg = 'Error al iniciar sesión con Microsoft';
       
+      // Error específico: Microsoft no está configurado en Firebase/Azure
+      if (error.code === 'auth/unauthorized-domain' || error.message?.includes('unauthorized_client')) {
+        await Swal.fire({
+          icon: 'error',
+          title: 'Microsoft no configurado',
+          html: `
+            <p>La autenticación con Microsoft no está habilitada en este proyecto.</p>
+            <p><strong>Para habilitar Microsoft:</strong></p>
+            <ol style="text-align: left; margin-top: 10px;">
+              <li>Ve a <a href="https://portal.azure.com" target="_blank">Azure Portal</a></li>
+              <li>Crea una aplicación en Azure AD</li>
+              <li>Copia el Client ID y Client Secret</li>
+              <li>Ve a <a href="https://console.firebase.google.com" target="_blank">Firebase Console</a></li>
+              <li>En Authentication → Sign-in method, habilita Microsoft</li>
+              <li>Ingresa las credenciales de Azure</li>
+            </ol>
+            <p style="margin-top: 10px;"><strong>Por ahora, usa otro método:</strong> Google, GitHub o Email</p>
+          `,
+          confirmButtonText: 'Entendido',
+          width: 600
+        });
+        
+        setLoading(false);
+        return; // Salir sin mostrar error adicional
+      }
+      
+      // Error específico: PKCE requerido para Microsoft (error de configuración de Azure)
+      if (error.code === 'auth/invalid-credential' && error.message?.includes('Proof Key for Code Exchange')) {
+        await Swal.fire({
+          icon: 'error',
+          title: 'Error de configuración de Microsoft',
+          html: `
+            <p><strong>Microsoft está parcialmente configurado pero falta PKCE.</strong></p>
+            <p>Este es un requisito de seguridad de Microsoft Azure.</p>
+            <p><strong>Solución:</strong></p>
+            <ol style="text-align: left; margin-top: 10px;">
+              <li>Ve a <a href="https://portal.azure.com" target="_blank">Azure Portal</a></li>
+              <li>Abre tu aplicación en "App registrations"</li>
+              <li>Ve a <strong>Authentication</strong> en el menú lateral</li>
+              <li>En <strong>Platform configurations → Web</strong>:</li>
+              <ul style="margin-left: 20px;">
+                <li>✅ Marca "Access tokens"</li>
+                <li>✅ Marca "ID tokens"</li>
+              </ul>
+              <li>En <strong>Advanced settings</strong>:</li>
+              <ul style="margin-left: 20px;">
+                <li>✅ Habilita "Allow public client flows"</li>
+              </ul>
+              <li>Haz clic en <strong>Save</strong></li>
+            </ol>
+            <p style="margin-top: 10px;"><strong>Por ahora, usa:</strong> Google, GitHub o Email/Password</p>
+          `,
+          confirmButtonText: 'Entendido',
+          width: 650
+        });
+        
+        setLoading(false);
+        return; // Salir sin mostrar error adicional
+      }
+      
       if (error.code === 'auth/popup-blocked') {
         errorMsg = 'El popup fue bloqueado. Permite popups para este sitio';
       }

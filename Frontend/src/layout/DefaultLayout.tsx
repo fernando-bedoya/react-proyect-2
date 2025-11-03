@@ -12,7 +12,7 @@ const DefaultLayout = () => {
 
   // Estilos condicionales basados en la librería
   const wrapperClasses = designLibrary === 'bootstrap' 
-    ? 'min-vh-100 d-flex' 
+    ? 'min-vh-100' 
     : 'dark:bg-boxdark-2 dark:text-bodydark';
 
   const layoutClasses = designLibrary === 'bootstrap'
@@ -33,11 +33,12 @@ const DefaultLayout = () => {
         {/* <!-- ===== Page Wrapper Start ===== --> */}
         <div className={layoutClasses}>
           {/* <!-- ===== Sidebar Start ===== --> */}
-          
+          {/* Usa el componente Sidebar genérico para todas las librerías de diseño */}
           <AdaptiveSidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
           {/* <!-- ===== Sidebar End ===== --> */}
 
           {/* <!-- ===== Content Area Start ===== --> */}
+          {/* El Sidebar genérico maneja su propio posicionamiento sin necesidad de margin-left */}
           <div className={contentClasses}>
             {/* <!-- ===== Header Start ===== --> */}
             <AdaptiveHeader sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />

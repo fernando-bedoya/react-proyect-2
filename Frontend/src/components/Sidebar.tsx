@@ -81,17 +81,51 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
 
   return (
     <div>
+      {/* Estilos en línea para asegurar que el sidebar funcione en todas las librerías (Bootstrap, Tailwind, Material) */}
+      <style>{`
+        /* Estilos base del sidebar - funcionan con todas las librerías de diseño */
+        aside[data-sidebar] {
+          position: absolute;
+          left: 0;
+          top: 0;
+          z-index: 9999;
+          display: flex;
+          height: 100vh;
+          width: 290px; /* w-72.5 de Tailwind = 290px */
+          flex-direction: column;
+          overflow-y: hidden;
+          transition: transform 0.3s ease;
+        }
+        
+        /* En desktop (>= 992px), el sidebar se comporta como estático */
+        @media (min-width: 992px) {
+          aside[data-sidebar] {
+            position: static !important;
+            transform: translateX(0) !important;
+          }
+        }
+        
+        /* En mobile, ocultar el sidebar cuando está cerrado */
+        aside[data-sidebar].sidebar-closed {
+          transform: translateX(-100%);
+        }
+        
+        /* En mobile, mostrar el sidebar cuando está abierto */
+        aside[data-sidebar].sidebar-open {
+          transform: translateX(0);
+        }
+      `}</style>
+      
       {/* Solo mostrar sidebar si hay usuario autenticado */}
       {user ? (
         <aside
           ref={sidebar}
-          className={`absolute left-0 top-0 z-9999 flex h-screen w-72.5 flex-col overflow-y-hidden duration-300 ease-linear lg:static lg:translate-x-0 ${
-            sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-          }`}
+          data-sidebar
+          className={`${sidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}
           style={{
-            // border uses CSS var so it adapts to light/dark mode
+            // Borde que se adapta al modo claro/oscuro
             borderRight: '2px solid var(--bs-sidebar-hover)',
-            // Soft teal background and text to match requested palette
+            // Fondo teal claro con degradado - consistente en todas las librerías
             background: 'linear-gradient(to bottom, #effdfa, #dff6f0)',
             color: '#07373a'
           }}

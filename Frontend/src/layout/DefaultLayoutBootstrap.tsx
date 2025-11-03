@@ -4,16 +4,23 @@ import { Outlet } from 'react-router-dom';
 import { Provider } from 'react-redux';
 import { store } from '../store/store';
 import HeaderBootstrap from '../components/HeaderBootstrap';
-import SidebarBootstrap from '../components/SidebarBootstrap';
+import Sidebar from '../components/Sidebar';
 
+/**
+ * DefaultLayoutBootstrap - Layout específico para Bootstrap
+ * 
+ * Este layout usa el componente Sidebar genérico en lugar de uno específico de Bootstrap,
+ * maximizando la reutilización de código y asegurando consistencia visual.
+ * El Sidebar.tsx está diseñado para funcionar con cualquier sistema de diseño.
+ */
 const DefaultLayoutBootstrap = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
     <Provider store={store}>
       <div className="min-vh-100" style={{ backgroundColor: '#f8f9fa' }}>
-        {/* Sidebar */}
-        <SidebarBootstrap sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+        {/* Sidebar - Usando el componente genérico que funciona con todas las librerías */}
+        <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
         
         {/* Main Content Area */}
         <div 
