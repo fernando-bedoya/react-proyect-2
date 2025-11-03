@@ -218,7 +218,6 @@ const GenericForm: React.FC<GenericFormProps> = ({
             name={field.name}
             value={formData[field.name] || ''}
             onChange={handleChange}
-            onBlur={() => handleBlur(field.name)}
             isInvalid={!!hasError}
             disabled={field.disabled || loading}
             style={inputStyle}
@@ -248,7 +247,6 @@ const GenericForm: React.FC<GenericFormProps> = ({
             name={field.name}
             value={formData[field.name] || ''}
             onChange={handleChange}
-            onBlur={() => handleBlur(field.name)}
             placeholder={field.placeholder}
             isInvalid={!!hasError}
             disabled={field.disabled || loading}
@@ -315,7 +313,6 @@ const GenericForm: React.FC<GenericFormProps> = ({
             name={field.name}
             value={formData[field.name] || ''}
             onChange={handleChange}
-            onBlur={() => handleBlur(field.name)}
             placeholder={field.placeholder}
             isInvalid={!!hasError}
             disabled={field.disabled || loading}

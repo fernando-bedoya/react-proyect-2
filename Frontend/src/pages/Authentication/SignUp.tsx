@@ -3,11 +3,12 @@
 // Incluye validación de formularios con Formik y Yup, y notificaciones con SweetAlert2.
 
 import React, { useState } from 'react';
-import { Container, Row, Col, Card, Form, Button, Alert, Spinner } from 'react-bootstrap';
+import { Card, Form, Button, Alert, Spinner } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
 import { Formik, Field, ErrorMessage, Form as FormikForm } from 'formik';
 import * as Yup from 'yup';
 import { UserPlus, Mail, User as UserIcon } from 'lucide-react';
+import AuthLayout from '../../components/AuthLayout';
 import { 
   createUserWithEmailAndPassword,
   GoogleAuthProvider,
@@ -30,31 +31,29 @@ const SignUp: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   // Función para guardar usuario en el backend
+  // Estrategia: Primero verificar si existe, luego crear si no existe
+  // Esto evita los mensajes de error 400 en la consola
   const saveUserToBackend = async (userData: { name: string; email: string }) => {
     try {
-      // Intentar crear el usuario
-      const createdUser = await userService.createUser(userData);
-      return { user: createdUser, isNew: true };
-    } catch (error: any) {
-      console.error('Error al guardar en backend:', error);
+      // PASO 1: Verificar si el usuario ya existe
+      console.log('🔍 Verificando si el usuario existe:', userData.email);
+      const allUsers = await userService.getUsers();
+      const existingUser = allUsers.find((u: any) => u.email === userData.email);
       
-      // Si el error es porque el email ya existe (400), buscar el usuario existente
-      if (error.response?.status === 400 && error.response?.data?.error?.includes('Email already registered')) {
-        console.log('Usuario ya existe, buscando en base de datos...');
-        try {
-          // Obtener todos los usuarios y buscar por email
-          const allUsers = await userService.getUsers();
-          const existingUser = allUsers.find((u: any) => u.email === userData.email);
-          
-          if (existingUser) {
-            console.log('Usuario encontrado:', existingUser);
-            return { user: existingUser, isNew: false };
-          }
-        } catch (searchError) {
-          console.error('Error al buscar usuario existente:', searchError);
-        }
+      if (existingUser) {
+        // Usuario ya existe, retornarlo directamente sin intentar crear
+        console.log('✅ Usuario encontrado en base de datos:', existingUser);
+        return { user: existingUser, isNew: false };
       }
       
+      // PASO 2: Si no existe, crear usuario nuevo
+      console.log('➕ Usuario nuevo, creando en base de datos...');
+      const createdUser = await userService.createUser(userData);
+      console.log('✅ Usuario creado exitosamente:', createdUser);
+      return { user: createdUser, isNew: true };
+      
+    } catch (error: any) {
+      console.error('❌ Error al procesar usuario:', error);
       throw error;
     }
   };
@@ -329,15 +328,8 @@ const SignUp: React.FC = () => {
   };
 
   return (
-    <Container fluid className="min-vh-100 d-flex align-items-center justify-content-center" 
-        style={{ 
-          background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-          padding: '2rem 0'
-        }}
-      >
-        <Row className="w-100 justify-content-center">
-          <Col xs={12} sm={10} md={8} lg={6} xl={5}>
-            <Card className="shadow-lg border-0" style={{ borderRadius: '1rem' }}>
+    <AuthLayout>
+      <Card className="shadow-lg border-0" style={{ borderRadius: '1rem' }}>
               <Card.Body className="p-4 p-md-5">
               <div className="text-center mb-4">
                 <div 
@@ -533,9 +525,7 @@ const SignUp: React.FC = () => {
               </Formik>
             </Card.Body>
           </Card>
-        </Col>
-      </Row>
-    </Container>
+    </AuthLayout>
   );
 };
 

@@ -1,16 +1,18 @@
 import React, { useState } from "react";
-import { Container, Row, Col, Card, Form, Button, Alert, Spinner, InputGroup } from "react-bootstrap";
+import { Card, Form, Button, Alert, Spinner, InputGroup } from "react-bootstrap";
 import { Formik, Form as FormikForm } from "formik";
 import * as Yup from "yup";
 import { LogIn, Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { User } from "../../models/User";
 import SecurityService from '../../services/securityService';
 import { useNavigate } from "react-router-dom";
+import AuthLayout from "../../components/AuthLayout";
 import { 
   GoogleAuthProvider,
   GithubAuthProvider,
   OAuthProvider,
-  signInWithPopup
+  signInWithPopup,
+  fetchSignInMethodsForEmail
 } from 'firebase/auth';
 import { auth } from '../../firebase';
 import { userService } from '../../services/userService';
@@ -30,15 +32,78 @@ const SignIn: React.FC = () => {
     setError(null);
     
     try {
+      // 🔐 Iniciar sesión con SecurityService (maneja tokens JWT automáticamente)
       const response = await SecurityService.login(user);
-      console.log('Usuario autenticado:', response);
+      console.log('✅ Usuario autenticado:', response);
+      
+      // 🔄 Sincronizar estado con Redux Store (para que esté disponible globalmente)
+      // Esto es crucial para el sistema de guardianes e interceptores
+      dispatch(setUser(response.user || response));
+      
+      // 💾 Guardar en localStorage (persistencia entre recargas)
+      localStorage.setItem('user', JSON.stringify(response.user || response));
       
       await new Promise(resolve => setTimeout(resolve, 500));
       
-      navigate("/");
+      // ✅ Redirección a la página de usuarios después del login exitoso
+      navigate("/users");
     } catch (error: any) {
       console.error('Error al iniciar sesión', error);
-      setError(error.response?.data?.message || 'Credenciales inválidas. Por favor, intente nuevamente.');
+      
+      // 🔐 Manejo especial para error de credenciales inválidas
+      // Este error puede ocurrir por dos razones:
+      // 1. Contraseña incorrecta (usuario registrado con email/password)
+      // 2. Usuario registrado con proveedor social pero intenta usar email/password
+      if (error.code === 'auth/invalid-credential') {
+        try {
+          // 🔍 Verificar con Firebase qué métodos de autenticación tiene este email
+          const signInMethods = await fetchSignInMethodsForEmail(auth, user.email || '');
+          
+          console.log('🔍 Métodos de autenticación para', user.email, ':', signInMethods);
+          
+          // Si el array de métodos está vacío, el usuario no existe en Firebase
+          if (signInMethods.length === 0) {
+            setError('No existe una cuenta con este correo electrónico. Por favor, regístrate primero.');
+            return;
+          }
+          
+          // Si el usuario tiene 'password' en sus métodos, significa que se registró con email/password
+          // entonces simplemente escribió mal la contraseña
+          if (signInMethods.includes('password')) {
+            setError('Contraseña incorrecta. Por favor, verifica tu contraseña e intenta nuevamente.');
+            return;
+          }
+          
+          // Si llegamos aquí, el usuario se registró con un proveedor social (Google, GitHub, Microsoft)
+          // pero está intentando iniciar sesión con email/password
+          const providerNames = signInMethods.map(method => {
+            if (method.includes('google')) return 'Google';
+            if (method.includes('github')) return 'GitHub';
+            if (method.includes('microsoft')) return 'Microsoft';
+            return method;
+          }).join(', ');
+          
+          await Swal.fire({
+            icon: 'warning',
+            title: '⚠️ Método de inicio de sesión incorrecto',
+            html: `
+              <p style="text-align: left;">La cuenta <strong>${user.email}</strong> fue creada usando: <strong>${providerNames}</strong></p>
+              <p style="text-align: left; margin-top: 15px;">Por favor, utiliza el botón correspondiente a continuación en lugar del formulario de email/contraseña.</p>
+            `,
+            confirmButtonText: 'Entendido',
+            confirmButtonColor: '#3b82f6',
+          });
+          setError(`Por favor, usa el botón de ${providerNames} para iniciar sesión.`);
+          
+        } catch (fetchError: any) {
+          console.error('Error al verificar métodos de autenticación:', fetchError);
+          // Si hay error al consultar Firebase, mostrar mensaje genérico
+          setError('Credenciales inválidas. Por favor, verifica tu email y contraseña.');
+        }
+      } else {
+        // Otros tipos de errores de autenticación
+        setError(error.response?.data?.message || 'Credenciales inválidas. Por favor, intente nuevamente.');
+      }
     } finally {
       setLoading(false);
     }
@@ -94,7 +159,8 @@ const SignIn: React.FC = () => {
         showConfirmButton: false
       });
 
-      navigate('/');
+      // ✅ Redirección a la página de usuarios después del login exitoso con Google
+      navigate('/users');
     } catch (error: any) {
       console.error('Error al iniciar sesión con Google:', error);
       
@@ -165,7 +231,8 @@ const SignIn: React.FC = () => {
         showConfirmButton: false
       });
 
-      navigate('/');
+      // ✅ Redirección a la página de usuarios después del login exitoso con GitHub
+      navigate('/users');
     } catch (error: any) {
       console.error('Error al iniciar sesión con GitHub:', error);
       
@@ -236,7 +303,8 @@ const SignIn: React.FC = () => {
         showConfirmButton: false
       });
 
-      navigate('/');
+      // ✅ Redirección a la página de usuarios después del login exitoso con Microsoft
+      navigate('/users');
     } catch (error: any) {
       console.error('Error al iniciar sesión con Microsoft:', error);
       
@@ -341,15 +409,8 @@ const SignIn: React.FC = () => {
   };
 
   return (
-    <Container fluid className="min-vh-100 d-flex align-items-center justify-content-center" 
-        style={{ 
-          background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-          padding: '2rem 0'
-        }}
-      >
-        <Row className="w-100 justify-content-center">
-          <Col xs={12} sm={10} md={8} lg={6} xl={5}>
-            <Card className="shadow-lg border-0" style={{ borderRadius: '1rem' }}>
+    <AuthLayout>
+      <Card className="shadow-lg border-0" style={{ borderRadius: '1rem' }}>
               <Card.Body className="p-4 p-md-5">
               <div className="text-center mb-4">
                 <div 
@@ -436,6 +497,27 @@ const SignIn: React.FC = () => {
                 <div className="text-center my-3">
                   <span className="text-muted">O inicia sesión con email</span>
                 </div>
+                
+                {/* 💡 Mensaje informativo sobre métodos de autenticación */}
+                <Alert 
+                  variant="info" 
+                  className="py-2 px-3"
+                  style={{ 
+                    fontSize: '0.875rem',
+                    backgroundColor: '#e0f2fe',
+                    borderColor: '#bae6fd',
+                    color: '#075985'
+                  }}
+                >
+                  <div className="d-flex align-items-start">
+                    <strong className="me-2">💡</strong>
+                    <div style={{ fontSize: '0.85rem' }}>
+                      <strong>Importante:</strong> Si te registraste con Google, GitHub o Microsoft, 
+                      debes usar el mismo botón para iniciar sesión. El formulario de email/contraseña 
+                      solo funciona para cuentas creadas con email.
+                    </div>
+                  </div>
+                </Alert>
               </div>
 
               <Formik
@@ -542,9 +624,7 @@ const SignIn: React.FC = () => {
               <small className="text-muted">© 2024 Tu Aplicación. Todos los derechos reservados.</small>
             </Card.Footer>
           </Card>
-        </Col>
-      </Row>
-    </Container>
+    </AuthLayout>
   );
 };
 

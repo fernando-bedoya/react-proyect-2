@@ -91,10 +91,11 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
           z-index: 9999;
           display: flex;
           height: 100vh;
-          width: 290px; /* w-72.5 de Tailwind = 290px */
+          width: 290px; /* w-72.5 de Tailwind = 290px - ancho fijo del sidebar */
           flex-direction: column;
           overflow-y: hidden;
           transition: transform 0.3s ease;
+          flex-shrink: 0; /* ✅ Importante: evita que el sidebar se encoja cuando está en un flex container */
         }
         
         /* En desktop (>= 992px), el sidebar se comporta como estático */
@@ -102,6 +103,9 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
           aside[data-sidebar] {
             position: static !important;
             transform: translateX(0) !important;
+            /* ✅ Mantiene el ancho fijo de 290px en desktop para layout con flexbox */
+            min-width: 290px;
+            max-width: 290px;
           }
         }
         

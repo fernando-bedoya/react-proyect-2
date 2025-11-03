@@ -4,10 +4,12 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useSelector } from "react-redux";
 import { RootState } from "../store/store";
 import SecurityService from '../services/securityService';
+import { useTheme } from '../context/ThemeContext';
 
 const DropdownUser = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const navigate = useNavigate();
+  const { designLibrary } = useTheme();
   
   // Esto lee la base de datos global del store Redux para obtener el usuario logueado
   const user = useSelector((state: RootState) => state.user.user);
@@ -122,40 +124,51 @@ const DropdownUser = () => {
   });
 
   return (
-    <div className="relative">
+    <div className={designLibrary === 'bootstrap' ? 'position-relative' : 'relative'}>
       <Link
         ref={trigger}
         onClick={() => setDropdownOpen(!dropdownOpen)}
-        className="flex items-center gap-4"
+        className={designLibrary === 'bootstrap' ? 'd-flex align-items-center gap-3 text-decoration-none' : 'flex items-center gap-4'}
         to="#"
       >
-        {/* Información del usuario: nombre y email */}
-        <span className="hidden text-right lg:block">
-          <span className="block text-sm font-medium text-black dark:text-white">
+        {/* ✅ Información del usuario: nombre y email (oculta en móvil, visible en desktop) */}
+        <span className={designLibrary === 'bootstrap' ? 'd-none d-lg-block text-end' : 'hidden text-right lg:block'}>
+          <span className={designLibrary === 'bootstrap' ? 'd-block text-dark fw-medium' : 'block text-sm font-medium text-black dark:text-white'} style={{ fontSize: designLibrary === 'bootstrap' ? '0.875rem' : undefined }}>
             {user ? user.name : 'Guest'}
           </span>
-          <span className="block text-xs text-gray-500 dark:text-gray-400">
+          <span className={designLibrary === 'bootstrap' ? 'd-block text-muted' : 'block text-xs text-gray-500 dark:text-gray-400'} style={{ fontSize: designLibrary === 'bootstrap' ? '0.75rem' : undefined }}>
             {user ? user.email : 'guest@example.com'}
           </span>
         </span>
 
-        {/* Avatar del usuario con iniciales y color personalizado */}
+        {/* ✅ Avatar del usuario con iniciales y color personalizado */}
         <span 
-          className="h-12 w-12 rounded-full flex items-center justify-center text-white font-bold text-lg"
+          className={designLibrary === 'bootstrap' ? 'rounded-circle d-flex align-items-center justify-content-center text-white fw-bold' : 'h-12 w-12 rounded-full flex items-center justify-center text-white font-bold text-lg'}
           style={{ 
             backgroundColor: getAvatarColor(user?.name),
             boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-            transition: 'all 0.3s ease'
+            transition: 'all 0.3s ease',
+            ...(designLibrary === 'bootstrap' && {
+              width: '48px',
+              height: '48px',
+              fontSize: '1.125rem'
+            })
           }}
           title={user?.name || 'Usuario'}
         >
           {getInitials(user?.name)}
         </span>
 
+        {/* ✅ Icono de flecha (chevron) - indicador de dropdown */}
         <svg
-          className={`hidden fill-current sm:block ${
-            dropdownOpen ? 'rotate-180' : ''
-          }`}
+          className={designLibrary === 'bootstrap' 
+            ? `d-none d-sm-block ${dropdownOpen ? 'rotate-180' : ''}` 
+            : `hidden fill-current sm:block ${dropdownOpen ? 'rotate-180' : ''}`
+          }
+          style={{
+            transition: 'transform 0.3s ease',
+            transform: dropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)'
+          }}
           width="12"
           height="8"
           viewBox="0 0 12 8"
