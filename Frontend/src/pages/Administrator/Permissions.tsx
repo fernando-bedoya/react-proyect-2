@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Container, Row, Col, Card, Form, Button, Spinner, Badge, Alert, Accordion } from "react-bootstrap";
 import { Shield, Save, RefreshCw } from "lucide-react";
-import ThemeSelector from "../../components/ThemeSelector";
 import Swal from "sweetalert2";
 import rolePermissionService from "../../services/rolePermissionService";
 import { permissionService } from "../../services/permissionService";
@@ -188,7 +187,6 @@ const AdministratorPermissions: React.FC = () => {
                             </p>
                         </div>
                         <div className="d-flex gap-2">
-                            <ThemeSelector />
                             <Button
                                 variant="outline-secondary"
                                 onClick={handleRefresh}

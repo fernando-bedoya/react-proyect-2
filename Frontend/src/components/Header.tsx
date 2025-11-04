@@ -1,10 +1,11 @@
 import { Link } from 'react-router-dom';
 import Logo from '../images/logo/logo-icon.svg';
 import DropdownUser from './DropdownUser';
+import ThemeSelector from './ThemeSelector';
 import { useTheme } from '../context/ThemeContext';
 
 /**
- * 🎯 Header - Componente de encabezado genérico y adaptable
+ * 🎯 Header - Componente de encabezado genérico y adaptable con selector de tema
  * 
  * Este componente se adapta automáticamente al tema activo (Bootstrap, Tailwind, Material)
  * aplicando las clases CSS correspondientes según la librería de diseño seleccionada.
@@ -13,7 +14,9 @@ import { useTheme } from '../context/ThemeContext';
  * - ✅ Funciona con Bootstrap, Tailwind y Material UI sin necesidad de componentes separados
  * - ✅ Incluye botón hamburguesa para toggle del sidebar en móvil
  * - ✅ Barra de búsqueda responsive (oculta en móvil)
+ * - ✅ Selector de tema (ThemeSelector) integrado en la barra de navegación
  * - ✅ Dropdown de perfil de usuario con opciones de configuración y logout
+ * - ✅ Colores dinámicos según tema: Bootstrap=Verde, Tailwind=Azul, Material=Amarillo
  * - ✅ Estilos inline para Bootstrap que garantizan posicionamiento correcto
  */
 
@@ -23,10 +26,34 @@ const Header = (props: {
 }) => {
   const { designLibrary } = useTheme();
 
+  // 🎨 Configuración de colores por tema (Bootstrap=Verde, Tailwind=Azul, Material=Amarillo)
+  const themeColors = {
+    bootstrap: {
+      bg: '#10b981', // verde
+      bgLight: '#d1fae5',
+      border: '#10b981',
+      text: '#065f46'
+    },
+    tailwind: {
+      bg: '#3b82f6', // azul
+      bgLight: '#dbeafe',
+      border: '#3b82f6',
+      text: '#1e40af'
+    },
+    material: {
+      bg: '#f59e0b', // amarillo
+      bgLight: '#fef3c7',
+      border: '#f59e0b',
+      text: '#92400e'
+    }
+  };
+
+  const colors = themeColors[designLibrary];
+
   // ✅ Clases condicionales basadas en la librería de diseño activa
   const headerClasses = designLibrary === 'bootstrap'
-    ? 'sticky-top bg-white shadow-sm border-bottom'
-    : 'sticky top-0 z-999 flex w-full bg-white drop-shadow-1 dark:bg-boxdark dark:drop-shadow-none';
+    ? 'sticky-top shadow-sm border-bottom'
+    : 'sticky top-0 z-999 flex w-full drop-shadow-1 dark:drop-shadow-none';
 
   const containerClasses = designLibrary === 'bootstrap'
     ? 'd-flex flex-grow-1 align-items-center justify-content-between py-3 px-4 px-md-6'
@@ -36,12 +63,12 @@ const Header = (props: {
     <header 
       className={headerClasses}
       style={{
-        // ✅ Estilos inline para Bootstrap que aseguran el posicionamiento correcto
-        ...(designLibrary === 'bootstrap' && {
-          borderBottom: '1px solid #e5e7eb',
-          zIndex: 999,
-          width: '100%'
-        })
+        // 🎨 Aplicar color de fondo según el tema activo con degradado sutil
+        background: `linear-gradient(to right, ${colors.bgLight}, white)`,
+        borderBottom: `3px solid ${colors.border}`,
+        zIndex: 999,
+        width: '100%',
+        transition: 'all 0.3s ease' // Transición suave al cambiar de tema
       }}
     >
       <div 
@@ -162,8 +189,11 @@ const Header = (props: {
           </form>
         </div>
 
-        {/* ✅ Sección derecha: Perfil de usuario */}
-        <div className={designLibrary === 'bootstrap' ? 'd-flex align-items-center gap-2 gap-sm-3 ms-auto' : 'flex items-center gap-3 2xsm:gap-7'}>
+        {/* ✅ Sección derecha: Selector de tema + Perfil de usuario */}
+        <div className={designLibrary === 'bootstrap' ? 'd-flex align-items-center gap-3 ms-auto' : 'flex items-center gap-4 2xsm:gap-7'}>
+          {/* 🎨 Selector de tema - permite cambiar entre Bootstrap, Tailwind y Material */}
+          <ThemeSelector />
+          
           {/* <!-- User Area --> */}
           <DropdownUser />
           {/* <!-- User Area --> */}

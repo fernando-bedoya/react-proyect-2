@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { Shield, Plus } from "lucide-react";
 import Swal from "sweetalert2";
 import GenericTable from "../../components/GenericTable";
-import ThemeSelector from "../../components/ThemeSelector";
 import rolePermissionService from "../../services/rolePermissionService";
 import { RolePermission } from "../../models/RolePermission";
 
@@ -136,8 +135,6 @@ const AdministratorList: React.FC = () => {
                         </p>
                     </div>
                     <div className="flex gap-2 items-center">
-                        {/* 🎨 Selector de tema unificado */}
-                        <ThemeSelector />
                         <button
                             onClick={() => navigate("/administrator/permissions")}
                             className="inline-flex items-center gap-2 bg-meta-3 text-white px-4 py-2 rounded text-sm hover:bg-meta-3/90 transition-colors"

@@ -4,6 +4,7 @@ import Logo from '../images/logo/logo.svg';
 
 import { useSelector } from "react-redux";
 import { RootState } from "../../src/store/store";
+import { useTheme } from '../context/ThemeContext';
 
 /**
  * 🎯 Sidebar Component - Menú lateral de navegación con estructura jerárquica completa
@@ -63,6 +64,35 @@ interface SidebarProps {
 const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
   // Obtener usuario del store de Redux - solo muestra el sidebar si hay usuario autenticado
   const user = useSelector((state: RootState) => state.user.user);
+  
+  // 🎨 Obtener el tema actual del contexto
+  const { designLibrary } = useTheme();
+  
+  // 🎨 Configuración de colores por tema (coincide con Header)
+  // Bootstrap = Verde, Tailwind = Azul, Material = Amarillo
+  const themeColors = {
+    bootstrap: {
+      bg: '#10b981',           // Verde principal
+      bgLight: '#d1fae5',      // Verde claro para fondo
+      border: '#10b981',       // Verde para bordes
+      text: '#065f46'          // Verde oscuro para texto
+    },
+    tailwind: {
+      bg: '#3b82f6',           // Azul principal
+      bgLight: '#dbeafe',      // Azul claro para fondo
+      border: '#3b82f6',       // Azul para bordes
+      text: '#1e40af'          // Azul oscuro para texto
+    },
+    material: {
+      bg: '#f59e0b',           // Amarillo principal
+      bgLight: '#fef3c7',      // Amarillo claro para fondo
+      border: '#f59e0b',       // Amarillo para bordes
+      text: '#92400e'          // Amarillo oscuro para texto
+    }
+  };
+  
+  // Obtener colores del tema activo
+  const colors = themeColors[designLibrary];
 
   // Referencias para el sidebar y el botón trigger (para cerrar al click fuera)
   const trigger = useRef<any>(null);
@@ -158,15 +188,25 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
           data-sidebar
           className={`${sidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}
           style={{
-            // Borde que se adapta al modo claro/oscuro
-            borderRight: '2px solid var(--bs-sidebar-hover)',
-            // Fondo teal claro con degradado - consistente en todas las librerías
-            background: 'linear-gradient(to bottom, #effdfa, #dff6f0)',
-            color: '#07373a'
+            // 🎨 Borde con color del tema activo
+            borderRight: `3px solid ${colors.border}`,
+            // 🎨 Fondo con degradado del tema activo (coincide con Header)
+            background: `linear-gradient(to right, ${colors.bgLight}, white)`,
+            // 🎨 Color de texto del tema activo
+            color: colors.text,
+            // Transición suave al cambiar de tema
+            transition: 'all 0.3s ease'
           }}
         >
           {/* SIDEBAR HEADER - Logo de la aplicación */}
-          <div className="flex items-center justify-between gap-2 px-6 py-5.5 lg:py-6.5 border-b border-gray-700">
+          <div 
+            className="flex items-center justify-between gap-2 px-6 py-5.5 lg:py-6.5 border-b"
+            style={{
+              // 🎨 Borde inferior con color del tema
+              borderBottomColor: colors.border,
+              borderBottomWidth: '2px'
+            }}
+          >
             <NavLink to="/">
               <img src={Logo} alt="Logo" />
             </NavLink>
@@ -180,7 +220,8 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
               className="block lg:hidden"
             >
               <svg
-                className="fill-current text-gray-400"
+                className="fill-current"
+                style={{ color: colors.text }}
                 width="20"
                 height="18"
                 viewBox="0 0 20 18"
@@ -205,7 +246,10 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
               {/* Gestión completa de usuarios, roles y asignaciones */}
               {/* ========================================== */}
               <div>
-                <h3 className="mb-4 ml-4 text-sm font-semibold uppercase tracking-wider" style={{ color: '#07373a' }}>
+                <h3 
+                  className="mb-4 ml-4 text-sm font-semibold uppercase tracking-wider" 
+                  style={{ color: colors.text, fontWeight: 700 }}
+                >
                   👥 USER MANAGEMENT
                 </h3>
 
@@ -312,7 +356,10 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
               {/* Gestión de permisos, contraseñas, sesiones y seguridad */}
               {/* ========================================== */}
               <div>
-                <h3 className="mb-4 ml-4 text-sm font-semibold uppercase tracking-wider" style={{ color: '#07373a' }}>
+                <h3 
+                  className="mb-4 ml-4 text-sm font-semibold uppercase tracking-wider" 
+                  style={{ color: colors.text, fontWeight: 700 }}
+                >
                   🔒 SECURITY & ACCESS
                 </h3>
 
@@ -462,7 +509,10 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
               {/* Gestión de direcciones, dispositivos y recursos */}
               {/* ========================================== */}
               <div>
-                <h3 className="mb-4 ml-4 text-sm font-semibold uppercase tracking-wider" style={{ color: '#07373a' }}>
+                <h3 
+                  className="mb-4 ml-4 text-sm font-semibold uppercase tracking-wider" 
+                  style={{ color: colors.text, fontWeight: 700 }}
+                >
                   📍 DATA & RESOURCES
                 </h3>
 
@@ -566,7 +616,10 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
               {/* Registro y autenticación */}
               {/* ========================================== */}
               <div>
-                <h3 className="mb-4 ml-4 text-sm font-semibold uppercase tracking-wider" style={{ color: '#07373a' }}>
+                <h3 
+                  className="mb-4 ml-4 text-sm font-semibold uppercase tracking-wider" 
+                  style={{ color: colors.text, fontWeight: 700 }}
+                >
                   🔐 AUTHENTICATION
                 </h3>
 

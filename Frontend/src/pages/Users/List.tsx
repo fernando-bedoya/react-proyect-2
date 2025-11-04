@@ -3,7 +3,6 @@ import { Container, Row, Col, Card, Button, Alert, Spinner, Badge } from "react-
 import { Plus, RefreshCw, Edit, Trash2, Eye } from "lucide-react";
 import GenericList from "../../components/GenericsMaterial/GenericList";
 import GenericTable from "../../components/GenericTable";
-import ThemeSelector from "../../components/ThemeSelector";
 import { User } from "../../models/User";
 import { userService } from "../../services/userService";
 import Swal from "sweetalert2";
@@ -168,7 +167,6 @@ const ListUsers: React.FC = () => {
                                     </p>
                                 </div>
                                 <div className="d-flex gap-3 align-items-center">
-                                    <ThemeSelector />
                                     <Button 
                                         variant="outline-success"
                                         onClick={handleRefresh}
@@ -343,7 +341,6 @@ const ListUsers: React.FC = () => {
                                 </p>
                             </div>
                             <div className="flex gap-2 items-center">
-                                <ThemeSelector />
                                 <button
                                     onClick={handleRefresh}
                                     disabled={loading}
@@ -454,7 +451,6 @@ const ListUsers: React.FC = () => {
                                 </p>
                             </div>
                             <div className="flex gap-3 items-center">
-                                <ThemeSelector />
                                 <button
                                     onClick={handleRefresh}
                                     disabled={loading}

@@ -5,7 +5,6 @@ import { Plus, RefreshCw, MapPin } from 'lucide-react';
 import GenericTable from '../../components/GenericTable';
 import GenericModal from '../../components/GenericModal';
 import GenericAddressForm from '../../components/GenericsMaterial/GenericAddressForm';
-import ThemeSelector from '../../components/ThemeSelector';
 import addressService from '../../services/addressService';
 import userService from '../../services/userService';
 import type { Address } from '../../models/Address';
@@ -216,7 +215,6 @@ const AddressView: React.FC = () => {
               {selectedUserId && <Badge bg="info">Filtrado por Usuario ID: {selectedUserId}</Badge>}
             </div>
             <div className="d-flex gap-2 align-items-center">
-              <ThemeSelector />
               <Button variant="outline-secondary" onClick={loadAddresses} disabled={loading}>
                 <RefreshCw size={16} className="me-2" />
                 Actualizar

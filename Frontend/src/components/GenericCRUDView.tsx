@@ -21,7 +21,6 @@ import { Plus, RefreshCw } from 'lucide-react';
 import GenericTable from './GenericTable';
 import GenericForm, { FieldConfig } from './GenericForm';
 import GenericModal from './GenericModal';
-import ThemeSelector from './ThemeSelector';
 import { getAll, create, update, remove } from '../services/baseService';
 import Swal from 'sweetalert2';
 
@@ -343,7 +342,6 @@ const GenericCRUDView: React.FC<GenericCRUDViewProps> = ({
               </p>
             </div>
             <div className="d-flex gap-3 align-items-center">
-              <ThemeSelector />
               <Button 
                 variant="outline-success"
                 onClick={loadData}

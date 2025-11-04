@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Container, Row, Col, Card, Form, Button, Spinner, Badge, Alert } from "react-bootstrap";
 import { UserPlus, RefreshCw } from "lucide-react";
-import ThemeSelector from "../ThemeSelector";
 import { userService } from "../../services/userService";
 import { roleService } from "../../services/Role/roleService";
 import { userRoleService } from "../../services/userRoleService";
@@ -103,7 +102,6 @@ export const AssignRoles: React.FC = () => {
               </h2>
               <p className="text-muted mb-0">Selecciona un usuario y los roles que deseas asignarle</p>
             </div>
-            <ThemeSelector />
           </div>
         </Col>
       </Row>

@@ -5,7 +5,6 @@ import { Plus, RefreshCw, Key } from 'lucide-react';
 import GenericTable from '../../components/GenericTable';
 import GenericModal from '../../components/GenericModal';
 import GenericForm, { FieldConfig } from '../../components/GenericForm';
-import ThemeSelector from '../../components/ThemeSelector';
 import axios from 'axios';
 import userService from '../../services/userService';
 import type { User } from '../../models/User';
@@ -373,7 +372,6 @@ const PasswordView: React.FC = () => {
 
   return (
     <>
-      <ThemeSelector />
       <Container fluid className="p-4">
         <Row className="mb-4 align-items-center">
           <Col>
