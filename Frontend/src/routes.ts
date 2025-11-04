@@ -40,18 +40,16 @@ const FirebaseChecker = lazy(() => import('./pages/Firebase/FirebaseChecker'));
 // 🔄 REFACTORIZADO: Passwords CRUD usando GenericCRUDView
 const PasswordView = lazy(() => import('./views/password/PasswordView'));
 
-// CRUD Views (Con funcionalidad completa - Crear/Editar/Eliminar activados)
-const DigitalSignatureView = lazy(() => import('./views/digitalSignature/DigitalSignatureViewReusable'));
-const DeviceView = lazy(() => import('./views/device/DeviceViewReusable'));
-const SecurityQuestionView = lazy(() => import('./views/securityQuestion/SecurityQuestionViewReusable'));
-const AnswerView = lazy(() => import('./views/answer/AnswerViewReusable'));
-// const SessionView = lazy(() => import('./views/session/SessionView.jsx')); // Archivo no existe aún
-// const UserView = lazy(() => import('./views/user/UserView.jsx')); // OBSOLETO: usar UserViewGeneric
+// 🔄 REFACTORIZADO: CRUD Views usando GenericCRUDView (Con funcionalidad completa)
+const DigitalSignatureView = lazy(() => import('./views/digitalSignature/DigitalSignatureView'));
+const DeviceView = lazy(() => import('./views/device/DeviceView'));
+const SecurityQuestionView = lazy(() => import('./views/securityQuestion/SecurityQuestionView'));
+const AnswerView = lazy(() => import('./views/answer/AnswerView'));
 
 // 🆕 NUEVAS RUTAS PARA SIDEBAR MEJORADO
 // Rutas para gestión de permisos de roles y historial de contraseñas
 const RolePermissionsList = lazy(() => import('./pages/Administrator/List')); // Reutilizando componente existente
-const UserAnswersList = lazy(() => import('./views/answer/AnswerViewReusable')); // Reutilizando componente existente
+const UserAnswersList = lazy(() => import('./views/answer/AnswerView')); // Reutilizando componente existente
 
 const coreRoutes = [
   {
