@@ -12,10 +12,8 @@ const UserViewGeneric = lazy(() => import('./views/user/UserViewGeneric'));
 const UsersRolesList = lazy(() => import('./pages/Users-Roles/List'));
 const UsersRolesUpdate = lazy(() => import('./pages/Users-Roles/Update'));
 
-// Address pages (mantiene implementación especial con mapa)
-const AddressCreate = lazy(() => import('./pages/Address/Create'));
-const AddressUpdate = lazy(() => import('./pages/Address/Update'));
-const AddressList = lazy(() => import('./pages/Address/List'));
+// 🔄 REFACTORIZADO: Address CRUD usando GenericCRUDView
+const AddressView = lazy(() => import('./views/address/AddressView'));
 
 // 🔄 REFACTORIZADO: Roles CRUD usando GenericCRUDView
 const RoleView = lazy(() => import('./views/role/RoleView'));
@@ -109,18 +107,8 @@ const coreRoutes = [
   },
   {
     path: '/addresses',
-    title: 'Addresses',
-    component: AddressList,
-  },
-  {
-    path: '/addresses/create',
-    title: 'Create Address',
-    component: AddressCreate,
-  },
-  {
-    path: '/addresses/update/:id',
-    title: 'Update Address',
-    component: AddressUpdate,
+    title: 'Direcciones',
+    component: AddressView,
   },
   {
     path: '/roles/list',
