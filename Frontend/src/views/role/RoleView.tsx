@@ -51,6 +51,16 @@ const RoleView: React.FC = () => {
       ]}
       customActions={[
         {
+          name: "view",
+          label: "Ver",
+          icon: "view",
+          variant: "outline-success",
+          handler: (role) => {
+            // Mostrar detalles del rol
+            navigate(`/roles/view/${role.id}`);
+          }
+        },
+        {
           name: "assignPermissions",
           label: "Asignar Permisos",
           icon: "shield",

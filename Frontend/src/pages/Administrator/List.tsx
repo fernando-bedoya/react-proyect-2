@@ -71,7 +71,23 @@ const AdministratorList: React.FC = () => {
     };
 
     const handleAction = (action: string, item: RolePermission) => {
-        if (action === "delete") {
+        if (action === "view") {
+            // Mostrar detalles de la asignación rol-permiso
+            Swal.fire({
+                title: "Detalles de Asignación",
+                html: `
+                    <div style="text-align: left;">
+                        <p><strong>ID:</strong> ${item.id}</p>
+                        <p><strong>Rol:</strong> ${item.role?.name || item.role_id}</p>
+                        <p><strong>Permiso:</strong> ${item.permission ? `${item.permission.method?.toUpperCase()} ${item.permission.url}` : item.permission_id}</p>
+                        <p><strong>Fecha de Creación:</strong> ${item.created_at ? new Date(item.created_at).toLocaleString() : '-'}</p>
+                    </div>
+                `,
+                icon: "info",
+                confirmButtonText: "Cerrar",
+                confirmButtonColor: "#3b82f6"
+            });
+        } else if (action === "delete") {
             handleDelete(item);
         }
     };
@@ -114,8 +130,15 @@ const AdministratorList: React.FC = () => {
 
     const actions = [
         {
+            name: "view",
+            label: "Ver",
+            icon: "view" as const,
+            variant: "success" as const
+        },
+        {
             name: "delete",
             label: "Eliminar",
+            icon: "delete" as const,
             variant: "danger" as const
         }
     ];

@@ -85,7 +85,10 @@ const ListUsers: React.FC = () => {
     };
 
     const handleAction = async (action: string, item: User) => {
-        if (action === "edit") {
+        if (action === "view") {
+            console.log("View user:", item);
+            navigate(`/users/view/${item.id}`);
+        } else if (action === "edit") {
             console.log("Edit user:", item);
             navigate(`/users/update/${item.id}`);
         } else if (action === "delete") {
@@ -305,6 +308,7 @@ const ListUsers: React.FC = () => {
                                     data={users}
                                     columns={["id", "name", "email"]}
                                     actions={[
+                                        { name: "view", label: "Ver", icon: "view", variant: "outline-success" },
                                         { name: "edit", label: "Editar", icon: "edit", variant: "outline-primary" },
                                         { name: "delete", label: "Eliminar", icon: "delete", variant: "outline-danger" }
                                     ]}
@@ -415,6 +419,7 @@ const ListUsers: React.FC = () => {
                                     data={users}
                                     columns={["id", "name", "email"]}
                                     actions={[
+                                        { name: "view", label: "Ver", icon: "view", variant: "success" },
                                         { name: "edit", label: "Editar", icon: "edit", variant: "primary" },
                                         { name: "delete", label: "Eliminar", icon: "delete", variant: "danger" }
                                     ]}

@@ -417,18 +417,30 @@ const GenericTable: React.FC<GenericTableProps> = ({
                     {actions.length > 0 && (
                       <td className="px-6 py-4 text-center">
                         <div className="flex gap-2 justify-center">
-                          {actions.map((action) => (
-                            <button
-                              key={action.name}
-                              onClick={() => onAction(action.name, item)}
-                              title={action.label}
-                              className="px-3 py-2 rounded-lg font-bold text-xs uppercase tracking-wide bg-blue-500 text-white hover:bg-blue-600 hover:scale-110 transform transition-all duration-200 shadow-md hover:shadow-xl"
-                              style={{ fontFamily: '"Poppins", sans-serif' }}
-                            >
-                              {action.icon && getActionIcon(action.icon)}
-                              {!action.icon && <span>{action.label}</span>}
-                            </button>
-                          ))}
+                          {actions.map((action) => {
+                            // 🎨 Colores específicos según el tipo de acción
+                            const actionColors = {
+                              edit: 'bg-blue-500 hover:bg-blue-600 text-white',
+                              delete: 'bg-red-500 hover:bg-red-600 text-white',
+                              view: 'bg-green-500 hover:bg-green-600 text-white'
+                            };
+                            const colorClass = actionColors[action.name as keyof typeof actionColors] || 'bg-blue-500 hover:bg-blue-600 text-white';
+                            
+                            return (
+                              <button
+                                key={action.name}
+                                onClick={() => onAction(action.name, item)}
+                                title={action.label}
+                                className={`px-3 py-2 rounded-lg font-bold text-xs uppercase tracking-wide ${colorClass} hover:scale-110 transform transition-all duration-200 shadow-md hover:shadow-xl`}
+                                style={{ fontFamily: '"Poppins", sans-serif' }}
+                              >
+                                <span className="text-white">
+                                  {action.icon && getActionIcon(action.icon)}
+                                  {!action.icon && <span>{action.label}</span>}
+                                </span>
+                              </button>
+                            );
+                          })}
                         </div>
                       </td>
                     )}
