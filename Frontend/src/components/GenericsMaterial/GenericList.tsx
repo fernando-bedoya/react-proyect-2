@@ -161,18 +161,19 @@ export default function GenericList<T extends Record<string, any>>(props: Generi
 
   return (
     <Paper
-      elevation={0}
+      elevation={4}
       sx={{
         width: '100%',
         overflow: 'hidden',
-        borderRadius: 3,
-        border: '1px solid #e5e7eb',
-        boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
-        background: '#ffffff',
+        borderRadius: '12px',
+        border: '2px solid #f59e0b',
+        boxShadow: '0 10px 30px rgba(245,158,11,0.12), 0 4px 12px rgba(0,0,0,0.06)',
+        background: 'linear-gradient(180deg, #ffffff 0%, #fffaf0 100%)',
+        fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
       }}
     >
-      {/* Barra superior: búsqueda y controles */}
-      <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', justifyContent: 'space-between', p: 2, background: 'linear-gradient(90deg, rgba(255,255,255,0.6), rgba(250,250,250,0.8))' }}>
+  {/* Barra superior: búsqueda y controles (estilo Material - ámbar) */}
+  <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', justifyContent: 'space-between', p: 2, background: 'linear-gradient(90deg, rgba(255,250,240,0.9), rgba(255,255,255,0.9))', borderBottom: '1px solid rgba(245,158,11,0.12)' }}>
         <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
           <TextField
             size="small"
@@ -199,13 +200,20 @@ export default function GenericList<T extends Record<string, any>>(props: Generi
       </Box>
 
       <TableContainer sx={{ maxHeight: 640, backgroundColor: '#fafafa' }}>
-        <Table stickyHeader size="medium">
+          <Table stickyHeader size="medium">
           <TableHead>
             <TableRow
               sx={{
                 '& th': {
-                  backgroundColor: '#fbbf24',
-                  borderBottom: '2px solid #f59e0b',
+                  background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                  color: '#ffffff',
+                  fontWeight: 700,
+                  textTransform: 'uppercase',
+                  fontSize: '0.85rem',
+                  letterSpacing: '1px',
+                  borderBottom: '2px solid #b45309',
+                  fontFamily: '"Roboto Condensed", sans-serif',
+                  padding: '14px 16px'
                 }
               }}
             >
@@ -298,19 +306,27 @@ export default function GenericList<T extends Record<string, any>>(props: Generi
                 const id = row[idKey as keyof T] ?? row[idKey as string] ?? idx;
                 const isRowSelected = isSelected(id);
                 return (
-                  <TableRow
+                      <TableRow
                     hover
                     role="checkbox"
                     tabIndex={-1}
                     key={String(id)}
                       selected={isRowSelected}
                       sx={{
-                        backgroundColor: isRowSelected ? (compact ? '#fff7ed' : '#fef3c7') : '#ffffff',
+                        backgroundColor: isRowSelected ? (compact ? '#ff8c00ff' : '#ffcc00ff') : undefined,
                         borderBottom: '1px solid #f3f4f6',
-                        '&:hover': { 
-                          backgroundColor: isRowSelected ? (compact ? '#fff3d7' : '#fde68a') : '#f9fafb',
+                        cursor: 'pointer',
+                        position: 'relative',
+                        transform: 'translateX(0) scale(1)',
+                        boxShadow: 'none',
+                        '&:nth-of-type(odd)': { backgroundColor: isRowSelected ? undefined : '#fff7ed' },
+                        '&:hover': {
+                          backgroundColor: isRowSelected ? (compact ? '#ffb300ff' : '#ffcc00ff') : '#fedfb7ff !important',
+                          transform: 'translateX(6px) scale(1.01)',
+                          boxShadow: '0 12px 32px rgba(245,158,11,0.18), 0 6px 16px rgba(0,0,0,0.06)',
+                          zIndex: 10,
                         },
-                        transition: 'background-color 0.18s ease, transform 0.12s ease',
+                        transition: 'background-color 0.18s ease, transform 0.18s cubic-bezier(0.4,0,0.2,1), box-shadow 0.18s ease',
                         '&:last-child td': { borderBottom: 0 },
                       }}
                   >
@@ -339,21 +355,21 @@ export default function GenericList<T extends Record<string, any>>(props: Generi
                               label={cellVal ? 'Activo' : 'Inactivo'}
                               size="small"
                               sx={{
-                                backgroundColor: cellVal ? '#dcfce7' : '#fee2e2',
-                                color: cellVal ? '#166534' : '#991b1b',
+                                backgroundColor: cellVal ? '#fff7ed' : '#fee2e2',
+                                color: cellVal ? '#92400e' : '#991b1b',
                                 fontWeight: 600,
                                 fontSize: '0.75rem',
                                 height: '24px',
                                 borderRadius: '6px',
-                                border: cellVal ? '1px solid #bbf7d0' : '1px solid #fecaca',
+                                border: cellVal ? '1px solid #ffedd5' : '1px solid #fecaca',
                               }}
                             />
                           ) : (
                             <Typography sx={{ 
-                              color: '#111827', 
+                              color: '#92400e', 
                               fontWeight: 500, 
                               fontSize: '0.875rem',
-                              fontFamily: '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+                              fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
                             }}>
                               {cellVal ?? ''}
                             </Typography>

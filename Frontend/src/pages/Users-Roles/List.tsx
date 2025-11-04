@@ -75,10 +75,25 @@ const ListUsersWithRoles: React.FC = () => {
       navigate(`/user-roles/update/${item.id}`);
       return;
     }
-    if (action === 'view') {
-      navigate(`/users/view/${item.id}`);
-      return;
+  if (action === "view") {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await roleService.getRoleById(item.id as number);
+      if (data) {
+        setSelectedRole(data);
+        setShowViewModal(true);
+      } else {
+        setError('No se pudo obtener la información del rol');
+      }
+    } catch (err) {
+      console.error('Error al obtener rol:', err);
+      setError('Error al obtener la información del rol');
+    } finally {
+      setLoading(false);
     }
+    return;
+  }
 
     if (action === 'delete') {
       // If viewing users filtered by a role, delete the user-role assignment on backend
@@ -180,7 +195,7 @@ const ListUsersWithRoles: React.FC = () => {
         <Col>
           <div className="d-flex justify-content-between align-items-center">
             <div>
-              <h2 className="h3 fw-bold mb-1" style={{ color: '#10b981' }}>{currentRole ? `Usuarios con rol: ${currentRole.name}` : 'Usuarios y Roles'}</h2>
+              <h2 className="h3 fw-bold mb-1" style={{ color: '#b99d10ff' }}>{currentRole ? `Usuarios con rol: ${currentRole.name}` : 'Usuarios y Roles'}</h2>
               <p className="text-muted mb-0">Listado de usuarios con sus roles asignados <Badge bg="secondary">{(filteredUsers || []).length}</Badge></p>
             </div>
             <div className="d-flex gap-2 align-items-center">
@@ -191,7 +206,7 @@ const ListUsersWithRoles: React.FC = () => {
               </Button>
               <Button variant="success" onClick={() => navigate('/users/create')} className="d-flex align-items-center gap-2">
                 <Plus size={18} />
-                Nuevo Usuario
+                Nuevo User-role
               </Button>
             </div>
           </div>
