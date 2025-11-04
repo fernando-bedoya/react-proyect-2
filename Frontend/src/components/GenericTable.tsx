@@ -242,6 +242,7 @@ const GenericTable: React.FC<GenericTableProps> = ({
               </TableRow>
             ) : (
               data.map((item, index) => (
+                // detect if the item represents the current password/row
                 <TableRow 
                   key={index}
                   hover={hover}
@@ -250,9 +251,14 @@ const GenericTable: React.FC<GenericTableProps> = ({
                     '&:nth-of-type(even)': striped ? { backgroundColor: '#ffffff' } : {},
                     '&:hover': { backgroundColor: '#ffedd5 !important' },
                     transition: 'background-color 0.3s ease',
+                    // if this row is marked as current, override with a highlighted style
+                    ...(item?.is_current || item?.isCurrent || item?.current ? {
+                      background: 'linear-gradient(90deg, rgba(245,158,11,0.08), rgba(255,243,205,0.12))',
+                      boxShadow: 'inset 0 0 0 2px rgba(245,158,11,0.08)'
+                    } as any : {})
                   }}
                 >
-                  {columns.map((col) => (
+                  {columns.map((col, colIndex) => (
                     <TableCell 
                       key={col}
                       sx={{ 
@@ -262,6 +268,16 @@ const GenericTable: React.FC<GenericTableProps> = ({
                         borderBottom: '1px solid #fde68a',
                       }}
                     >
+                      {/* If this is the first column and the row is current, render a small chip indicator */}
+                      {colIndex === 0 && (item?.is_current || item?.isCurrent || item?.current) && (
+                        <Chip 
+                          label="Actual"
+                          color="warning"
+                          size="small"
+                          sx={{ mr: 1, fontWeight: 800, backgroundColor: '#f59e0b', color: '#000000' }}
+                        />
+                      )}
+
                       {typeof item[col] === 'boolean' ? (
                         <Chip 
                           label={item[col] ? 'Activo' : 'Inactivo'}
@@ -364,30 +380,40 @@ const GenericTable: React.FC<GenericTableProps> = ({
               ) : (
                 data.map((item, index) => (
                   <tr 
-                    key={index}
-                    className={`
-                      ${striped && index % 2 === 0 ? 'bg-blue-100' : 'bg-white'}
-                      ${hover ? 'hover:bg-blue-200 hover:shadow-lg transition-all duration-300' : ''}
-                      border-l-4 border-blue-400
-                    `}
-                  >
-                    {columns.map((col) => (
-                      <td 
-                        key={col}
-                        className="px-6 py-4 text-sm font-semibold text-blue-900"
-                        style={{ fontFamily: '"Inter", sans-serif' }}
+                        key={index}
+                        className={`
+                          ${striped && index % 2 === 0 ? 'bg-blue-100' : 'bg-white'}
+                          ${hover ? 'hover:bg-blue-200 hover:shadow-lg transition-all duration-300' : ''}
+                          ${item?.is_current || item?.isCurrent || item?.current ? 'ring-2 ring-blue-400 border-l-8' : 'border-l-4 border-blue-400'}
+                        `}
+                        style={{
+                          // inline styles to guarantee visible blue highlight even if Tailwind classes are purged
+                          backgroundColor: item?.is_current || item?.isCurrent || item?.current ? '#e6f2ff' : undefined,
+                          borderLeft: item?.is_current || item?.isCurrent || item?.current ? '8px solid #2563eb' : undefined
+                        }}
                       >
-                        {typeof item[col] === 'boolean' ? (
-                          <span className={`px-3 py-1 rounded-full text-xs font-bold ${item[col] ? 'bg-blue-500 text-white' : 'bg-blue-200 text-blue-800'}`}>
-                            {item[col] ? 'Activo' : 'Inactivo'}
-                          </span>
-                        ) : item[col] === null || item[col] === undefined ? (
-                          <span className="text-blue-400">-</span>
-                        ) : (
-                          item[col]
-                        )}
-                      </td>
-                    ))}
+                      {columns.map((col, colIndex) => (
+                        <td 
+                          key={col}
+                          className="px-6 py-4 text-sm font-semibold text-blue-900"
+                          style={{ fontFamily: '"Inter", sans-serif' }}
+                        >
+                          {/* show a small badge on the first column when current */}
+                          {colIndex === 0 && (item?.is_current || item?.isCurrent || item?.current) && (
+                            <span style={{ display: 'inline-block', marginRight: 8, padding: '4px 8px', borderRadius: 6, backgroundColor: '#2563eb', color: '#ffffff', fontWeight: 800, fontSize: '0.75rem' }}>Actual</span>
+                          )}
+
+                          {typeof item[col] === 'boolean' ? (
+                            <span className={`px-3 py-1 rounded-full text-xs font-bold ${item[col] ? 'bg-blue-500 text-white' : 'bg-blue-200 text-blue-800'}`}>
+                              {item[col] ? 'Activo' : 'Inactivo'}
+                            </span>
+                          ) : item[col] === null || item[col] === undefined ? (
+                            <span className="text-blue-400">-</span>
+                          ) : (
+                            item[col]
+                          )}
+                        </td>
+                      ))}
                     {actions.length > 0 && (
                       <td className="px-6 py-4 text-center">
                         <div className="flex gap-2 justify-center">
@@ -499,11 +525,12 @@ const GenericTable: React.FC<GenericTableProps> = ({
           </tr>
         ) : (
           data.map((item, index) => (
+            // mark current rows with a different left border and background (green for Bootstrap)
             <tr 
               key={index}
               style={{
-                backgroundColor: index % 2 === 0 ? '#ecfdf5' : '#ffffff',
-                borderLeft: '6px solid #10b981',
+                backgroundColor: (item?.is_current || item?.isCurrent || item?.current) ? '#ecfdf5' : (index % 2 === 0 ? '#ecfdf5' : '#ffffff'),
+                borderLeft: (item?.is_current || item?.isCurrent || item?.current) ? '8px solid #10b981' : '6px solid #10b981',
                 transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                 borderBottom: '2px solid #d1fae5',
                 position: 'relative'
@@ -521,16 +548,16 @@ const GenericTable: React.FC<GenericTableProps> = ({
               }}
               onMouseLeave={(e) => {
                 if (hover) {
-                  e.currentTarget.style.backgroundColor = index % 2 === 0 ? '#ecfdf5' : '#ffffff';
+                  e.currentTarget.style.backgroundColor = (item?.is_current || item?.isCurrent || item?.current) ? '#ecfdf5' : (index % 2 === 0 ? '#ecfdf5' : '#ffffff');
                   e.currentTarget.style.transform = 'translateX(0) scale(1)';
                   e.currentTarget.style.boxShadow = 'none';
-                  e.currentTarget.style.borderLeftColor = '#10b981';
-                  e.currentTarget.style.borderLeftWidth = '6px';
+                  e.currentTarget.style.borderLeftColor = (item?.is_current || item?.isCurrent || item?.current) ? '#10b981' : '#10b981';
+                  e.currentTarget.style.borderLeftWidth = (item?.is_current || item?.isCurrent || item?.current) ? '8px' : '6px';
                   e.currentTarget.style.zIndex = '1';
                 }
               }}
             >
-              {columns.map((col) => (
+              {columns.map((col, colIndex) => (
                 <td 
                   key={col} 
                   className="align-middle"
@@ -542,6 +569,10 @@ const GenericTable: React.FC<GenericTableProps> = ({
                     borderBottom: 'none'
                   }}
                 >
+                  {/* show a small badge on the first column when current */}
+                  {colIndex === 0 && (item?.is_current || item?.isCurrent || item?.current) && (
+                    <Badge bg="success" style={{ color: '#ffffff', marginRight: 8, fontWeight: 800, backgroundColor: '#10b981', borderRadius: 6 }}>Actual</Badge>
+                  )}
                   {typeof item[col] === 'boolean' ? (
                     <Badge 
                       bg={item[col] ? 'success' : 'secondary'}
