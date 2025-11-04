@@ -46,7 +46,7 @@ const DeviceView = lazy(() => import('./views/device/DeviceViewReusable'));
 const SecurityQuestionView = lazy(() => import('./views/securityQuestion/SecurityQuestionViewReusable'));
 const AnswerView = lazy(() => import('./views/answer/AnswerViewReusable'));
 // const SessionView = lazy(() => import('./views/session/SessionView.jsx')); // Archivo no existe aún
-const UserView = lazy(() => import('./views/user/UserView.jsx'));
+// const UserView = lazy(() => import('./views/user/UserView.jsx')); // OBSOLETO: usar UserViewGeneric
 
 // 🆕 NUEVAS RUTAS PARA SIDEBAR MEJORADO
 // Rutas para gestión de permisos de roles y historial de contraseñas
@@ -194,11 +194,11 @@ const coreRoutes = [
   //   title: 'Sessions',
   //   component: SessionView,
   // },
-  {
-    path: '/users',
-    title: 'Gestión de Usuarios',
-    component: UserView,
-  },
+  // {
+  //   path: '/users',
+  //   title: 'Gestión de Usuarios',
+  //   component: UserView, // OBSOLETO: usar UserViewGeneric en /users/list
+  // },
   // 🆕 RUTAS ADICIONALES PARA NUEVO SIDEBAR
   {
     path: '/role-permissions',

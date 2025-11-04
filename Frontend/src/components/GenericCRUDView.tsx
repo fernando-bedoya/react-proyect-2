@@ -17,7 +17,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Alert, Spinner, Badge, Button } from 'react-bootstrap';
-import { Plus, RefreshCw, ArrowLeft } from 'lucide-react';
+import { Plus, RefreshCw } from 'lucide-react';
 import GenericTable from './GenericTable';
 import GenericForm, { FieldConfig } from './GenericForm';
 import GenericModal from './GenericModal';
