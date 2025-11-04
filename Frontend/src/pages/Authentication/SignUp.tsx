@@ -84,7 +84,7 @@ const SignUp: React.FC = () => {
         });
         
         setTimeout(() => {
-          navigate('/auth/signin');
+          navigate('/users/list');
         }, 2000);
       }
     } catch (error: any) {
@@ -150,7 +150,7 @@ const SignUp: React.FC = () => {
         });
       }
       
-      setTimeout(() => navigate('/'), 2000);
+      setTimeout(() => navigate('/users/list'), 2000);
     } catch (error: any) {
       console.error('Error en Google login:', error);
       let errorMsg = 'Error al iniciar sesión con Google';
@@ -207,7 +207,7 @@ const SignUp: React.FC = () => {
             });
         }
 
-        setTimeout(() => navigate('/'), 2000);
+        setTimeout(() => navigate('/users/list'), 2000);
     } catch (error: any) {
         console.error('Error en GitHub login:', error);
         let errorMsg = 'Error al iniciar sesión con GitHub';
@@ -252,7 +252,7 @@ const SignUp: React.FC = () => {
         showConfirmButton: false
       });
       
-      setTimeout(() => navigate('/'), 2000);
+      setTimeout(() => navigate('/users/list'), 2000);
     } catch (error: any) {
       console.error('Error en Microsoft login:', error);
       let errorMsg = 'Error al iniciar sesión con Microsoft';

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Table, Button, Badge } from 'react-bootstrap';
-import { Edit, Trash2, Eye, MoreVertical } from 'lucide-react';
+import { Edit, Trash2, Eye, MoreVertical, User, MapPin, Smartphone, Clock, Key, Shield } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 // Material UI imports
 import {
@@ -65,6 +65,18 @@ const GenericTable: React.FC<GenericTableProps> = ({
         return <Eye size={16} />;
       case 'more':
         return <MoreVertical size={16} />;
+      case 'user':
+        return <User size={16} />;
+      case 'map':
+        return <MapPin size={16} />;
+      case 'smartphone':
+        return <Smartphone size={16} />;
+      case 'clock':
+        return <Clock size={16} />;
+      case 'key':
+        return <Key size={16} />;
+      case 'shield':
+        return <Shield size={16} />;
       default:
         return null;
     }
@@ -81,6 +93,18 @@ const GenericTable: React.FC<GenericTableProps> = ({
         return <Eye size={18} />;
       case 'more':
         return <MoreVertical size={18} />;
+      case 'user':
+        return <User size={18} />;
+      case 'map':
+        return <MapPin size={18} />;
+      case 'smartphone':
+        return <Smartphone size={18} />;
+      case 'clock':
+        return <Clock size={18} />;
+      case 'key':
+        return <Key size={18} />;
+      case 'shield':
+        return <Shield size={18} />;
       default:
         return null;
     }
