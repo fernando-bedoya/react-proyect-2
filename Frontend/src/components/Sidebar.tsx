@@ -604,6 +604,27 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
 
                 <ul className="mb-6 flex flex-col gap-2">
                   
+                  {/* 📍 MENU ITEM: Address List - Ver direcciones */}
+                  <li>
+                    <NavLink
+                      to="/addresses"
+                      className={({ isActive }) =>
+                        `group relative flex items-center gap-3 rounded-lg py-3 px-4 font-medium transition-all duration-300 ease-in-out hover:shadow-lg ${
+                          isActive ? 'bg-gradient-to-r from-red-700 to-red-600 shadow-lg' : ''
+                        }`
+                      }
+                      style={({ isActive }) => ({
+                        color: '#07373a',
+                        fontWeight: isActive ? 600 : 500,
+                      })}
+                    >
+                      <svg className="fill-current" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M10 2C7.24 2 5 4.24 5 7C5 11.25 10 18 10 18C10 18 15 11.25 15 7C15 4.24 12.76 2 10 2ZM10 9C8.9 9 8 8.1 8 7C8 5.9 8.9 5 10 5C11.1 5 12 5.9 12 7C12 8.1 11.1 9 10 9Z" fill=""/>
+                      </svg>
+                      <span className="font-semibold">Address List</span>
+                    </NavLink>
+                  </li>
+
                   {/* 📍 MENU ITEM: Create Address - Crear dirección */}
                   <li>
                     <NavLink

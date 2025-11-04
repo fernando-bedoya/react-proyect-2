@@ -159,25 +159,9 @@ const UserView = () => {
   /**
    * Navega a la vista de direcciones del usuario
    */
-  const handleAddress = async (user) => {
-    // Check if user already has an address; if so navigate to update, otherwise to create
-    setLoading(true);
-    try {
-      const addr = await addressService.getAddressByUserId(Number(user.id));
-      if (addr && addr.id) {
-        // navigate to update page for this address
-        navigate(`/addresses/update/${addr.id}`);
-      } else {
-        // no address found -> go to create with userId
-        navigate(`/addresses/create?userId=${user.id}`);
-      }
-    } catch (err) {
-      console.error('Error checking address for user', err);
-      // fallback to create page
-      navigate(`/addresses?userId=${user.id}`);
-    } finally {
-      setLoading(false);
-    }
+  const handleAddress = (user) => {
+    // Ir siempre a la lista de direcciones del usuario (si no tiene, mostrará vacío con opción de crear)
+    navigate(`/addresses?userId=${user.id}`);
   };
 
   /**

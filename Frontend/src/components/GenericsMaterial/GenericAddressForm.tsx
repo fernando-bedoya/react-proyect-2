@@ -5,6 +5,9 @@ import addressService from '../../services/addressService';
 import toast from 'react-hot-toast';
 import type { Address } from '../../models/Address';
 
+// Evitar cargar Google Maps múltiples veces (StrictMode monta efectos 2 veces en dev)
+let googleMapsLoaderPromise: Promise<boolean> | null = null;
+
 // Tipado de coordenadas usado en el formulario
 type LatLng = { lat: number; lng: number } | null;
 
@@ -44,6 +47,8 @@ const GenericAddressForm: React.FC<Props> = ({
   const mapRef = useRef<L.Map | null>(null);
   const markerRef = useRef<L.Marker | null>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
+  // Estado para saber cuándo Leaflet terminó de inicializarse
+  const [leafletReady, setLeafletReady] = useState(false);
 
   // Refs de Google Maps
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -66,6 +71,9 @@ const GenericAddressForm: React.FC<Props> = ({
   const abortControllerRef = useRef<AbortController | null>(null);
   // Flag para indicar si Google Maps no pudo inicializar (clave faltante o error de red)
   const [googleInitFailed, setGoogleInitFailed] = useState(false);
+  // Proveedor efectivo: puede caer a Leaflet si Google falla (sin bloquear al usuario)
+  const [effectiveProvider, setEffectiveProvider] = useState<'leaflet' | 'google'>(mapProvider);
+  useEffect(() => { setEffectiveProvider(mapProvider); }, [mapProvider]);
 
   // Centro por defecto (Manizales)
   const defaultCenter = { lat: 5.0689, lng: -75.5176 };
@@ -82,45 +90,69 @@ const GenericAddressForm: React.FC<Props> = ({
   const loadGoogleMaps = async (): Promise<boolean> => {
     if (typeof window === 'undefined') return false;
     const w = window as any;
-    if (w.google && w.google.maps) return true;
+    if (w.google && w.google.maps) return true; // ya disponible
+    if (googleMapsLoaderPromise) return googleMapsLoaderPromise; // ya en proceso de carga
     const apiKey = (import.meta as any).env?.VITE_GOOGLE_MAPS_API_KEY;
     if (!apiKey) {
       console.warn('VITE_GOOGLE_MAPS_API_KEY no definido');
       return false;
     }
-    return new Promise((resolve) => {
+    googleMapsLoaderPromise = new Promise((resolve) => {
+      const existing = document.getElementById('google-maps-script') as HTMLScriptElement | null;
+      if (existing) {
+        // Si el script ya existe, esperamos a que "google.maps" esté disponible
+        const check = () => {
+          if (w.google && w.google.maps) resolve(true);
+          else setTimeout(check, 50);
+        };
+        check();
+        return;
+      }
       const script = document.createElement('script');
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&v=weekly`;
+      script.id = 'google-maps-script';
+      // Google recomienda usar loading=async para mejor rendimiento
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&v=weekly&loading=async`;
       script.async = true;
       script.defer = true;
       script.onload = () => resolve(true);
       script.onerror = () => resolve(false);
       document.head.appendChild(script);
     });
+    return googleMapsLoaderPromise;
   };
 
-  // 1) Inicializar el mapa (Leaflet o Google) una sola vez
+  // 1) Inicializar el mapa (Leaflet o Google) una sola vez según el proveedor efectivo
   useEffect(() => {
     if (!mapContainerRef.current) return;
 
     // Google Maps
-    if (mapProvider === 'google') {
+    if (effectiveProvider === 'google') {
       if (googleMapRef.current) return; // ya inicializado
       (async () => {
         const ok = await loadGoogleMaps();
         if (!ok || !mapContainerRef.current) {
-          // Si no se pudo cargar la API (p. ej. falta VITE_GOOGLE_MAPS_API_KEY), marcamos el flag
+          // Si no se pudo cargar la API (p. ej. falta VITE_GOOGLE_MAPS_API_KEY), caemos a Leaflet
           setGoogleInitFailed(true);
+          setEffectiveProvider('leaflet');
           return;
         }
         const w = window as any;
-        const gmap = new w.google.maps.Map(mapContainerRef.current, {
-          center: position ?? defaultCenter,
-          zoom: 13,
-          mapTypeControl: false,
-          streetViewControl: false,
-          fullscreenControl: false,
-        });
+        let gmap: any;
+        try {
+          gmap = new w.google.maps.Map(mapContainerRef.current, {
+            center: position ?? defaultCenter,
+            zoom: 13,
+            mapTypeControl: false,
+            streetViewControl: false,
+            fullscreenControl: false,
+          });
+        } catch (e) {
+          // Por ejemplo, ApiNotActivatedMapError u otros errores de inicialización
+          console.error('Google Maps init error', e);
+          setGoogleInitFailed(true);
+          setEffectiveProvider('leaflet');
+          return;
+        }
         gmap.addListener('click', async (e: { latLng: { lat: () => number; lng: () => number } }) => {
           const lat = e.latLng.lat();
           const lng = e.latLng.lng();
@@ -182,8 +214,8 @@ const GenericAddressForm: React.FC<Props> = ({
     }
 
     // Leaflet (por defecto)
-    if (mapRef.current) return; // ya inicializado
-    const map = L.map(mapContainerRef.current).setView(position ?? defaultCenter, 13);
+  if (mapRef.current) return; // ya inicializado
+  const map = L.map(mapContainerRef.current).setView(position ?? defaultCenter, 13);
     // Capa base con fallback si falla la carga de tiles
     const baseLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap contributors',
@@ -204,6 +236,8 @@ const GenericAddressForm: React.FC<Props> = ({
       setTimeout(invalidate, 250);
       setTimeout(invalidate, 500);
       setTimeout(invalidate, 1000);
+      // marcar como listo para aceptar actualizaciones de posición
+      setLeafletReady(true);
     });
     window.addEventListener('resize', invalidate);
     // Observa cambios del contenedor y fuerza recálculo de tamaño
@@ -270,15 +304,18 @@ const GenericAddressForm: React.FC<Props> = ({
     return () => {
       window.removeEventListener('resize', invalidate);
       if (ro) { try { ro.disconnect(); } catch { /* noop */ } ro = null; }
-      map.remove();
+      try { map.remove(); } catch { /* noop */ }
+      mapRef.current = null;
+      markerRef.current = null;
+      setLeafletReady(false);
     };
-  }, [mapProvider]);
+  }, [effectiveProvider]);
 
   // 2) Cuando cambia la posición, centrar mapa y mover/crear el marcador (Leaflet o Google)
   useEffect(() => {
     if (!position) return;
     // Google
-    if (mapProvider === 'google' && googleMapRef.current) {
+    if (effectiveProvider === 'google' && googleMapRef.current) {
       const w = window as any;
       const gmap = googleMapRef.current as any;
       gmap.setCenter(position);
@@ -290,15 +327,37 @@ const GenericAddressForm: React.FC<Props> = ({
       return;
     }
     // Leaflet
-    if (!mapRef.current) return;
-    mapRef.current.setView(position, mapRef.current.getZoom());
-    try { mapRef.current.invalidateSize(); } catch { /* noop */ }
-    if (markerRef.current) {
-      markerRef.current.setLatLng(position);
-    } else {
-      markerRef.current = L.marker(position, { icon: locationIcon }).addTo(mapRef.current);
+    if (!mapRef.current || !leafletReady) return;
+    try {
+      mapRef.current.setView(position, mapRef.current.getZoom());
+      try { mapRef.current.invalidateSize(); } catch { /* noop */ }
+      if (markerRef.current) {
+        // Si el marcador aún no tiene icono (no está en el mapa), volver a crearlo de forma segura
+        const hasIcon = (markerRef.current as unknown as { _icon?: HTMLElement })._icon;
+        if (hasIcon) {
+          markerRef.current.setLatLng(position);
+        } else {
+          try { markerRef.current.remove(); } catch { /* noop */ }
+          markerRef.current = L.marker(position, { icon: locationIcon }).addTo(mapRef.current);
+        }
+      } else {
+        markerRef.current = L.marker(position, { icon: locationIcon }).addTo(mapRef.current);
+      }
+    } catch (e) {
+      // En casos raros (p. ej. navegación rápida), deferir actualización al siguiente frame
+      requestAnimationFrame(() => {
+        if (!mapRef.current) return;
+        try {
+          mapRef.current!.setView(position, mapRef.current!.getZoom());
+          if (markerRef.current) {
+            try { markerRef.current.setLatLng(position); } catch { /* noop */ }
+          } else {
+            markerRef.current = L.marker(position, { icon: locationIcon }).addTo(mapRef.current!);
+          }
+        } catch { /* noop */ }
+      });
     }
-  }, [position, mapProvider]);
+  }, [position, effectiveProvider, leafletReady]);
 
   // 3) Si venimos a editar, precargar datos de la dirección
   useEffect(() => {
@@ -315,7 +374,12 @@ const GenericAddressForm: React.FC<Props> = ({
               setStreet(a.street || '');
             }
             setNumber(a.number || '');
-            setPosition({ lat: a.latitude || 0, lng: a.longitude || 0 });
+            // Validar números antes de actualizar posición (evita NaN)
+            const lat = Number(a.latitude);
+            const lng = Number(a.longitude);
+            if (Number.isFinite(lat) && Number.isFinite(lng)) {
+              setPosition({ lat, lng });
+            }
           }
         } catch (err) {
           console.error('Error loading address for edit', err);
@@ -456,7 +520,7 @@ const GenericAddressForm: React.FC<Props> = ({
             mostramos un overlay simple con una pista para el desarrollador. Esto no toca backend.
           */}
           <div ref={mapContainerRef} style={{ height: 360, width: '100%', position: 'relative' }} className="rounded overflow-hidden">
-            {mapProvider === 'google' && googleInitFailed && (
+            {effectiveProvider === 'google' && googleInitFailed && (
               <div style={{
                 position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
                 background: 'repeating-linear-gradient(45deg, rgba(255,0,0,0.06), rgba(255,0,0,0.06) 10px, rgba(0,0,0,0.02) 10px, rgba(0,0,0,0.02) 20px)'
