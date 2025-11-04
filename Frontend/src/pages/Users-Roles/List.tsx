@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Container, Row, Col, Card, Button, Spinner, Badge } from 'react-bootstrap';
 import { Plus, RefreshCw, Eye, Edit, Trash2 } from 'lucide-react';
 import GenericList from '../../components/GenericsMaterial/GenericList';
+import ThemeSelector from '../../components/ThemeSelector';
 import { useUsersAndRoles } from '../../hooks/useUsersAndRoles';
 import { userRoleService } from '../../services/userRoleService';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -183,6 +184,7 @@ const ListUsersWithRoles: React.FC = () => {
               <p className="text-muted mb-0">Listado de usuarios con sus roles asignados <Badge bg="secondary">{(filteredUsers || []).length}</Badge></p>
             </div>
             <div className="d-flex gap-2 align-items-center">
+              <ThemeSelector />
               <Button variant="outline-secondary" size="sm" onClick={() => { refresh(); setLoading(true); }} className="d-flex align-items-center gap-2">
                 <RefreshCw size={16} />
                 Actualizar

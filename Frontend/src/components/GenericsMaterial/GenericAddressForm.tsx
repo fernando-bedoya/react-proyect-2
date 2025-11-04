@@ -1,52 +1,231 @@
-import React, { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-leaflet';
-import L, { type LeafletMouseEvent } from 'leaflet';
+import React, { useEffect, useRef, useState } from 'react';
+import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import addressService from '../../services/addressService';
 import toast from 'react-hot-toast';
 import type { Address } from '../../models/Address';
 
+// Tipado de coordenadas usado en el formulario
 type LatLng = { lat: number; lng: number } | null;
 
+// Props del componente (se mantienen igual para reusar en las páginas existentes)
 interface Props {
   mode?: 'create' | 'edit';
-  userId?: number; // required for create
-  addressId?: number; // required for edit
+  userId?: number; // requerido para crear
+  addressId?: number; // requerido para editar
   initial?: Partial<Address>;
   onSaved?: (a: Address) => void;
   onCancel?: () => void;
+  // Opcional: permitir usar Google Maps en vez de Leaflet
+  mapProvider?: 'leaflet' | 'google';
 }
 
-function ClickHandler({
-  setPosition,
-  setStreet,
-  setNumber,
-  setStreetType,
-  setGeocodingLoading,
-}: {
-  setPosition: (p: LatLng) => void;
-  setStreet: (s: string) => void;
-  setNumber: (n: string) => void;
-  setStreetType: (t: string) => void;
-  setGeocodingLoading: (b: boolean) => void;
-}) {
-  useMapEvents({
-    async click(e: LeafletMouseEvent) {
+// FIX: Leaflet en Vite no resuelve los iconos por defecto; forzamos URLs públicas
+// para que el marcador se vea sin configurar loaders especiales.
+// Esto NO toca el backend, es puramente del lado del cliente.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+});
+
+const GenericAddressForm: React.FC<Props> = ({
+  mode = 'create',
+  userId,
+  addressId,
+  initial,
+  onSaved,
+  onCancel,
+  mapProvider = 'leaflet',
+}) => {
+  // Refs de Leaflet: mapa, marcador y contenedor DOM
+  const mapRef = useRef<L.Map | null>(null);
+  const markerRef = useRef<L.Marker | null>(null);
+  const mapContainerRef = useRef<HTMLDivElement>(null);
+
+  // Refs de Google Maps
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const googleMapRef = useRef<any>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const googleMarkerRef = useRef<any>(null);
+
+  // Estado del formulario
+  const [street, setStreet] = useState(initial?.street?.replace(/^\w+\s+/, '') || '');
+  const [streetType, setStreetType] = useState<string>((initial?.street && initial.street.split(' ')[0]) || 'Calle');
+  const [number, setNumber] = useState(initial?.number || '');
+  const [position, setPosition] = useState<LatLng>(
+    initial && initial.latitude !== undefined && initial.longitude !== undefined
+      ? { lat: Number(initial.latitude), lng: Number(initial.longitude) }
+      : null,
+  );
+  const [geocodingLoading, setGeocodingLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const debounceRef = useRef<number | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
+  // Flag para indicar si Google Maps no pudo inicializar (clave faltante o error de red)
+  const [googleInitFailed, setGoogleInitFailed] = useState(false);
+
+  // Centro por defecto (Manizales)
+  const defaultCenter = { lat: 5.0689, lng: -75.5176 };
+
+  // Icono de marcador bonito (SVG) para la ubicación
+  const locationIcon = L.divIcon({
+    className: 'custom-location-icon',
+    html: `<svg width="36" height="48" viewBox="0 0 24 33" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 0C7.02944 0 3 4.02944 3 9C3 16.125 12 33 12 33C12 33 21 16.125 21 9C21 4.02944 16.9706 0 12 0Z" fill="#ef4444"/><circle cx="12" cy="9" r="3.5" fill="white"/></svg>`,
+    iconSize: [36, 48],
+    iconAnchor: [18, 48],
+  });
+
+  // Cargar Google Maps si se elige ese proveedor
+  const loadGoogleMaps = async (): Promise<boolean> => {
+    if (typeof window === 'undefined') return false;
+    const w = window as any;
+    if (w.google && w.google.maps) return true;
+    const apiKey = (import.meta as any).env?.VITE_GOOGLE_MAPS_API_KEY;
+    if (!apiKey) {
+      console.warn('VITE_GOOGLE_MAPS_API_KEY no definido');
+      return false;
+    }
+    return new Promise((resolve) => {
+      const script = document.createElement('script');
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&v=weekly`;
+      script.async = true;
+      script.defer = true;
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.head.appendChild(script);
+    });
+  };
+
+  // 1) Inicializar el mapa (Leaflet o Google) una sola vez
+  useEffect(() => {
+    if (!mapContainerRef.current) return;
+
+    // Google Maps
+    if (mapProvider === 'google') {
+      if (googleMapRef.current) return; // ya inicializado
+      (async () => {
+        const ok = await loadGoogleMaps();
+        if (!ok || !mapContainerRef.current) {
+          // Si no se pudo cargar la API (p. ej. falta VITE_GOOGLE_MAPS_API_KEY), marcamos el flag
+          setGoogleInitFailed(true);
+          return;
+        }
+        const w = window as any;
+        const gmap = new w.google.maps.Map(mapContainerRef.current, {
+          center: position ?? defaultCenter,
+          zoom: 13,
+          mapTypeControl: false,
+          streetViewControl: false,
+          fullscreenControl: false,
+        });
+        gmap.addListener('click', async (e: { latLng: { lat: () => number; lng: () => number } }) => {
+          const lat = e.latLng.lat();
+          const lng = e.latLng.lng();
+          setPosition({ lat, lng });
+          setGeocodingLoading(true);
+          if (googleMarkerRef.current) googleMarkerRef.current.setPosition({ lat, lng });
+          else googleMarkerRef.current = new w.google.maps.Marker({ position: { lat, lng }, map: gmap });
+          try {
+            const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lng)}&addressdetails=1`;
+            const resp = await fetch(url, { headers: { 'Accept-Language': 'es' } });
+            if (!resp.ok) throw new Error('Reverse geocoding failed');
+            const data = await resp.json();
+            const addr = (data && data.address) || {};
+            let road = (addr.road || addr.pedestrian || addr.cycleway || addr.footway || addr.path || addr.neighbourhood || addr.suburb || '') as string;
+            let houseNumber = (addr.house_number || addr.house || addr.building || addr.housenumber || '') as string;
+            if (!houseNumber && data && data.display_name) {
+              const dn = String(data.display_name);
+              const hashMatch = dn.match(/#\s*([0-9A-Za-z\-]+)/);
+              const noMatch = dn.match(/\bNo\.?\s*[:#]?\s*([0-9A-Za-z\-]+)/i);
+              const dashMatch = dn.match(/\b([0-9]{1,4}-[0-9]{1,4})\b/);
+              if (hashMatch) houseNumber = hashMatch[1];
+              else if (noMatch) houseNumber = noMatch[1];
+              else if (dashMatch) houseNumber = dashMatch[1];
+            }
+            const knownTypes: Record<string, string> = {
+              cl: 'Calle', cll: 'Calle', calle: 'Calle',
+              cra: 'Carrera', cr: 'Carrera', carrera: 'Carrera', kr: 'Carrera',
+              av: 'Avenida', avd: 'Avenida', avenida: 'Avenida',
+              tv: 'Transversal', transversal: 'Transversal',
+              diag: 'Diagonal', diagonal: 'Diagonal',
+            };
+            let detectedType = 'Calle';
+            let streetName = road;
+            if (road) {
+              const r = road.trim();
+              const m = r.match(/^([A-Za-zÀ-ÿ\.]+)\s+(.+)$/);
+              if (m) {
+                const maybeType = m[1].replace('.', '').toLowerCase();
+                const rest = m[2];
+                if (knownTypes[maybeType]) {
+                  detectedType = knownTypes[maybeType];
+                  streetName = rest;
+                }
+              }
+            }
+            setStreetType(detectedType);
+            setStreet(streetName || '');
+            setNumber(houseNumber || '');
+          } catch (err) {
+            console.error('Reverse geocoding error', err);
+            toast.error('No se pudo obtener la dirección desde el mapa');
+          } finally {
+            setGeocodingLoading(false);
+          }
+        });
+        googleMapRef.current = gmap;
+      })();
+      return;
+    }
+
+    // Leaflet (por defecto)
+    if (mapRef.current) return; // ya inicializado
+    const map = L.map(mapContainerRef.current).setView(position ?? defaultCenter, 13);
+    // Capa base con fallback si falla la carga de tiles
+    const baseLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors',
+    }).addTo(map);
+    baseLayer.on('tileerror', () => {
+      try {
+        const alt = L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
+          attribution: '© OpenStreetMap contributors, Tiles style by Humanitarian OpenStreetMap Team',
+        });
+        alt.addTo(map);
+        map.removeLayer(baseLayer);
+      } catch { /* noop */ }
+    });
+    const invalidate = () => { try { map.invalidateSize(); } catch { /* noop */ } };
+    map.whenReady(() => {
+      requestAnimationFrame(invalidate);
+      setTimeout(invalidate, 0);
+      setTimeout(invalidate, 250);
+      setTimeout(invalidate, 500);
+      setTimeout(invalidate, 1000);
+    });
+    window.addEventListener('resize', invalidate);
+    // Observa cambios del contenedor y fuerza recálculo de tamaño
+    let ro: ResizeObserver | null = null;
+    try {
+      ro = new ResizeObserver(() => invalidate());
+      ro.observe(mapContainerRef.current as Element);
+    } catch { /* noop */ }
+    map.on('click', async (e: L.LeafletMouseEvent) => {
       const latlng = e.latlng;
       setPosition(latlng);
       setGeocodingLoading(true);
+      if (markerRef.current) markerRef.current.setLatLng(latlng);
+      else markerRef.current = L.marker(latlng, { icon: locationIcon }).addTo(map);
       try {
-        const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${encodeURIComponent(
-          latlng.lat,
-        )}&lon=${encodeURIComponent(latlng.lng)}&addressdetails=1`;
+        const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${encodeURIComponent(latlng.lat)}&lon=${encodeURIComponent(latlng.lng)}&addressdetails=1`;
         const resp = await fetch(url, { headers: { 'Accept-Language': 'es' } });
         if (!resp.ok) throw new Error('Reverse geocoding failed');
         const data = await resp.json();
         const addr = (data && data.address) || {};
-
         let road = (addr.road || addr.pedestrian || addr.cycleway || addr.footway || addr.path || addr.neighbourhood || addr.suburb || '') as string;
         let houseNumber = (addr.house_number || addr.house || addr.building || addr.housenumber || '') as string;
-
         if (!houseNumber && data && data.display_name) {
           const dn = String(data.display_name);
           const hashMatch = dn.match(/#\s*([0-9A-Za-z\-]+)/);
@@ -56,33 +235,13 @@ function ClickHandler({
           else if (noMatch) houseNumber = noMatch[1];
           else if (dashMatch) houseNumber = dashMatch[1];
         }
-
-        if (!houseNumber && road) {
-          const rd = String(road);
-          const hashMatchR = rd.match(/#\s*([0-9A-Za-z\-]+)/);
-          const dashMatchR = rd.match(/([0-9]{1,4}-[0-9]{1,4})/);
-          if (hashMatchR) houseNumber = hashMatchR[1];
-          else if (dashMatchR) houseNumber = dashMatchR[1];
-        }
-
         const knownTypes: Record<string, string> = {
-          cl: 'Calle',
-          cll: 'Calle',
-          calle: 'Calle',
-          cra: 'Carrera',
-          cr: 'Carrera',
-          craa: 'Carrera',
-          carrera: 'Carrera',
-          av: 'Avenida',
-          avd: 'Avenida',
-          avenida: 'Avenida',
-          tv: 'Transversal',
-          transversal: 'Transversal',
-          diag: 'Diagonal',
-          diagonal: 'Diagonal',
-          kr: 'Carrera',
+          cl: 'Calle', cll: 'Calle', calle: 'Calle',
+          cra: 'Carrera', cr: 'Carrera', carrera: 'Carrera', kr: 'Carrera',
+          av: 'Avenida', avd: 'Avenida', avenida: 'Avenida',
+          tv: 'Transversal', transversal: 'Transversal',
+          diag: 'Diagonal', diagonal: 'Diagonal',
         };
-
         let detectedType = 'Calle';
         let streetName = road;
         if (road) {
@@ -94,14 +253,9 @@ function ClickHandler({
             if (knownTypes[maybeType]) {
               detectedType = knownTypes[maybeType];
               streetName = rest;
-            } else {
-              streetName = r;
             }
-          } else {
-            streetName = r;
           }
         }
-
         setStreetType(detectedType);
         setStreet(streetName || '');
         setNumber(houseNumber || '');
@@ -111,34 +265,48 @@ function ClickHandler({
       } finally {
         setGeocodingLoading(false);
       }
-    },
-  });
-  return null;
-}
+    });
+    mapRef.current = map;
+    return () => {
+      window.removeEventListener('resize', invalidate);
+      if (ro) { try { ro.disconnect(); } catch { /* noop */ } ro = null; }
+      map.remove();
+    };
+  }, [mapProvider]);
 
-const GenericAddressForm: React.FC<Props> = ({ mode = 'create', userId, addressId, initial, onSaved, onCancel }) => {
-  const [street, setStreet] = useState(initial?.street?.replace(/^\w+\s+/, '') || '');
-  const [streetType, setStreetType] = useState<string>((initial?.street && initial.street.split(' ')[0]) || 'Calle');
-  const [number, setNumber] = useState(initial?.number || '');
-  const [position, setPosition] = useState<LatLng>(
-    initial && initial.latitude !== undefined && initial.longitude !== undefined
-      ? { lat: Number(initial.latitude), lng: Number(initial.longitude) }
-      : null,
-  );
-  const [geocodingLoading, setGeocodingLoading] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const debounceRef = React.useRef<number | null>(null);
-  const abortControllerRef = React.useRef<AbortController | null>(null);
+  // 2) Cuando cambia la posición, centrar mapa y mover/crear el marcador (Leaflet o Google)
+  useEffect(() => {
+    if (!position) return;
+    // Google
+    if (mapProvider === 'google' && googleMapRef.current) {
+      const w = window as any;
+      const gmap = googleMapRef.current as any;
+      gmap.setCenter(position);
+      if (googleMarkerRef.current) {
+        googleMarkerRef.current.setPosition(position);
+      } else if (w.google && w.google.maps) {
+        googleMarkerRef.current = new w.google.maps.Marker({ position, map: gmap });
+      }
+      return;
+    }
+    // Leaflet
+    if (!mapRef.current) return;
+    mapRef.current.setView(position, mapRef.current.getZoom());
+    try { mapRef.current.invalidateSize(); } catch { /* noop */ }
+    if (markerRef.current) {
+      markerRef.current.setLatLng(position);
+    } else {
+      markerRef.current = L.marker(position, { icon: locationIcon }).addTo(mapRef.current);
+    }
+  }, [position, mapProvider]);
 
-  const defaultCenter = { lat: 5.0689, lng: -75.5176 };
-
+  // 3) Si venimos a editar, precargar datos de la dirección
   useEffect(() => {
     if (mode === 'edit' && addressId) {
       (async () => {
         try {
           const a = await addressService.getAddressById(addressId);
           if (a) {
-            // map back
             const parts = (a.street || '').split(' ');
             if (parts.length > 1) {
               setStreetType(parts[0]);
@@ -156,6 +324,7 @@ const GenericAddressForm: React.FC<Props> = ({ mode = 'create', userId, addressI
     }
   }, [mode, addressId]);
 
+  // 4) Guardar (create/update) reutilizando el servicio existente
   const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (mode === 'create' && !userId) {
@@ -197,22 +366,17 @@ const GenericAddressForm: React.FC<Props> = ({ mode = 'create', userId, addressI
     }
   };
 
-  // Auto-geocode when street or number change (debounced)
+  // 5) Geocodificar al escribir (con debounce) para mover el mapa automáticamente
   useEffect(() => {
     if (debounceRef.current) {
       window.clearTimeout(debounceRef.current);
       debounceRef.current = null;
     }
-
-    // if no meaningful input, skip
     if (!street || !number) return;
 
     debounceRef.current = window.setTimeout(async () => {
       setGeocodingLoading(true);
-      // abort previous request if any
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
-      }
+      if (abortControllerRef.current) abortControllerRef.current.abort();
       const controller = new AbortController();
       abortControllerRef.current = controller;
       try {
@@ -223,9 +387,7 @@ const GenericAddressForm: React.FC<Props> = ({ mode = 'create', userId, addressI
         const results = await resp.json();
         if (Array.isArray(results) && results.length > 0) {
           const r = results[0];
-          const lat = Number(r.lat);
-          const lon = Number(r.lon);
-          setPosition({ lat, lng: lon });
+          setPosition({ lat: Number(r.lat), lng: Number(r.lon) });
         } else {
           toast.error('No se encontró la dirección en el mapa');
         }
@@ -251,15 +413,13 @@ const GenericAddressForm: React.FC<Props> = ({ mode = 'create', userId, addressI
     };
   }, [street, number, streetType]);
 
-  // Manual geocode trigger
+  // 6) Botón para geocodificar manualmente
   const geocodeNow = async () => {
     if (!street || !number) {
       toast.error('Street y Number son obligatorios para buscar');
       return;
     }
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-    }
+    if (abortControllerRef.current) abortControllerRef.current.abort();
     const controller = new AbortController();
     abortControllerRef.current = controller;
     setGeocodingLoading(true);
@@ -286,44 +446,26 @@ const GenericAddressForm: React.FC<Props> = ({ mode = 'create', userId, addressI
     }
   };
 
-  const locationIcon = L.divIcon({
-    className: 'custom-location-icon',
-    html: `<svg width="36" height="48" viewBox="0 0 24 33" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 0C7.02944 0 3 4.02944 3 9C3 16.125 12 33 12 33C12 33 21 16.125 21 9C21 4.02944 16.9706 0 12 0Z" fill="#ef4444"/><circle cx="12" cy="9" r="3.5" fill="white"/></svg>`,
-    iconSize: [36, 48],
-    iconAnchor: [18, 48],
-  });
-
-  function Recenter({ pos }: { pos: LatLng }) {
-    const map = useMap();
-    useEffect(() => {
-      if (pos) map.setView(pos, map.getZoom());
-    }, [pos, map]);
-    return null;
-  }
-
+  // Render: mismo layout, pero el mapa ahora es un <div> donde Leaflet dibuja
   return (
     <div className="p-6">
       <div className="grid grid-cols-12 gap-6">
         <div className="col-span-12 lg:col-span-7 rounded border bg-white p-4">
-          <div style={{ height: 360 }} className="rounded overflow-hidden">
-            {/* @ts-ignore */}
-            <MapContainer center={position ?? defaultCenter} zoom={13} style={{ height: '100%', width: '100%' }}>
-              {/* @ts-ignore */}
-              <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              />
-              <ClickHandler
-                setPosition={setPosition}
-                setStreet={setStreet}
-                setNumber={setNumber}
-                setStreetType={setStreetType}
-                setGeocodingLoading={setGeocodingLoading}
-              />
-              {/* @ts-ignore */}
-              {position && <Marker position={position} icon={locationIcon} />}
-              {position && <Recenter pos={position} />}
-            </MapContainer>
+          {/*
+            Contenedor del mapa. Para Google Maps, si falló la inicialización (p. ej. falta API key),
+            mostramos un overlay simple con una pista para el desarrollador. Esto no toca backend.
+          */}
+          <div ref={mapContainerRef} style={{ height: 360, width: '100%', position: 'relative' }} className="rounded overflow-hidden">
+            {mapProvider === 'google' && googleInitFailed && (
+              <div style={{
+                position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                background: 'repeating-linear-gradient(45deg, rgba(255,0,0,0.06), rgba(255,0,0,0.06) 10px, rgba(0,0,0,0.02) 10px, rgba(0,0,0,0.02) 20px)'
+              }}>
+                <span className="text-sm text-gray-700 bg-white/80 px-3 py-2 rounded shadow">
+                  No se pudo cargar Google Maps. Verifica tu variable VITE_GOOGLE_MAPS_API_KEY y recarga la página.
+                </span>
+              </div>
+            )}
           </div>
         </div>
 

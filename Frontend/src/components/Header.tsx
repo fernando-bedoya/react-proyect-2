@@ -1,8 +1,5 @@
 import { Link } from 'react-router-dom';
 import Logo from '../images/logo/logo-icon.svg';
-import DarkModeSwitcher from './DarkModeSwitcher';
-import DropdownMessage from './DropdownMessage';
-import DropdownNotification from './DropdownNotification';
 import DropdownUser from './DropdownUser';
 import { useTheme } from '../context/ThemeContext';
 
@@ -16,8 +13,7 @@ import { useTheme } from '../context/ThemeContext';
  * - ✅ Funciona con Bootstrap, Tailwind y Material UI sin necesidad de componentes separados
  * - ✅ Incluye botón hamburguesa para toggle del sidebar en móvil
  * - ✅ Barra de búsqueda responsive (oculta en móvil)
- * - ✅ Botones de notificaciones, mensajes y perfil de usuario
- * - ✅ Switcher de modo oscuro/claro
+ * - ✅ Dropdown de perfil de usuario con opciones de configuración y logout
  * - ✅ Estilos inline para Bootstrap que garantizan posicionamiento correcto
  */
 
@@ -166,22 +162,8 @@ const Header = (props: {
           </form>
         </div>
 
-        {/* ✅ Sección derecha: Botones de acción (notificaciones, mensajes, perfil) */}
+        {/* ✅ Sección derecha: Perfil de usuario */}
         <div className={designLibrary === 'bootstrap' ? 'd-flex align-items-center gap-2 gap-sm-3 ms-auto' : 'flex items-center gap-3 2xsm:gap-7'}>
-          <ul className={designLibrary === 'bootstrap' ? 'd-flex align-items-center gap-2 list-unstyled mb-0' : 'flex items-center gap-2 2xsm:gap-4'}>
-            {/* <!-- Dark Mode Toggler --> */}
-            <DarkModeSwitcher />
-            {/* <!-- Dark Mode Toggler --> */}
-
-            {/* <!-- Notification Menu Area --> */}
-            <DropdownNotification />
-            {/* <!-- Notification Menu Area --> */}
-
-            {/* <!-- Chat Notification Area --> */}
-            <DropdownMessage />
-            {/* <!-- Chat Notification Area --> */}
-          </ul>
-
           {/* <!-- User Area --> */}
           <DropdownUser />
           {/* <!-- User Area --> */}
