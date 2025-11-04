@@ -7,45 +7,38 @@ const UserProfile = lazy(() => import('./pages/Profile/UserProfile')); // Nueva 
 const Settings = lazy(() => import('./pages/Settings'));
 const Tables = lazy(() => import('./pages/Tables'));
 
-// Users CRUD
-const UsersList = lazy(() => import('./pages/Users/List'));
-const UsersCreate = lazy(() => import('./pages/Users/Create'));
-const UsersUpdate = lazy(() => import('./pages/Users/Update'));
+// 🔄 REFACTORIZADO: Users CRUD usando GenericCRUDView
+const UserViewGeneric = lazy(() => import('./views/user/UserViewGeneric'));
 const UsersRolesList = lazy(() => import('./pages/Users-Roles/List'));
 const UsersRolesUpdate = lazy(() => import('./pages/Users-Roles/Update'));
 
-// Address pages
-// Load the Create page we added under src/pages/Adrdess/Create.tsx
+// Address pages (mantiene implementación especial con mapa)
 const AddressCreate = lazy(() => import('./pages/Address/Create'));
 const AddressUpdate = lazy(() => import('./pages/Address/Update'));
 const AddressList = lazy(() => import('./pages/Address/List'));
 
-// Roles
-const RolesList = lazy(() => import('./pages/Roles/List'));
-const RolesCreate = lazy(() => import('./pages/Roles/Create'));
-const RolesUpdate = lazy(() => import('./pages/Roles/Update'));
+// 🔄 REFACTORIZADO: Roles CRUD usando GenericCRUDView
+const RoleView = lazy(() => import('./views/role/RoleView'));
 
 // User role manager (assign roles to users)
 const UserRoleManager = lazy(() => import('./components/UserRoleManager'));
 
-const PermissionsList = lazy(() => import('./pages/Permissions/List'));
-const PermissionsCreate = lazy(() => import('./pages/Permissions/Create'));
+// 🔄 REFACTORIZADO: Permissions CRUD usando GenericCRUDView
+const PermissionView = lazy(() => import('./views/permission/PermissionView'));
 
 // Administrator
 const AdministratorList = lazy(() => import('./pages/Administrator/List'));
 const AdministratorPermissions = lazy(() => import('./pages/Administrator/Permissions'));
 
-//Sessions
-const SessionsList = lazy(() => import('./pages/Session/List'));
-const SessionsCreate = lazy(() => import('./pages/Session/Create'));
+// 🔄 REFACTORIZADO: Sessions CRUD usando GenericCRUDView
+const SessionView = lazy(() => import('./views/session/SessionView'));
+
 // Firebase Demo
 const FirebaseDemo = lazy(() => import('./pages/Firebase/FirebaseDemo'));
 const FirebaseChecker = lazy(() => import('./pages/Firebase/FirebaseChecker'));
 
-// Passwords
-const PasswordsList = lazy(() => import('./pages/password/List'));
-const PasswordsCreate = lazy(() => import('./pages/password/Create'));
-const PasswordsUpdate = lazy(() => import('./pages/password/Update'));
+// 🔄 REFACTORIZADO: Passwords CRUD usando GenericCRUDView
+const PasswordView = lazy(() => import('./views/password/PasswordView'));
 
 // CRUD Views (Con funcionalidad completa - Crear/Editar/Eliminar activados)
 const DigitalSignatureView = lazy(() => import('./views/digitalSignature/DigitalSignatureViewReusable'));
@@ -58,7 +51,6 @@ const UserView = lazy(() => import('./views/user/UserView.jsx'));
 // 🆕 NUEVAS RUTAS PARA SIDEBAR MEJORADO
 // Rutas para gestión de permisos de roles y historial de contraseñas
 const RolePermissionsList = lazy(() => import('./pages/Administrator/List')); // Reutilizando componente existente
-const PasswordHistoryList = lazy(() => import('./pages/password/List')); // Reutilizando componente existente  
 const UserAnswersList = lazy(() => import('./views/answer/AnswerViewReusable')); // Reutilizando componente existente
 
 const coreRoutes = [
@@ -95,17 +87,7 @@ const coreRoutes = [
   {
     path: '/users/list',
     title: 'Users List',
-    component: UsersList,
-  },
-  {
-    path: '/users/create',
-    title: 'Create User',
-    component: UsersCreate,
-  },
-  {
-    path: '/users/update/:id',
-    title: 'Update User',
-    component: UsersUpdate,
+    component: UserViewGeneric,
   },
   {
     path: '/user-roles/update/:id',
@@ -145,32 +127,17 @@ const coreRoutes = [
   {
     path: '/roles/list',
     title: 'Roles List',
-    component: RolesList,
-  },
-  {
-    path: '/roles/create',
-    title: 'Create Role',
-    component: RolesCreate,
-  },
-  {
-    path: '/roles/update/:id',
-    title: 'Update Role',
-    component: RolesUpdate,
+    component: RoleView,
   },
   {
     path: '/permissions/list',
     title: 'Permissions List',
-    component: PermissionsList,
+    component: PermissionView,
   },
   {
     path: '/permissions/list/:roleId',
     title: 'Permissions List (por role)',
-    component: PermissionsList,
-  },
-  {
-    path: '/permissions/create',
-    title: 'Create Permission',
-    component: PermissionsCreate,
+    component: PermissionView,
   },
   {
     path: '/permissions-roles/list',
@@ -182,16 +149,10 @@ const coreRoutes = [
     title: 'Administrator Permissions',
     component: AdministratorPermissions,
   },
-  // Permissions update handled via Create page with ?edit=<id>
   {
     path: '/sessions/list',
     title: 'Sessions List',
-    component: SessionsList,
-  },
-  {
-    path: '/sessions/create',
-    title: 'Create Session',
-    component: SessionsCreate,
+    component: SessionView,
   },
   {
     path: '/firebase',
@@ -226,17 +187,7 @@ const coreRoutes = [
   {
     path: '/passwords/list',
     title: 'Passwords List',
-    component: PasswordsList,
-  },
-  {
-    path: '/passwords/create',
-    title: 'Create Password',
-    component: PasswordsCreate,
-  },
-  {
-    path: '/passwords/update/:id',
-    title: 'Update Password',
-    component: PasswordsUpdate,
+    component: PasswordView,
   },
   // {
   //   path: '/sessions',
@@ -257,7 +208,7 @@ const coreRoutes = [
   {
     path: '/password-history',
     title: 'Password History',
-    component: PasswordHistoryList, // Historial de contraseñas
+    component: PasswordView, // Historial de contraseñas
   },
   {
     path: '/user-answers',

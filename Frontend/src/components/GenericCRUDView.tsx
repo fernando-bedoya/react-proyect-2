@@ -19,7 +19,7 @@ import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Alert, Spinner, Badge, Button } from 'react-bootstrap';
 import { Plus, RefreshCw, ArrowLeft } from 'lucide-react';
 import GenericTable from './GenericTable';
-import GenericForm from './GenericForm';
+import GenericForm, { FieldConfig } from './GenericForm';
 import GenericModal from './GenericModal';
 import ThemeSelector from './ThemeSelector';
 import { getAll, create, update, remove } from '../services/baseService';
@@ -32,6 +32,10 @@ export interface CRUDField {
   placeholder?: string;
   required?: boolean;
   options?: { value: string | number; label: string }[];
+  // Para select dinámicos que se llenan con datos relacionados
+  relatedDataKey?: string; // Ej: "users" para poblar desde relatedData.users
+  relatedValueField?: string; // Campo a usar como value (default: "id")
+  relatedLabelField?: string; // Campo a usar como label (default: "name")
   helpText?: string;
   cols?: number;
   validation?: any;
@@ -260,6 +264,39 @@ const GenericCRUDView: React.FC<GenericCRUDViewProps> = ({
     }
   };
 
+  // Enriquecer formFields con datos relacionados para selects dinámicos
+  const enrichedFormFields: FieldConfig[] = formFields.map(field => {
+    if (field.type === 'select' && field.relatedDataKey && !field.options) {
+      const relatedItems = relatedData[field.relatedDataKey] || [];
+      const valueField = field.relatedValueField || 'id';
+      const labelField = field.relatedLabelField || 'name';
+      
+      return {
+        name: field.name,
+        label: field.label || field.name,
+        type: 'select' as const,
+        required: field.required,
+        placeholder: field.placeholder,
+        helpText: field.helpText,
+        cols: field.cols,
+        options: relatedItems.map((item: any) => ({
+          value: item[valueField],
+          label: item[labelField] || item[valueField]
+        }))
+      };
+    }
+    return { 
+      name: field.name,
+      label: field.label || field.name,
+      type: field.type || 'text',
+      required: field.required,
+      placeholder: field.placeholder,
+      helpText: field.helpText,
+      cols: field.cols,
+      options: field.options
+    };
+  });
+
   // Transformar datos si se proporciona transformador
   const tableData = dataTransformer ? dataTransformer(data, relatedData) : data;
 
@@ -406,16 +443,15 @@ const GenericCRUDView: React.FC<GenericCRUDViewProps> = ({
         show={showModal}
         onHide={() => setShowModal(false)}
         title={modalMode === 'create' ? `Nuevo ${entityNameSingular}` : `Editar ${entityNameSingular}`}
-        icon={modalMode === 'create' ? <Plus size={24} /> : undefined}
         size="lg"
       >
         <GenericForm
-          fields={formFields}
+          fields={enrichedFormFields}
           onSubmit={handleSubmit}
           onCancel={() => setShowModal(false)}
           submitLabel={modalMode === 'create' ? 'Crear' : 'Actualizar'}
           cancelLabel="Cancelar"
-          initialValues={modalMode === 'edit' ? selectedItem : undefined}
+          initialData={modalMode === 'edit' ? selectedItem : undefined}
         />
       </GenericModal>
     </Container>
