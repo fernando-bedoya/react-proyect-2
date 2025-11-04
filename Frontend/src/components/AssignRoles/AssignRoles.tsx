@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from "react";
-import { Box, Button, CircularProgress, Paper, Snackbar, Alert, Typography } from "@mui/material";
-import Autocomplete from "@mui/material/Autocomplete";
-import TextField from "@mui/material/TextField";
-import Chip from "@mui/material/Chip";
+import { Container, Row, Col, Card, Form, Button, Spinner, Badge, Alert } from "react-bootstrap";
+import { UserPlus, RefreshCw } from "lucide-react";
+import ThemeSelector from "../ThemeSelector";
 import { userService } from "../../services/userService";
 import { roleService } from "../../services/Role/roleService";
 import { userRoleService } from "../../services/userRoleService";
 import type { User } from "../../models/User";
 import type { Role } from "../../models/Role";
+import Swal from "sweetalert2";
 
 /**
  * Componente para asignar uno o varios roles a un usuario.
@@ -20,12 +20,11 @@ import type { Role } from "../../models/Role";
 export const AssignRoles: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [roles, setRoles] = useState<Role[]>([]);
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [selectedRoles, setSelectedRoles] = useState<Role[]>([]);
+  const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
+  const [selectedRoleIds, setSelectedRoleIds] = useState<number[]>([]);
   const [loading, setLoading] = useState(false);
-  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: "success" | "error" | "info" }>(
-    { open: false, message: "", severity: "info" }
-  );
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -38,7 +37,7 @@ export const AssignRoles: React.FC = () => {
         setRoles(r || []);
       } catch (err) {
         console.error(err);
-        setSnackbar({ open: true, message: "Error cargando usuarios/roles", severity: "error" });
+        setError("Error cargando usuarios/roles");
       } finally {
         if (mounted) setLoading(false);
       }
@@ -48,105 +47,198 @@ export const AssignRoles: React.FC = () => {
   }, []);
 
   const handleAssign = async () => {
-    if (!selectedUser || !selectedRoles.length) return;
+    if (!selectedUserId || !selectedRoleIds.length) return;
     setLoading(true);
+    setError(null);
+    setSuccess(null);
+    
     try {
-      const roleIds = selectedRoles.map((r) => r.id).filter((id): id is number => typeof id === "number");
-      const ok = await userRoleService.assignRoles(selectedUser.id as number, roleIds);
+      const ok = await userRoleService.assignRoles(selectedUserId, selectedRoleIds);
       if (ok) {
-        setSnackbar({ open: true, message: "Roles asignados correctamente", severity: "success" });
-        // Actualizar estado local del usuario (si existe el arreglo roles)
-        setUsers((prev) => prev.map(u => u.id === selectedUser.id ? { ...u, roles: Array.from(new Map([...(u.roles || []), ...selectedRoles].map(r=>[(r as Role).id, r])).values()) } : u));
+        await Swal.fire({
+          title: '¡Éxito!',
+          text: 'Roles asignados correctamente',
+          icon: 'success',
+          timer: 2000,
+          showConfirmButton: false
+        });
+        setSuccess("Roles asignados correctamente");
+        setSelectedUserId(null);
+        setSelectedRoleIds([]);
       } else {
-        setSnackbar({ open: true, message: "No se pudieron asignar los roles", severity: "error" });
+        setError("No se pudieron asignar los roles");
       }
     } catch (error: any) {
       console.error(error);
-      // Robust extraction of server message
-      let serverMsg: string = "Error al asignar roles";
-      try {
-        if (error?.response?.data) {
-          const data = error.response.data;
-          // Prefer common fields
-          serverMsg = data.message || data.error || JSON.stringify(data);
-        } else if (error?.message) {
-          serverMsg = String(error.message);
-        }
-      } catch (e) {
-        serverMsg = String(error?.message || "Error al asignar roles");
-      }
-      setSnackbar({ open: true, message: serverMsg, severity: "error" });
+      const serverMsg = error?.response?.data?.message || error?.message || "Error al asignar roles";
+      setError(serverMsg);
+      await Swal.fire({
+        title: 'Error',
+        text: serverMsg,
+        icon: 'error'
+      });
     } finally {
       setLoading(false);
     }
   };
 
-  return (
-    <Paper sx={{ p: 3, width: "100%", maxWidth: 900 }} elevation={3}>
-      <Typography variant="h6" gutterBottom>Asignar roles a usuario</Typography>
+  const handleRoleToggle = (roleId: number) => {
+    setSelectedRoleIds(prev =>
+      prev.includes(roleId)
+        ? prev.filter(id => id !== roleId)
+        : [...prev, roleId]
+    );
+  };
 
-      {loading && (
-        <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2 }}>
-          <CircularProgress size={20} />
-          <Typography variant="body2">Cargando...</Typography>
-        </Box>
+  return (
+    <Container fluid className="py-4">
+      {/* Header */}
+      <Row className="mb-4">
+        <Col>
+          <div className="d-flex justify-content-between align-items-center">
+            <div>
+              <h2 className="h2 fw-bold mb-2" style={{ color: '#10b981' }}>
+                <UserPlus className="me-2" size={32} style={{ verticalAlign: 'middle' }} />
+                👥 Asignar Roles a Usuario
+              </h2>
+              <p className="text-muted mb-0">Selecciona un usuario y los roles que deseas asignarle</p>
+            </div>
+            <ThemeSelector />
+          </div>
+        </Col>
+      </Row>
+
+      {/* Error/Success Messages */}
+      {error && (
+        <Alert variant="danger" dismissible onClose={() => setError(null)} className="mb-3">
+          {error}
+        </Alert>
+      )}
+      {success && (
+        <Alert variant="success" dismissible onClose={() => setSuccess(null)} className="mb-3">
+          {success}
+        </Alert>
       )}
 
-      <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: 2 }}>
-        <Autocomplete
-          options={users}
-          getOptionLabel={(u) => u.name || u.email || String(u.id)}
-          value={selectedUser}
-          onChange={(_, value) => setSelectedUser(value)}
-          renderInput={(params) => <TextField {...params} label="Seleccionar usuario" placeholder="Buscar usuario..." />}
-          isOptionEqualToValue={(a, b) => a.id === b.id}
-        />
+      {/* Loading State */}
+      {loading && (
+        <div className="d-flex align-items-center gap-2 mb-3">
+          <Spinner animation="border" size="sm" variant="success" />
+          <span className="text-muted">Cargando...</span>
+        </div>
+      )}
 
-        <Autocomplete
-          multiple
-          options={roles}
-          getOptionLabel={(r) => r.name || String(r.id)}
-          value={selectedRoles}
-          onChange={(_, value) => setSelectedRoles(value)}
-          renderTags={(value: Role[], getTagProps) =>
-            value.map((option: Role, index: number) => (
-              <Chip
-                label={option.name || `#${option.id}`}
-                {...getTagProps({ index })}
-                color="warning"
-                key={option.id}
-              />
-            ))
-          }
-          renderInput={(params) => <TextField {...params} label="Seleccionar roles" placeholder="Roles..." />}
-          isOptionEqualToValue={(a, b) => a.id === b.id}
-        />
-      </Box>
+      {/* Form Card */}
+      <Card className="shadow-sm">
+        <Card.Body className="p-4">
+          <Row className="g-4">
+            {/* Select User */}
+            <Col md={6}>
+              <Form.Group>
+                <Form.Label className="fw-semibold text-success">
+                  <span className="me-2">👤</span>
+                  Seleccionar Usuario *
+                </Form.Label>
+                <Form.Select
+                  value={selectedUserId || ''}
+                  onChange={(e) => setSelectedUserId(e.target.value ? Number(e.target.value) : null)}
+                  disabled={loading}
+                  className="form-select-lg"
+                >
+                  <option value="">-- Selecciona un usuario --</option>
+                  {users.map(user => (
+                    <option key={user.id} value={user.id}>
+                      {user.name || user.email || `Usuario #${user.id}`}
+                    </option>
+                  ))}
+                </Form.Select>
+                <Form.Text className="text-muted">
+                  Usuario al que se asignarán los roles seleccionados
+                </Form.Text>
+              </Form.Group>
+            </Col>
 
-      <Box sx={{ mt: 3, display: "flex", gap: 2 }}>
-        <Button
-          variant="contained"
-          color="warning"
-          disabled={!selectedUser || selectedRoles.length === 0 || loading}
-          onClick={handleAssign}
-        >
-          Asignar
-        </Button>
+            {/* Select Roles */}
+            <Col md={6}>
+              <Form.Label className="fw-semibold text-success">
+                <span className="me-2">🛡️</span>
+                Seleccionar Roles * ({selectedRoleIds.length} seleccionados)
+              </Form.Label>
+              <div className="border rounded p-3" style={{ maxHeight: '300px', overflowY: 'auto' }}>
+                {roles.length === 0 ? (
+                  <p className="text-muted mb-0">No hay roles disponibles</p>
+                ) : (
+                  roles.map(role => (
+                    <Form.Check
+                      key={role.id}
+                      type="checkbox"
+                      id={`role-${role.id}`}
+                      label={
+                        <span>
+                          {role.name || `Rol #${role.id}`}
+                          {selectedRoleIds.includes(role.id as number) && (
+                            <Badge bg="success" className="ms-2">✓</Badge>
+                          )}
+                        </span>
+                      }
+                      checked={selectedRoleIds.includes(role.id as number)}
+                      onChange={() => handleRoleToggle(role.id as number)}
+                      disabled={loading}
+                      className="mb-2"
+                    />
+                  ))
+                )}
+              </div>
+              <Form.Text className="text-muted">
+                Selecciona uno o más roles para asignar
+              </Form.Text>
+            </Col>
+          </Row>
 
-        <Button
-          variant="outlined"
-          onClick={() => { setSelectedUser(null); setSelectedRoles([]); }}
-        >
-          Limpiar
-        </Button>
-      </Box>
+          {/* Action Buttons */}
+          <Row className="mt-4">
+            <Col>
+              <div className="d-flex gap-2">
+                <Button
+                  variant="success"
+                  size="lg"
+                  disabled={!selectedUserId || selectedRoleIds.length === 0 || loading}
+                  onClick={handleAssign}
+                  className="px-4"
+                >
+                  {loading ? (
+                    <>
+                      <Spinner animation="border" size="sm" className="me-2" />
+                      Asignando...
+                    </>
+                  ) : (
+                    <>
+                      <UserPlus size={18} className="me-2" />
+                      Asignar Roles
+                    </>
+                  )}
+                </Button>
 
-      <Snackbar open={snackbar.open} autoHideDuration={4000} onClose={() => setSnackbar(s => ({ ...s, open: false }))}>
-        <Alert severity={snackbar.severity} onClose={() => setSnackbar(s => ({ ...s, open: false }))}>
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
-    </Paper>
+                <Button
+                  variant="outline-secondary"
+                  size="lg"
+                  onClick={() => {
+                    setSelectedUserId(null);
+                    setSelectedRoleIds([]);
+                    setError(null);
+                    setSuccess(null);
+                  }}
+                  disabled={loading}
+                >
+                  <RefreshCw size={18} className="me-2" />
+                  Limpiar
+                </Button>
+              </div>
+            </Col>
+          </Row>
+        </Card.Body>
+      </Card>
+    </Container>
   );
 };
 

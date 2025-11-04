@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Container, Row, Col, Card, Form, Button, Spinner, Badge, Alert, Accordion } from "react-bootstrap";
 import { Shield, Save, RefreshCw } from "lucide-react";
 import ThemeSelector from "../../components/ThemeSelector";
 import Swal from "sweetalert2";
@@ -172,172 +173,203 @@ const AdministratorPermissions: React.FC = () => {
     const selectedRoleName = roles.find(r => r.id === selectedRole)?.name || '';
 
     return (
-        <div className="p-4">
+        <Container fluid className="py-4">
             {/* Header */}
-            <div className="mb-4">
-                <div className="flex justify-between items-center">
-                    <div>
-                        <h2 className="text-2xl font-bold mb-1 text-meta-3">
-                            <Shield className="inline mr-2" size={28} />
-                            Administrador de Permisos
-                        </h2>
-                        <p className="text-muted mb-0">
-                            Asigne permisos a los roles del sistema
-                        </p>
+            <Row className="mb-4">
+                <Col>
+                    <div className="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h2 className="h2 fw-bold mb-2" style={{ color: '#10b981' }}>
+                                <Shield className="me-2" size={32} style={{ verticalAlign: 'middle' }} />
+                                🛡️ Administrador de Permisos
+                            </h2>
+                            <p className="text-muted mb-0">
+                                Asigne permisos a los roles del sistema
+                            </p>
+                        </div>
+                        <div className="d-flex gap-2">
+                            <ThemeSelector />
+                            <Button
+                                variant="outline-secondary"
+                                onClick={handleRefresh}
+                                disabled={loading}
+                                className="d-flex align-items-center gap-2"
+                            >
+                                <RefreshCw size={16} />
+                                Actualizar
+                            </Button>
+                            <Button
+                                variant="success"
+                                onClick={handleSave}
+                                disabled={saving || !selectedRole}
+                                className="d-flex align-items-center gap-2"
+                            >
+                                {saving ? (
+                                    <>
+                                        <Spinner animation="border" size="sm" />
+                                        Guardando...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Save size={18} />
+                                        Guardar Cambios
+                                    </>
+                                )}
+                            </Button>
+                        </div>
                     </div>
-                    <div className="flex gap-2">
-                        <ThemeSelector />
-                        <button
-                            onClick={handleRefresh}
-                            disabled={loading}
-                            className="inline-flex items-center gap-2 px-3 py-1 border rounded text-sm hover:bg-gray-50 transition-colors"
-                        >
-                            <RefreshCw size={16} />
-                            Actualizar
-                        </button>
-                        <button
-                            onClick={handleSave}
-                            disabled={saving || !selectedRole}
-                            className="inline-flex items-center gap-2 bg-meta-3 text-white px-3 py-2 rounded text-sm hover:bg-meta-3/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            <Save size={18} />
-                            {saving ? "Guardando..." : "Guardar Cambios"}
-                        </button>
-                    </div>
-                </div>
-            </div>
+                </Col>
+            </Row>
 
             {/* Success Message */}
             {successMessage && (
-                <div className="mb-4 p-3 bg-green-50 border border-green-200 text-green-800 rounded shadow-sm">
-                    <div className="flex items-center">
-                        <strong className="mr-2">✓</strong>
-                        {successMessage}
-                    </div>
-                </div>
+                <Alert variant="success" dismissible onClose={() => setSuccessMessage(null)} className="mb-3">
+                    <strong>✓</strong> {successMessage}
+                </Alert>
             )}
 
             {/* Error Message */}
             {error && (
-                <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-800 rounded shadow-sm">
-                    <div className="flex items-center">
-                        <strong className="mr-2">✕</strong>
-                        {error}
-                    </div>
-                </div>
+                <Alert variant="danger" dismissible onClose={() => setError(null)} className="mb-3">
+                    <strong>✕</strong> {error}
+                </Alert>
             )}
 
             {/* Role Selector */}
-            <div className="bg-white dark:bg-boxdark rounded shadow-sm border p-6 mb-4">
-                <h3 className="text-lg font-semibold mb-4">Seleccionar Rol</h3>
-                <div className="flex items-center gap-4">
-                    <label htmlFor="role-select" className="text-sm font-medium min-w-24">
-                        Rol:
-                    </label>
-                    <select
-                        id="role-select"
-                        value={selectedRole || ''}
-                        onChange={handleRoleChange}
-                        className="flex-1 max-w-md px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary"
-                        disabled={loading}
-                    >
-                        <option value="">-- Seleccione un rol --</option>
-                        {roles.map(role => (
-                            <option key={role.id} value={role.id}>
-                                {role.name} {role.description ? `- ${role.description}` : ''}
-                            </option>
-                        ))}
-                    </select>
-                </div>
-                {selectedRole && (
-                    <div className="mt-3 p-3 bg-blue-50 rounded text-sm text-blue-800">
-                        <strong>Asignando permisos al rol:</strong> {selectedRoleName}
-                    </div>
-                )}
-            </div>
+            <Card className="shadow-sm mb-4">
+                <Card.Body>
+                    <h3 className="h5 fw-semibold mb-3 text-success">Seleccionar Rol</h3>
+                    <Row>
+                        <Col md={8}>
+                            <Form.Group>
+                                <Form.Label className="fw-medium">Rol *</Form.Label>
+                                <Form.Select
+                                    value={selectedRole || ''}
+                                    onChange={handleRoleChange}
+                                    disabled={loading}
+                                    size="lg"
+                                >
+                                    <option value="">-- Seleccione un rol --</option>
+                                    {roles.map(role => (
+                                        <option key={role.id} value={role.id}>
+                                            {role.name} {role.description ? `- ${role.description}` : ''}
+                                        </option>
+                                    ))}
+                                </Form.Select>
+                            </Form.Group>
+                        </Col>
+                    </Row>
+                    {selectedRole && (
+                        <Alert variant="info" className="mt-3 mb-0">
+                            <strong>Asignando permisos al rol:</strong> {selectedRoleName}
+                        </Alert>
+                    )}
+                </Card.Body>
+            </Card>
 
             {/* Permissions Grid */}
             {selectedRole && (
-                <div className="bg-white dark:bg-boxdark rounded shadow-sm border p-6">
-                    <h3 className="text-lg font-semibold mb-4">Permisos Disponibles</h3>
+                <Card className="shadow-sm">
+                    <Card.Body>
+                        <h3 className="h5 fw-semibold mb-4 text-success">Permisos Disponibles</h3>
 
-                    {loading ? (
-                        <div className="text-center py-8">
-                            <span className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full mx-auto" />
-                            <p className="mt-3 text-muted">Cargando permisos...</p>
-                        </div>
-                    ) : (
-                        <div className="space-y-6">
-                            {Object.entries(groupedPermissions).map(([entity, perms]) => (
-                                <div key={entity} className="border rounded p-4">
-                                    <div className="flex justify-between items-center mb-3">
-                                        <h4 className="text-md font-semibold text-primary">{entity}</h4>
-                                        <button
-                                            onClick={() => handleSelectAllInEntity(entity)}
-                                            className="text-sm text-primary hover:underline"
-                                        >
-                                            {perms.every(p => selectedPermissions.includes(p.id as number))
-                                                ? 'Deseleccionar todos'
-                                                : 'Seleccionar todos'}
-                                        </button>
-                                    </div>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                                        {perms.map(perm => (
-                                            <label
-                                                key={perm.id}
-                                                className="flex items-start gap-3 p-3 border rounded cursor-pointer hover:bg-gray-50 transition-colors"
-                                            >
-                                                <input
-                                                    type="checkbox"
-                                                    checked={selectedPermissions.includes(perm.id as number)}
-                                                    onChange={() => handlePermissionToggle(perm.id as number)}
-                                                    className="mt-1 h-4 w-4 text-primary border-gray-300 rounded focus:ring-primary"
-                                                />
-                                                <div className="flex-1">
-                                                    <div className="font-medium text-sm">
-                                                        {perm.method?.toUpperCase()} {perm.url}
-                                                    </div>
-                                                    <div className="text-xs text-gray-500 mt-1">
-                                                        ID: {perm.id}
-                                                    </div>
-                                                </div>
-                                            </label>
-                                        ))}
-                                    </div>
-                                </div>
-                            ))}
-
-                            {Object.keys(groupedPermissions).length === 0 && (
-                                <div className="text-center py-8 text-muted">
-                                    No hay permisos disponibles para asignar
-                                </div>
-                            )}
-                        </div>
-                    )}
-
-                    {/* Summary */}
-                    {selectedRole && !loading && (
-                        <div className="mt-6 p-4 bg-gray-50 rounded">
-                            <div className="flex justify-between items-center text-sm">
-                                <span className="font-medium">Permisos seleccionados:</span>
-                                <span className="text-primary font-bold text-lg">
-                                    {selectedPermissions.length} / {permissions.length}
-                                </span>
+                        {loading ? (
+                            <div className="text-center py-5">
+                                <Spinner animation="border" variant="success" role="status">
+                                    <span className="visually-hidden">Cargando...</span>
+                                </Spinner>
+                                <p className="mt-3 text-muted">Cargando permisos...</p>
                             </div>
-                        </div>
-                    )}
-                </div>
+                        ) : (
+                            <>
+                                <Accordion defaultActiveKey="0" className="mb-3">
+                                    {Object.entries(groupedPermissions).map(([entity, perms], index) => (
+                                        <Accordion.Item eventKey={String(index)} key={entity}>
+                                            <Accordion.Header>
+                                                <div className="d-flex justify-content-between align-items-center w-100 me-3">
+                                                    <span className="fw-semibold text-success">{entity}</span>
+                                                    <Badge bg="success" pill>{perms.length}</Badge>
+                                                </div>
+                                            </Accordion.Header>
+                                            <Accordion.Body>
+                                                <div className="d-flex justify-content-end mb-3">
+                                                    <Button
+                                                        variant="link"
+                                                        size="sm"
+                                                        onClick={() => handleSelectAllInEntity(entity)}
+                                                        className="text-success text-decoration-none"
+                                                    >
+                                                        {perms.every(p => selectedPermissions.includes(p.id as number))
+                                                            ? 'Deseleccionar todos'
+                                                            : 'Seleccionar todos'}
+                                                    </Button>
+                                                </div>
+                                                <Row className="g-3">
+                                                    {perms.map(perm => (
+                                                        <Col key={perm.id} xs={12} md={6} lg={4}>
+                                                            <Card className="h-100 border" style={{ cursor: 'pointer' }}>
+                                                                <Card.Body className="p-3">
+                                                                    <Form.Check
+                                                                        type="checkbox"
+                                                                        id={`perm-${perm.id}`}
+                                                                        checked={selectedPermissions.includes(perm.id as number)}
+                                                                        onChange={() => handlePermissionToggle(perm.id as number)}
+                                                                        label={
+                                                                            <div>
+                                                                                <div className="fw-medium small">
+                                                                                    <Badge bg="secondary" className="me-2">{perm.method?.toUpperCase()}</Badge>
+                                                                                    {perm.url}
+                                                                                </div>
+                                                                                <div className="text-muted" style={{ fontSize: '0.75rem' }}>
+                                                                                    ID: {perm.id}
+                                                                                </div>
+                                                                            </div>
+                                                                        }
+                                                                    />
+                                                                </Card.Body>
+                                                            </Card>
+                                                        </Col>
+                                                    ))}
+                                                </Row>
+                                            </Accordion.Body>
+                                        </Accordion.Item>
+                                    ))}
+                                </Accordion>
+
+                                {Object.keys(groupedPermissions).length === 0 && (
+                                    <Alert variant="warning" className="text-center">
+                                        No hay permisos disponibles para asignar
+                                    </Alert>
+                                )}
+
+                                {/* Summary */}
+                                {selectedRole && !loading && selectedPermissions.length > 0 && (
+                                    <Card bg="light" className="mt-3">
+                                        <Card.Body className="d-flex justify-content-between align-items-center">
+                                            <span className="fw-medium">Permisos seleccionados:</span>
+                                            <Badge bg="success" pill style={{ fontSize: '1rem' }}>
+                                                {selectedPermissions.length} / {permissions.length}
+                                            </Badge>
+                                        </Card.Body>
+                                    </Card>
+                                )}
+                            </>
+                        )}
+                    </Card.Body>
+                </Card>
             )}
 
             {!selectedRole && !loading && (
-                <div className="bg-white dark:bg-boxdark rounded shadow-sm border p-12 text-center">
-                    <Shield size={64} className="mx-auto text-gray-300 mb-4" />
-                    <p className="text-muted text-lg">
-                        Seleccione un rol para comenzar a asignar permisos
-                    </p>
-                </div>
+                <Card className="shadow-sm text-center">
+                    <Card.Body className="py-5">
+                        <Shield size={64} className="text-secondary mb-3" />
+                        <p className="text-muted fs-5 mb-0">
+                            Seleccione un rol para comenzar a asignar permisos
+                        </p>
+                    </Card.Body>
+                </Card>
             )}
-        </div>
+        </Container>
     );
 };
 

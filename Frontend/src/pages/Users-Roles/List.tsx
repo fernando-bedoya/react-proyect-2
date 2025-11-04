@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Container, Row, Col, Card, Button, Spinner, Badge } from 'react-bootstrap';
-import { Plus, RefreshCw, Eye, Edit, Trash2 } from 'lucide-react';
-import GenericList from '../../components/GenericsMaterial/GenericList';
+import { Plus, RefreshCw } from 'lucide-react';
+import GenericTable from '../../components/GenericTable';
 import ThemeSelector from '../../components/ThemeSelector';
 import { useUsersAndRoles } from '../../hooks/useUsersAndRoles';
 import { userRoleService } from '../../services/userRoleService';
@@ -62,12 +62,11 @@ const ListUsersWithRoles: React.FC = () => {
   // actions: if we're viewing users filtered by a role, only show the 'delete' role action
   const listActions = (roleNum !== null && !Number.isNaN(roleNum))
     ? [
-        { name: 'delete', icon: <Trash2 />, tooltip: 'Eliminar rol', color: 'error' },
+        { name: 'delete', label: 'Eliminar', icon: 'delete' as const, variant: 'outline-danger' as const },
       ]
     : [
-        { name: 'view', icon: <Eye />, tooltip: 'Ver', color: 'info' },
-        { name: 'edit', icon: <Edit />, tooltip: 'Editar', color: 'warning' },
-        { name: 'delete', icon: <Trash2 />, tooltip: 'Eliminar', color: 'error' },
+        { name: 'edit', label: 'Editar', icon: 'edit' as const, variant: 'warning' as const },
+        { name: 'delete', label: 'Eliminar', icon: 'delete' as const, variant: 'outline-danger' as const },
       ];
 
   const handleAction = async (action: string, item: any) => {
@@ -75,25 +74,6 @@ const ListUsersWithRoles: React.FC = () => {
       navigate(`/user-roles/update/${item.id}`);
       return;
     }
-  if (action === "view") {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await roleService.getRoleById(item.id as number);
-      if (data) {
-        setSelectedRole(data);
-        setShowViewModal(true);
-      } else {
-        setError('No se pudo obtener la información del rol');
-      }
-    } catch (err) {
-      console.error('Error al obtener rol:', err);
-      setError('Error al obtener la información del rol');
-    } finally {
-      setLoading(false);
-    }
-    return;
-  }
 
     if (action === 'delete') {
       // If viewing users filtered by a role, delete the user-role assignment on backend
@@ -126,7 +106,7 @@ const ListUsersWithRoles: React.FC = () => {
             return;
           }
 
-          const ok = await userRoleService.delete(rel.id ?? rel.user_role_id ?? rel.userRoleId ?? relId);
+          const ok = await userRoleService.delete((rel as any).id ?? (rel as any).user_role_id ?? (rel as any).userRoleId);
           if (ok) {
             await Swal.fire('Eliminado', 'La asignación se ha eliminado correctamente.', 'success');
             // rebuild local map to reflect change immediately
@@ -163,7 +143,7 @@ const ListUsersWithRoles: React.FC = () => {
     }
   };
 
-  const columns = [
+  const columns: any[] = [
     { key: 'id', label: 'ID' },
     { key: 'name', label: 'Nombre' },
     { key: 'email', label: 'Correo' },
@@ -172,22 +152,19 @@ const ListUsersWithRoles: React.FC = () => {
       label: 'Roles',
       render: (row: any) => {
         const ids = userRolesMap[String(row.id)] || [];
-        if (!ids.length) return <span className="text-muted">-</span>;
-        return (
-          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-            {ids.map((rid) => {
-              const r = roles.find((x: any) => Number(x.id) === Number(rid));
-              return (
-                <span key={rid} style={{ background: '#fff8e1', color: '#7a4b00', padding: '2px 8px', borderRadius: 12, fontSize: 12 }}>
-                  {r?.name ?? `#${rid}`}
-                </span>
-              );
-            })}
-          </div>
-        );
+        if (!ids.length) return '-';
+        return ids.map((rid) => {
+          const r = roles.find((x: any) => Number(x.id) === Number(rid));
+          return r?.name ?? `#${rid}`;
+        }).join(', ');
       },
     },
   ];
+
+  const tableData = (filteredUsers || []).map(user => ({
+    ...user,
+    roles: userRolesMap[String(user.id)] || []
+  }));
 
   return (
     <Container fluid className="py-4">
@@ -216,20 +193,23 @@ const ListUsersWithRoles: React.FC = () => {
       <Row>
         <Col>
           <Card className="shadow-sm border-0">
-            <Card.Body className="p-3">
+            <Card.Body className="p-0">
               {(loadingHook || loading) ? (
-                <div className="text-center py-5"><Spinner animation="border" variant="success" /><p className="mt-3 text-muted">Cargando...</p></div>
+                <div className="text-center py-5">
+                  <Spinner animation="border" variant="success" />
+                  <p className="mt-3 text-muted">Cargando...</p>
+                </div>
               ) : (
-                  <GenericList
-                    data={filteredUsers as any}
-                    columns={columns as any}
-                    loading={loadingHook || loading}
-                    selectable
-                    idKey="id"
-                    actions={listActions}
-                    onAction={handleAction}
-                    emptyMessage="No hay usuarios"
-                  />
+                <GenericTable
+                  data={tableData}
+                  columns={columns}
+                  actions={listActions}
+                  onAction={handleAction}
+                  striped
+                  hover
+                  responsive
+                  emptyMessage="No hay usuarios con roles asignados"
+                />
               )}
             </Card.Body>
           </Card>

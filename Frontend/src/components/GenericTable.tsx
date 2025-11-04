@@ -20,7 +20,7 @@ interface Action {
   name: string;
   label: string;
   variant?: 'primary' | 'secondary' | 'success' | 'danger' | 'warning' | 'info' | 'light' | 'dark' | 'outline-primary' | 'outline-secondary' | 'outline-success' | 'outline-danger';
-  icon?: 'edit' | 'delete' | 'view' | 'more';
+  icon?: 'edit' | 'delete' | 'view' | 'more' | 'user' | 'map' | 'smartphone' | 'clock' | 'key' | 'shield';
 }
 
 interface GenericTableProps {
@@ -128,16 +128,30 @@ const GenericTable: React.FC<GenericTableProps> = ({
   };
 
   // Función para formatear el nombre de la columna
-  const formatColumnName = (column: string) => {
-    // Si hay un label personalizado, usarlo
-    if (columnLabels[column]) {
-      return columnLabels[column];
+    const formatColumnName = (column: string) => {
+    return columnLabels[column] || column.charAt(0).toUpperCase() + column.slice(1);
+  };
+
+  // Función para obtener colores según el variant de Bootstrap
+  const getVariantColors = (variant?: string) => {
+    const colors = {
+      primary: { bg: '#0d6efd', border: '#0d6efd', hover: '#0b5ed7' },
+      secondary: { bg: '#6c757d', border: '#6c757d', hover: '#5c636a' },
+      success: { bg: '#10b981', border: '#10b981', hover: '#059669' },
+      danger: { bg: '#dc3545', border: '#dc3545', hover: '#bb2d3b' },
+      warning: { bg: '#ffc107', border: '#ffc107', hover: '#ffca2c' },
+      info: { bg: '#0dcaf0', border: '#0dcaf0', hover: '#31d2f2' },
+      light: { bg: '#f8f9fa', border: '#f8f9fa', hover: '#f9fafb' },
+      dark: { bg: '#212529', border: '#212529', hover: '#1c1f23' },
+    };
+
+    // Manejar variants con outline
+    if (variant?.startsWith('outline-')) {
+      const baseVariant = variant.replace('outline-', '') as keyof typeof colors;
+      return colors[baseVariant] || colors.success;
     }
-    // Si no, formatear automáticamente
-    return column
-      .split('_')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ');
+
+    return colors[variant as keyof typeof colors] || colors.success;
   };
 
   // Función para renderizar el valor de la celda
@@ -561,45 +575,50 @@ const GenericTable: React.FC<GenericTableProps> = ({
                   }}
                 >
                   <div className="d-flex gap-2 justify-content-center flex-wrap">
-                    {actions.map((action) => (
-                      <Button
-                        key={action.name}
-                        variant={action.variant || 'outline-success'}
-                        size="sm"
-                        onClick={() => onAction(action.name, item)}
-                        className="d-flex align-items-center gap-1"
-                        style={{ 
-                          minWidth: action.icon ? '40px' : 'auto',
-                          height: '40px',
-                          transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                          fontWeight: '700',
-                          backgroundColor: action.variant?.includes('outline') ? 'transparent' : '#10b981',
-                          borderColor: '#10b981',
-                          color: action.variant?.includes('outline') ? '#10b981' : '#ffffff',
-                          borderWidth: '2px',
-                          borderRadius: '10px',
-                          boxShadow: '0 2px 8px rgba(16, 185, 129, 0.2)'
-                        }}
-                        title={action.label}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.transform = 'translateY(-2px) scale(1.08)';
-                          e.currentTarget.style.backgroundColor = '#059669';
-                          e.currentTarget.style.borderColor = '#047857';
-                          e.currentTarget.style.color = '#ffffff';
-                          e.currentTarget.style.boxShadow = '0 8px 20px rgba(5, 150, 105, 0.4)';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.transform = 'translateY(0) scale(1)';
-                          e.currentTarget.style.backgroundColor = action.variant?.includes('outline') ? 'transparent' : '#10b981';
-                          e.currentTarget.style.borderColor = '#10b981';
-                          e.currentTarget.style.color = action.variant?.includes('outline') ? '#10b981' : '#ffffff';
-                          e.currentTarget.style.boxShadow = '0 2px 8px rgba(16, 185, 129, 0.2)';
-                        }}
-                      >
-                        {action.icon && getActionIcon(action.icon)}
-                        {!action.icon && <span>{action.label}</span>}
-                      </Button>
-                    ))}
+                    {actions.map((action) => {
+                      const colors = getVariantColors(action.variant || 'outline-success');
+                      const isOutline = action.variant?.includes('outline');
+                      
+                      return (
+                        <Button
+                          key={action.name}
+                          variant={action.variant || 'outline-success'}
+                          size="sm"
+                          onClick={() => onAction(action.name, item)}
+                          className="d-flex align-items-center gap-1"
+                          style={{ 
+                            minWidth: action.icon ? '40px' : 'auto',
+                            height: '40px',
+                            transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                            fontWeight: '700',
+                            backgroundColor: isOutline ? 'transparent' : colors.bg,
+                            borderColor: colors.border,
+                            color: isOutline ? colors.bg : '#ffffff',
+                            borderWidth: '2px',
+                            borderRadius: '10px',
+                            boxShadow: `0 2px 8px ${colors.bg}33`
+                          }}
+                          title={action.label}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.transform = 'translateY(-2px) scale(1.08)';
+                            e.currentTarget.style.backgroundColor = colors.hover;
+                            e.currentTarget.style.borderColor = colors.hover;
+                            e.currentTarget.style.color = '#ffffff';
+                            e.currentTarget.style.boxShadow = `0 8px 20px ${colors.hover}66`;
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.transform = 'translateY(0) scale(1)';
+                            e.currentTarget.style.backgroundColor = isOutline ? 'transparent' : colors.bg;
+                            e.currentTarget.style.borderColor = colors.border;
+                            e.currentTarget.style.color = isOutline ? colors.bg : '#ffffff';
+                            e.currentTarget.style.boxShadow = `0 2px 8px ${colors.bg}33`;
+                          }}
+                        >
+                          {action.icon && getActionIcon(action.icon)}
+                          {!action.icon && <span>{action.label}</span>}
+                        </Button>
+                      );
+                    })}
                   </div>
                 </td>
               )}

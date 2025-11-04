@@ -1,93 +1,318 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import GenericCRUDView from '../../components/GenericCRUDView';
+import { Container, Row, Col, Button, Spinner, Alert, Badge, Form } from 'react-bootstrap';
+import { Plus, RefreshCw, MapPin } from 'lucide-react';
+import GenericTable from '../../components/GenericTable';
+import GenericModal from '../../components/GenericModal';
+import GenericAddressForm from '../../components/GenericsMaterial/GenericAddressForm';
+import ThemeSelector from '../../components/ThemeSelector';
+import addressService from '../../services/addressService';
+import userService from '../../services/userService';
 import type { Address } from '../../models/Address';
+import type { User } from '../../models/User';
+import Swal from 'sweetalert2';
 
 const AddressView: React.FC = () => {
-  const [searchParams] = useSearchParams();
-  const userId = searchParams.get('userId');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const userIdParam = searchParams.get('userId');
+
+  const [addresses, setAddresses] = useState<Address[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
+  const [selectedUserId, setSelectedUserId] = useState<number | null>(userIdParam ? Number(userIdParam) : null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [showModal, setShowModal] = useState(false);
+  const [modalMode, setModalMode] = useState<'create' | 'edit'>('create');
+  const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
+  const [selectedUserForCreate, setSelectedUserForCreate] = useState<number | null>(null);
+
+  // Cargar usuarios
+  useEffect(() => {
+    const loadUsers = async () => {
+      try {
+        const data = await userService.getUsers();
+        setUsers(data);
+      } catch (err) {
+        console.error('Error loading users:', err);
+      }
+    };
+    loadUsers();
+  }, []);
+
+  // Cargar direcciones
+  const loadAddresses = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = selectedUserId 
+        ? [await addressService.getAddressByUserId(selectedUserId)].filter(Boolean) as Address[]
+        : await addressService.getAddresses();
+      setAddresses(data);
+    } catch (err: any) {
+      console.error('Error loading addresses:', err);
+      setError(err.message || 'Error al cargar direcciones');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadAddresses();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedUserId]);
+
+  // Actualizar URL cuando cambia el filtro de usuario
+  const handleUserFilterChange = (userId: string) => {
+    if (userId) {
+      setSelectedUserId(Number(userId));
+      setSearchParams({ userId });
+    } else {
+      setSelectedUserId(null);
+      setSearchParams({});
+    }
+  };
 
   // Configuración de columnas para la tabla
-  const columns = [
-    'id',
-    'street',
-    'number',
-    'latitude',
-    'longitude',
-    'userId'
-  ];
+  const columns = ['id', 'street', 'number', 'latitude', 'longitude', 'userId'];
+  
+  const columnLabels = {
+    id: 'ID',
+    street: 'Calle',
+    number: 'Número',
+    latitude: 'Latitud',
+    longitude: 'Longitud',
+    userId: 'Usuario ID'
+  };
 
-  // Configuración de campos del formulario
-  const formFields = [
-    { 
-      name: 'street', 
-      label: 'Calle', 
-      type: 'text' as const, 
-      required: true 
-    },
-    { 
-      name: 'number', 
-      label: 'Número', 
-      type: 'text' as const, 
-      required: true 
-    },
-    { 
-      name: 'latitude', 
-      label: 'Latitud', 
-      type: 'number' as const, 
-      required: true 
-    },
-    { 
-      name: 'longitude', 
-      label: 'Longitud', 
-      type: 'number' as const, 
-      required: true 
-    },
-    { 
-      name: 'userId', 
-      label: 'ID Usuario', 
-      type: 'number' as const, 
-      required: true,
-      hidden: !!userId // Ocultar si viene userId en query params
-    }
-  ];
+  // Formatear datos para mostrar coordenadas con 6 decimales
+  const tableData = addresses.map(addr => ({
+    ...addr,
+    latitude: addr.latitude?.toFixed(6),
+    longitude: addr.longitude?.toFixed(6)
+  }));
 
-  // Acciones personalizadas para ver en mapa
-  const customActions = [
+  // Acciones de la tabla (combinadas)
+  const actions = [
+    {
+      name: 'edit',
+      label: 'Editar',
+      icon: 'edit' as const,
+      variant: 'warning' as const
+    },
+    {
+      name: 'delete',
+      label: 'Eliminar',
+      icon: 'delete' as const,
+      variant: 'outline-danger' as const
+    },
     {
       name: 'viewMap',
       label: 'Ver en Mapa',
-      icon: '🗺️',
-      variant: 'info',
-      handler: (item: Address) => {
-        window.open(
-          `https://www.google.com/maps?q=${item.latitude},${item.longitude}`,
-          '_blank'
-        );
-      }
+      icon: 'map' as const,
+      variant: 'info' as const
     }
   ];
 
-  // Hook para establecer userId si viene en query params
-  const onBeforeCreate = (data: any) => {
-    if (userId) {
-      return { ...data, userId: Number(userId) };
+  // Handlers
+  const handleAction = async (actionName: string, item: Record<string, any>) => {
+    // Encontrar la dirección original en el array
+    const address = addresses.find(addr => addr.id === item.id);
+    if (!address) return;
+
+    switch (actionName) {
+      case 'edit':
+        setSelectedAddress(address);
+        setModalMode('edit');
+        setShowModal(true);
+        break;
+      case 'delete':
+        const result = await Swal.fire({
+          title: '¿Eliminar dirección?',
+          text: `¿Estás seguro de eliminar la dirección ${address.street} ${address.number}?`,
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonColor: '#dc3545',
+          cancelButtonColor: '#6c757d',
+          confirmButtonText: 'Sí, eliminar',
+          cancelButtonText: 'Cancelar'
+        });
+        if (result.isConfirmed) {
+          try {
+            await addressService.deleteAddress(address.id);
+            Swal.fire('¡Eliminado!', 'Dirección eliminada exitosamente', 'success');
+            loadAddresses();
+          } catch (err: any) {
+            Swal.fire('Error', err.message || 'Error al eliminar dirección', 'error');
+          }
+        }
+        break;
+      case 'viewMap':
+        window.open(
+          `https://www.google.com/maps?q=${address.latitude},${address.longitude}`,
+          '_blank'
+        );
+        break;
     }
-    return data;
+  };
+
+  const handleCreate = () => {
+    setSelectedAddress(null);
+    setSelectedUserForCreate(selectedUserId); // Pre-seleccionar el usuario filtrado si existe
+    setModalMode('create');
+    setShowModal(true);
+  };
+
+  const handleSaved = () => {
+    setShowModal(false);
+    setSelectedAddress(null);
+    setSelectedUserForCreate(null);
+    loadAddresses();
   };
 
   return (
-    <GenericCRUDView
-      entityName="direcciones"
-      entityNameSingular="dirección"
-      emoji="📍"
-      endpoint="addresses"
-      columns={columns}
-      formFields={formFields}
-      customActions={customActions}
-      onBeforeCreate={onBeforeCreate}
-      emptyMessage={userId ? 'Este usuario no tiene dirección registrada' : 'No hay direcciones registradas'}
-    />
+    <Container fluid className="py-4">
+      <Row className="mb-4">
+        <Col>
+          <div className="d-flex justify-content-between align-items-center mb-3">
+            <div>
+              <h2 className="h2 fw-bold mb-2" style={{ color: '#10b981' }}>
+                <MapPin className="me-2" size={32} />
+                📍 Direcciones
+              </h2>
+              {selectedUserId && <Badge bg="info">Filtrado por Usuario ID: {selectedUserId}</Badge>}
+            </div>
+            <div className="d-flex gap-2 align-items-center">
+              <ThemeSelector />
+              <Button variant="outline-secondary" onClick={loadAddresses} disabled={loading}>
+                <RefreshCw size={16} className="me-2" />
+                Actualizar
+              </Button>
+              <Button variant="success" onClick={handleCreate}>
+                <Plus size={16} className="me-2" />
+                Crear Dirección
+              </Button>
+            </div>
+          </div>
+          
+          {/* Filtro por usuario */}
+          <Row className="mb-3">
+            <Col md={4}>
+              <Form.Group>
+                <Form.Label className="fw-semibold">Filtrar por Usuario</Form.Label>
+                <Form.Select
+                  value={selectedUserId || ''}
+                  onChange={(e) => handleUserFilterChange(e.target.value)}
+                  disabled={loading}
+                >
+                  <option value="">Todos los usuarios</option>
+                  {users.map(user => (
+                    <option key={user.id} value={user.id}>
+                      {user.name} ({user.email})
+                    </option>
+                  ))}
+                </Form.Select>
+              </Form.Group>
+            </Col>
+          </Row>
+        </Col>
+      </Row>
+
+      {error && (
+        <Alert variant="danger" dismissible onClose={() => setError(null)} className="mb-3">
+          {error}
+        </Alert>
+      )}
+
+      {loading ? (
+        <div className="text-center py-5">
+          <Spinner animation="border" variant="success" />
+          <p className="mt-3 text-muted">Cargando direcciones...</p>
+        </div>
+      ) : (
+        <GenericTable
+          data={tableData}
+          columns={columns}
+          columnLabels={columnLabels}
+          actions={actions}
+          onAction={handleAction}
+          emptyMessage={selectedUserId ? 'Este usuario no tiene dirección registrada' : 'No hay direcciones registradas'}
+        />
+      )}
+
+      {/* Modal con mapa de Google Maps / Leaflet */}
+      <GenericModal
+        show={showModal}
+        onHide={() => {
+          setShowModal(false);
+          setSelectedAddress(null);
+          setSelectedUserForCreate(null);
+        }}
+        title={modalMode === 'create' ? '📍 Crear Dirección' : '📍 Editar Dirección'}
+        size="xl"
+      >
+        {modalMode === 'create' && !selectedUserForCreate ? (
+          // Selector de usuario cuando no hay userId pre-seleccionado
+          <div className="p-4">
+            <Alert variant="info">
+              Selecciona el usuario para el cual deseas crear una dirección:
+            </Alert>
+            <Form.Group className="mb-3">
+              <Form.Label className="fw-semibold">Usuario *</Form.Label>
+              <Form.Select
+                value={selectedUserForCreate || ''}
+                onChange={(e) => setSelectedUserForCreate(Number(e.target.value))}
+                size="lg"
+              >
+                <option value="">-- Seleccione un usuario --</option>
+                {users.map(user => (
+                  <option key={user.id} value={user.id}>
+                    {user.name} - {user.email}
+                  </option>
+                ))}
+              </Form.Select>
+            </Form.Group>
+            <div className="d-flex gap-2">
+              <Button
+                variant="success"
+                disabled={!selectedUserForCreate}
+                onClick={() => {
+                  // Solo continuar si hay usuario seleccionado
+                  if (selectedUserForCreate) {
+                    // El formulario ya se mostrará porque selectedUserForCreate tiene valor
+                  }
+                }}
+              >
+                Continuar
+              </Button>
+              <Button
+                variant="outline-secondary"
+                onClick={() => {
+                  setShowModal(false);
+                  setSelectedUserForCreate(null);
+                }}
+              >
+                Cancelar
+              </Button>
+            </div>
+          </div>
+        ) : (
+          // Formulario de dirección con mapa
+          <GenericAddressForm
+            mode={modalMode}
+            userId={selectedUserForCreate || selectedAddress?.userId}
+            addressId={selectedAddress?.id}
+            initial={selectedAddress || undefined}
+            onSaved={handleSaved}
+            onCancel={() => {
+              setShowModal(false);
+              setSelectedAddress(null);
+              setSelectedUserForCreate(null);
+            }}
+            mapProvider="leaflet"
+          />
+        )}
+      </GenericModal>
+    </Container>
   );
 };
 
