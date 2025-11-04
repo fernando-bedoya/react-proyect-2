@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { Plus, RefreshCw, Eye, Edit, Trash2 } from "lucide-react";
 import GenericList from "../../components/GenericsMaterial/GenericList";
-import GenericTableTailwind from "../../components/tailwindGenerics/GenericTableTailwind";
-import GenericTableBootstrap from "../../components/GenericTable";
-import useLocalStorage from "../../hooks/useLocalStorage";
+import GenericTable from "../../components/GenericTable";
+import ThemeSelector from "../../components/ThemeSelector";
+import { useTheme } from "../../context/ThemeContext";
 import { Permission } from "../../models/Permission";
 import { permissionService } from "../../services/permissionService";
 import Swal from "sweetalert2";
@@ -11,6 +11,8 @@ import { useNavigate, useSearchParams, useParams } from "react-router-dom";
 
 const ListPermissions: React.FC = () => {
     const navigate = useNavigate();
+    // 🎨 Hook para obtener el tema actual (bootstrap, tailwind, material)
+    const { designLibrary } = useTheme();
     const [permissions, setPermissions] = useState<Permission[]>([]);
     const [groupedPermissions, setGroupedPermissions] = useState<any[] | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
@@ -18,7 +20,6 @@ const ListPermissions: React.FC = () => {
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
     const [showModal, setShowModal] = useState<boolean>(false);
     const [selectedPermission, setSelectedPermission] = useState<Permission | null>(null);
-    const [tableStyle, setTableStyle] = useLocalStorage<'tailwind' | 'bootstrap' | 'material'>('tableStyle', 'tailwind');
     const [searchParams] = useSearchParams();
     const params = useParams();
     const [roleId, setRoleId] = useState<number | null>(null);
@@ -150,29 +151,8 @@ const ListPermissions: React.FC = () => {
                         </p>
                     </div>
                     <div className="flex gap-2 items-center">
-                        <div className="inline-flex items-center gap-1 mr-2">
-                            <button
-                                onClick={() => setTableStyle('tailwind')}
-                                className={`px-2 py-1 text-sm rounded ${tableStyle === 'tailwind' ? 'bg-emerald-600 text-white' : 'bg-gray-100 text-gray-700'}`}
-                                title="Tailwind"
-                            >
-                                Tailwind
-                            </button>
-                            <button
-                                onClick={() => setTableStyle('material')}
-                                className={`px-2 py-1 text-sm rounded ${tableStyle === 'material' ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-700'}`}
-                                title="Material UI"
-                            >
-                                Material
-                            </button>
-                            <button
-                                onClick={() => setTableStyle('bootstrap')}
-                                className={`px-2 py-1 text-sm rounded ${tableStyle === 'bootstrap' ? 'bg-sky-600 text-white' : 'bg-gray-100 text-gray-700'}`}
-                                title="Bootstrap"
-                            >
-                                Bootstrap
-                            </button>
-                        </div>
+                        {/* 🎨 Selector de tema unificado - reemplaza botones customizados */}
+                        <ThemeSelector />
                         <button
                             onClick={handleRefresh}
                             disabled={loading}
@@ -265,7 +245,9 @@ const ListPermissions: React.FC = () => {
                                     </div>
                                 ) : (
                                     <>
-                                        {tableStyle === 'material' && (
+                                        {/* 📊 Tabla genérica unificada - se adapta automáticamente al tema seleccionado */}
+                                        {/* Material UI: Usa GenericList con iconos */}
+                                        {designLibrary === 'material' ? (
                                             <div className="p-3">
                                                 <GenericList
                                                     data={permissions as any}
@@ -287,49 +269,24 @@ const ListPermissions: React.FC = () => {
                                                     emptyMessage="No hay permisos registrados en el sistema"
                                                 />
                                             </div>
+                                        ) : (
+                                            /* Bootstrap y Tailwind: Usa GenericTable unificado */
+                                            <GenericTable
+                                                data={permissions as any}
+                                                columns={["id", "url", "method", "entity"]}
+                                                actions={[
+                                                    { name: "view", label: "Ver", variant: "outline-primary", icon: 'view' },
+                                                    { name: "edit", label: "Editar", variant: "warning", icon: 'edit' },
+                                                    { name: "delete", label: "Eliminar", variant: "outline-danger", icon: 'delete' },
+                                                ]}
+                                                onAction={handleAction}
+                                                striped
+                                                hover
+                                                responsive
+                                                emptyMessage="No hay permisos registrados en el sistema"
+                                            />
                                         )}
                                     </>
-                                )}
-
-                                {tableStyle === 'tailwind' && (
-                                    <GenericTableTailwind
-                                        data={permissions as any}
-                                        columns={["id", "url", "method", "entity"]}
-                                        actions={[
-                                            { name: "view", label: "Ver", variant: "primary" },
-                                            { name: "edit", label: "Editar", variant: "warning" },
-                                            { name: "delete", label: "Eliminar", variant: "danger" },
-                                        ]}
-                                        onAction={handleAction}
-                                        theme="tailwind"
-                                        actionVisible={(actionName, row) => {
-                                            if (actionName === 'edit' || actionName === 'delete') {
-                                                return Boolean(row && row.id !== undefined && row.id !== null);
-                                            }
-                                            return true;
-                                        }}
-                                        striped
-                                        hover
-                                        responsive
-                                        emptyMessage="No hay permisos registrados en el sistema"
-                                    />
-                                )}
-
-                                {tableStyle === 'bootstrap' && (
-                                    <GenericTableBootstrap
-                                        data={permissions as any}
-                                        columns={["id", "url", "method", "entity"]}
-                                        actions={[
-                                            { name: "view", label: "Ver", variant: "outline-primary", icon: 'view' },
-                                            { name: "edit", label: "Editar", variant: "warning", icon: 'edit' },
-                                            { name: "delete", label: "Eliminar", variant: "outline-danger", icon: 'delete' },
-                                        ]}
-                                        onAction={handleAction}
-                                        striped
-                                        hover
-                                        responsive
-                                        emptyMessage="No hay permisos registrados en el sistema"
-                                    />
                                 )}
                             </>
                         )}

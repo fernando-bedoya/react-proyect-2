@@ -6,6 +6,8 @@ import Swal from 'sweetalert2';
 import Breadcrumb from '../../components/Breadcrumb';
 import { passwordService } from '../../services/Password/passwordService';
 import { userService } from '../../services/userService';
+import { updatePassword as firebaseUpdatePassword } from 'firebase/auth';
+import { auth } from '../../firebase';
 
 const formatDateToBackend = (datetimeLocal: string) => {
   // Convert local datetime-local input (YYYY-MM-DDTHH:MM) to UTC string
@@ -101,21 +103,67 @@ const CreatePassword: React.FC = () => {
 
       console.log('Enviando payload:', payload);
 
+      // 📝 PASO 1: Crear contraseña en el BACKEND (Flask)
       const created = await passwordService.createPassword(Number(userId), payload as any);
       
       if (!created) {
         throw new Error('No se creó la contraseña');
       }
 
-      Swal.fire({ 
-        title: 'Completado', 
-        text: 'Contraseña creada exitosamente', 
-        icon: 'success', 
-        timer: 1500, 
-        showConfirmButton: false 
-      });
+      // 🔥 PASO 2: Si el usuario actual es el dueño de esta contraseña, actualizar en FIREBASE
+      const currentUser = auth.currentUser;
+      const selectedUser = users.find((u: any) => u.id === userId);
       
-      setTimeout(() => navigate('/passwords/list'), 1000);
+      if (currentUser && selectedUser && currentUser.email === selectedUser.email) {
+        console.log('🔥 Actualizando contraseña en Firebase Authentication...');
+        console.log('   Usuario actual:', currentUser.email);
+        console.log('   Nueva contraseña:', content.substring(0, 3) + '***');
+        
+        try {
+          // 🔐 Actualizar contraseña en Firebase (solo funciona para el usuario autenticado actual)
+          await firebaseUpdatePassword(currentUser, content);
+          console.log('✅ Contraseña actualizada en Firebase exitosamente');
+          
+          Swal.fire({ 
+            title: 'Completado', 
+            html: '✅ Contraseña creada en:<br/>• Base de datos Flask<br/>• Firebase Authentication',
+            icon: 'success', 
+            timer: 2000, 
+            showConfirmButton: false 
+          });
+        } catch (firebaseErr: any) {
+          console.error('❌ Error actualizando Firebase:', firebaseErr);
+          
+          if (firebaseErr.code === 'auth/requires-recent-login') {
+            Swal.fire({ 
+              title: 'Advertencia', 
+              html: '⚠️ La contraseña se creó en la base de datos, pero Firebase requiere que vuelvas a iniciar sesión para actualizar tu contraseña de autenticación.<br/><br/>Por favor, cierra sesión e inicia sesión nuevamente con tu nueva contraseña.',
+              icon: 'warning',
+              confirmButtonColor: '#10b981'
+            });
+          } else {
+            Swal.fire({ 
+              title: 'Parcialmente creado', 
+              html: '⚠️ La contraseña se creó en la base de datos, pero hubo un problema al sincronizar con Firebase.<br/><br/>Error: ' + firebaseErr.message,
+              icon: 'warning',
+              confirmButtonColor: '#10b981'
+            });
+          }
+        }
+      } else {
+        // ℹ️ Creando contraseña para otro usuario (solo backend)
+        console.log('ℹ️ Creando contraseña para otro usuario (solo backend)');
+        
+        Swal.fire({ 
+          title: 'Completado', 
+          html: 'ℹ️ Contraseña creada en la base de datos.<br/><br/><small>Nota: La contraseña de Firebase solo se actualiza cuando el usuario modifica su propia contraseña.</small>',
+          icon: 'success',
+          timer: 2000,
+          showConfirmButton: false 
+        });
+      }
+      
+      setTimeout(() => navigate('/passwords/list'), 1500);
     } catch (err: any) {
       console.error('Error completo:', err);
       

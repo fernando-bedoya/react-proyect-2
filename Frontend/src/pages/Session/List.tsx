@@ -2,9 +2,9 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Plus, RefreshCw } from "lucide-react";
 import Swal from "sweetalert2";
-import GenericTableTailwind from "../../components/tailwindGenerics/GenericTableTailwind";
-import GenericTableBootstrap from "../../components/GenericTable";
-import useLocalStorage from "../../hooks/useLocalStorage";
+import GenericTable from "../../components/GenericTable";
+import ThemeSelector from "../../components/ThemeSelector";
+import { useTheme } from "../../context/ThemeContext";
 import sessionService from "../../services/sessionService";
 import { Session } from "../../models/Session";
 
@@ -14,7 +14,8 @@ const SessionsList: React.FC = () => {
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
-    const [tableStyle, setTableStyle] = useLocalStorage<'tailwind' | 'bootstrap' | 'material'>('tableStyle', 'tailwind');
+    // 🎨 Hook para obtener el tema actual desde el contexto global
+    const { designLibrary } = useTheme();
 
     useEffect(() => {
         fetchData();
@@ -114,29 +115,8 @@ const SessionsList: React.FC = () => {
                         </p>
                     </div>
                     <div className="flex gap-2 items-center">
-                        <div className="inline-flex items-center gap-1 mr-2">
-                            <button
-                                onClick={() => setTableStyle('tailwind')}
-                                className={`px-2 py-1 text-sm rounded ${tableStyle === 'tailwind' ? 'bg-emerald-600 text-white' : 'bg-gray-100 text-gray-700'}`}
-                                title="Tailwind"
-                            >
-                                Tailwind
-                            </button>
-                            <button
-                                onClick={() => setTableStyle('material')}
-                                className={`px-2 py-1 text-sm rounded ${tableStyle === 'material' ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-700'}`}
-                                title="Material UI"
-                            >
-                                Material
-                            </button>
-                            <button
-                                onClick={() => setTableStyle('bootstrap')}
-                                className={`px-2 py-1 text-sm rounded ${tableStyle === 'bootstrap' ? 'bg-sky-600 text-white' : 'bg-gray-100 text-gray-700'}`}
-                                title="Bootstrap"
-                            >
-                                Bootstrap
-                            </button>
-                        </div>
+                        {/* 🎨 Selector de tema unificado - reemplaza botones customizados */}
+                        <ThemeSelector />
                         <button
                             onClick={handleRefresh}
                             disabled={loading}
@@ -186,72 +166,25 @@ const SessionsList: React.FC = () => {
                         </div>
                     ) : (
                         <>
-                            {tableStyle === 'material' && (
-                                <div className="p-3">
-                                    <div className="rounded-md bg-yellow-50 p-3 text-sm text-yellow-800 shadow-sm">
-                                        <strong>Nota:</strong> La implementación de la tabla Material UI no está disponible. Se usará la variante Bootstrap como fallback.
-                                    </div>
-                                </div>
-                            )}
-
-                            {tableStyle === 'tailwind' && (
-                                <GenericTableTailwind
-                                    data={sessions as any}
-                                    columns={[
-                                        "id",
-                                        "user_id",
-                                        { 
-                                            key: "token", 
-                                            label: "Token",
-                                            render: (row: any) => row.token ? `${row.token.substring(0, 20)}...` : '-'
-                                        },
-                                        { 
-                                            key: "expiration", 
-                                            label: "Expiración",
-                                            render: (row: any) => row.expiration ? new Date(row.expiration).toLocaleString() : '-'
-                                        },
-                                        "state"
-                                    ]}
-                                    actions={[
-                                        { name: "view", label: "Ver", variant: "primary" },
-                                        { name: "edit", label: "Editar", variant: "warning" },
-                                        { name: "delete", label: "Eliminar", variant: "danger" },
-                                    ]}
-                                    onAction={handleAction}
-                                    theme="tailwind"
-                                    actionVisible={(actionName, row) => {
-                                        if (actionName === 'edit' || actionName === 'delete') {
-                                            return Boolean(row && row.id !== undefined && row.id !== null);
-                                        }
-                                        return true;
-                                    }}
-                                    striped
-                                    hover
-                                    responsive
-                                    emptyMessage="No hay sesiones registradas en el sistema"
-                                />
-                            )}
-
-                            {(tableStyle === 'bootstrap' || tableStyle === 'material') && (
-                                <GenericTableBootstrap
-                                    data={sessions.map(s => ({
-                                        ...s,
-                                        token: s.token ? `${s.token.substring(0, 20)}...` : '-',
-                                        expiration: s.expiration ? new Date(s.expiration).toLocaleString() : '-'
-                                    })) as any}
-                                    columns={["id", "user_id", "token", "expiration", "state"]}
-                                    actions={[
-                                        { name: "view", label: "Ver", variant: "outline-primary", icon: 'view' },
-                                        { name: "edit", label: "Editar", variant: "warning", icon: 'edit' },
-                                        { name: "delete", label: "Eliminar", variant: "outline-danger", icon: 'delete' },
-                                    ]}
-                                    onAction={handleAction}
-                                    striped
-                                    hover
-                                    responsive
-                                    emptyMessage="No hay sesiones registradas en el sistema"
-                                />
-                            )}
+                            {/* 📊 Tabla genérica unificada - se adapta automáticamente al tema seleccionado */}
+                            <GenericTable
+                                data={sessions.map(s => ({
+                                    ...s,
+                                    token: s.token ? `${s.token.substring(0, 20)}...` : '-',
+                                    expiration: s.expiration ? new Date(s.expiration).toLocaleString() : '-'
+                                })) as any}
+                                columns={["id", "user_id", "token", "expiration", "state"]}
+                                actions={[
+                                    { name: "view", label: "Ver", variant: "outline-primary", icon: 'view' },
+                                    { name: "edit", label: "Editar", variant: "warning", icon: 'edit' },
+                                    { name: "delete", label: "Eliminar", variant: "outline-danger", icon: 'delete' },
+                                ]}
+                                onAction={handleAction}
+                                striped
+                                hover
+                                responsive
+                                emptyMessage="No hay sesiones registradas en el sistema"
+                            />
                         </>
                     )}
                 </div>

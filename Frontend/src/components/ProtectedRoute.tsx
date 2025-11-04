@@ -1,40 +1,87 @@
-// ProtectedRoute.tsx - Componente de protección de rutas privadas
-// Este componente verifica si el usuario tiene una sesión activa antes de mostrar contenido protegido
-// Sirve para proteger rutas que requieren autenticación, redirigiendo al login si no hay sesión válida
+// ProtectedRoute.tsx - Guardián de rutas privadas (Route Guard)
+// 🛡️ Este componente actúa como un GUARDIÁN (Guard) que intercepta el acceso a rutas protegidas
+// 🔒 Implementa un sistema de autenticación robusto que verifica tokens, sesiones y estado de Redux
+// 🚦 Funciona como INTERCEPTOR al verificar cada intento de acceso antes de permitir el paso
+// ⚡ Sincroniza el estado de autenticación entre localStorage, SecurityService y Redux Store
 
 import React, { useState, useEffect } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { Spinner, Container } from 'react-bootstrap';
+import { useDispatch, useSelector } from 'react-redux';
 import SecurityService from '../services/securityService';
+import { setUser } from '../store/userSlice';
+import { RootState } from '../store/store';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
 }
 
 /**
- * Componente Guard para rutas protegidas
- * Muestra un Spinner de Bootstrap mientras verifica la sesión
- * Redirige al login si no hay sesión activa
+ * 🛡️ GUARDIÁN DE RUTAS (Route Guard) 
+ * Componente que implementa el patrón Guard/Interceptor para proteger rutas privadas
+ * 
+ * Flujo de verificación (interceptor de 3 capas):
+ * 1. Verifica token en localStorage (primera capa - persistencia)
+ * 2. Valida con SecurityService (segunda capa - lógica de negocio)
+ * 3. Sincroniza con Redux Store (tercera capa - estado global)
+ * 
+ * Si alguna capa falla, redirige al login y limpia toda la sesión
  */
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const [isChecking, setIsChecking] = useState<boolean>(true);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const location = useLocation(); // Para guardar la ruta a la que intentaba acceder
+  const dispatch = useDispatch();
+  const reduxUser = useSelector((state: RootState) => state.user.user);
 
   useEffect(() => {
+    // 🔍 FUNCIÓN INTERCEPTORA: Verifica autenticación en múltiples capas
     const checkAuth = async () => {
       try {
-        // Verificar si hay un token de acceso en el localStorage
-        const token = localStorage.getItem('access_token');
+        console.log('🛡️ Guard: Interceptando acceso a ruta protegida:', location.pathname);
         
-        // Verificar autenticación usando SecurityService
+        // 🔐 CAPA 1: Verificar tokens en localStorage (persistencia)
+        const accessToken = localStorage.getItem('access_token');
+        const userStorage = localStorage.getItem('user');
+        
+        if (!accessToken) {
+          console.log('❌ Guard: No hay token de acceso - Acceso denegado');
+          setIsAuthenticated(false);
+          setIsChecking(false);
+          return;
+        }
+        
+        // 🔐 CAPA 2: Validar con SecurityService (lógica de negocio)
         const authStatus = SecurityService.isAuthenticated();
         
-        // Pequeño delay para mostrar el spinner (opcional, solo para UX)
-        await new Promise(resolve => setTimeout(resolve, 500));
+        if (!authStatus) {
+          console.log('❌ Guard: SecurityService reporta sesión inválida - Acceso denegado');
+          setIsAuthenticated(false);
+          setIsChecking(false);
+          return;
+        }
         
-        setIsAuthenticated(authStatus && !!token);
+        // 🔐 CAPA 3: Sincronizar con Redux Store (estado global)
+        // Si hay usuario en localStorage pero no en Redux, restaurar el estado
+        if (userStorage && !reduxUser) {
+          try {
+            const parsedUser = JSON.parse(userStorage);
+            console.log('🔄 Guard: Restaurando usuario en Redux desde localStorage');
+            dispatch(setUser(parsedUser));
+          } catch (error) {
+            console.error('❌ Guard: Error al parsear usuario de localStorage:', error);
+          }
+        }
+        
+        // ✅ TODAS LAS CAPAS VALIDADAS: Permitir acceso
+        console.log('✅ Guard: Autenticación verificada - Acceso permitido');
+        
+        // Pequeño delay para UX suave (opcional)
+        await new Promise(resolve => setTimeout(resolve, 300));
+        
+        setIsAuthenticated(true);
       } catch (error) {
-        console.error('Error verificando autenticación:', error);
+        console.error('❌ Guard: Error en verificación de autenticación:', error);
         setIsAuthenticated(false);
       } finally {
         setIsChecking(false);
@@ -42,7 +89,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     };
 
     checkAuth();
-  }, []);
+  }, [location.pathname, dispatch, reduxUser]);
 
   // Mostrar spinner mientras verifica la sesión
   if (isChecking) {
@@ -85,17 +132,26 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     );
   }
 
-  // Si no está autenticado, redirigir al login
+  // 🚫 ACCESO DENEGADO: Usuario no autenticado
   if (!isAuthenticated) {
-    // Limpiar datos de sesión antes de redirigir
+    console.log('🚫 Guard: Acceso denegado - Redirigiendo a login');
+    console.log('📍 Guard: Guardando ruta de destino:', location.pathname);
+    
+    // 🧹 LIMPIEZA COMPLETA DE SESIÓN (interceptor de limpieza)
+    // Eliminar todos los tokens y datos de usuario de localStorage
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
     localStorage.removeItem('user');
     
-    return <Navigate to="/auth/signin" replace />;
+    // Limpiar Redux Store también
+    dispatch(setUser(null));
+    
+    // Redirigir al login con la ruta de origen guardada (para redirigir después del login)
+    return <Navigate to="/auth/signin" state={{ from: location.pathname }} replace />;
   }
 
-  // Si está autenticado, mostrar el contenido protegido
+  // ✅ ACCESO PERMITIDO: Usuario autenticado, mostrar contenido protegido
+  console.log('✅ Guard: Renderizando contenido protegido');
   return <>{children}</>;
 };
 

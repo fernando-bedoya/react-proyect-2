@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import Swal from "sweetalert2";
 import { ArrowLeft } from "lucide-react";
+import ThemeSelector from "../../components/ThemeSelector";
 import sessionService from "../../services/sessionService";
 import SessionFormValidator from "../../components/formValidators/SessionFormValidator";
 import { Session } from "../../models/Session";
@@ -151,21 +152,26 @@ const SessionCreate: React.FC = () => {
         <div className="p-4 max-w-4xl mx-auto">
             {/* Header */}
             <div className="mb-6">
-                <button
-                    onClick={handleCancel}
-                    className="inline-flex items-center gap-2 text-primary hover:text-primary/80 mb-4"
-                >
-                    <ArrowLeft size={20} />
-                    Volver a la lista
-                </button>
-                <h2 className="text-2xl font-bold text-meta-3">
-                    {isEditMode ? "Editar Sesión" : "Nueva Sesión"}
-                </h2>
-                <p className="text-muted mt-1">
-                    {isEditMode 
-                        ? "Modifique los datos de la sesión existente"
-                        : "Complete el formulario para crear una nueva sesión"}
-                </p>
+                <div className="flex justify-between items-start">
+                    <div>
+                        <button
+                            onClick={handleCancel}
+                            className="inline-flex items-center gap-2 text-primary hover:text-primary/80 mb-4"
+                        >
+                            <ArrowLeft size={20} />
+                            Volver a la lista
+                        </button>
+                        <h2 className="text-2xl font-bold text-meta-3">
+                            {isEditMode ? "Editar Sesión" : "Nueva Sesión"}
+                        </h2>
+                        <p className="text-muted mt-1">
+                            {isEditMode 
+                                ? "Modifique los datos de la sesión existente"
+                                : "Complete el formulario para crear una nueva sesión"}
+                        </p>
+                    </div>
+                    <ThemeSelector />
+                </div>
             </div>
 
             {/* Form */}

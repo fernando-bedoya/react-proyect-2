@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { ArrowLeft, Plus } from "lucide-react";
 import Breadcrumb from '../../components/Breadcrumb';
+import ThemeSelector from '../../components/ThemeSelector';
 import Swal from 'sweetalert2';
 import { permissionService } from '../../services/permissionService';
 import { Permission } from '../../models/Permission';
@@ -173,12 +174,13 @@ const CreatePermission: React.FC = () => {
                         <ArrowLeft size={16} />
                         Volver
                     </button>
-                    <div>
+                    <div className="flex-grow">
                         <h2 className="text-title-sm font-bold mb-1" style={{ color: '#10b981' }}>
                             Crear Nuevo Permiso
                         </h2>
                         <p className="text-muted mb-0">Complete los campos para crear un permiso</p>
                     </div>
+                    <ThemeSelector />
                 </div>
             </div>
 

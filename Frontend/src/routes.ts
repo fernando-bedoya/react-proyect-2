@@ -18,6 +18,7 @@ const UsersRolesUpdate = lazy(() => import('./pages/Users-Roles/Update'));
 // Load the Create page we added under src/pages/Adrdess/Create.tsx
 const AddressCreate = lazy(() => import('./pages/Address/Create'));
 const AddressUpdate = lazy(() => import('./pages/Address/Update'));
+const AddressList = lazy(() => import('./pages/Address/List'));
 
 // Roles
 const RolesList = lazy(() => import('./pages/Roles/List'));
@@ -53,6 +54,12 @@ const SecurityQuestionView = lazy(() => import('./views/securityQuestion/Securit
 const AnswerView = lazy(() => import('./views/answer/AnswerViewReusable'));
 // const SessionView = lazy(() => import('./views/session/SessionView.jsx')); // Archivo no existe aún
 const UserView = lazy(() => import('./views/user/UserView.jsx'));
+
+// 🆕 NUEVAS RUTAS PARA SIDEBAR MEJORADO
+// Rutas para gestión de permisos de roles y historial de contraseñas
+const RolePermissionsList = lazy(() => import('./pages/Administrator/List')); // Reutilizando componente existente
+const PasswordHistoryList = lazy(() => import('./pages/password/List')); // Reutilizando componente existente  
+const UserAnswersList = lazy(() => import('./views/answer/AnswerViewReusable')); // Reutilizando componente existente
 
 const coreRoutes = [
   {
@@ -119,6 +126,11 @@ const coreRoutes = [
     path: '/user-roles/:roleId',
     title: 'Users - Roles (por rol)',
     component: UsersRolesList,
+  },
+  {
+    path: '/addresses',
+    title: 'Addresses',
+    component: AddressList,
   },
   {
     path: '/addresses/create',
@@ -235,6 +247,22 @@ const coreRoutes = [
     path: '/users',
     title: 'Gestión de Usuarios',
     component: UserView,
+  },
+  // 🆕 RUTAS ADICIONALES PARA NUEVO SIDEBAR
+  {
+    path: '/role-permissions',
+    title: 'Role Permissions',
+    component: RolePermissionsList, // Asignación de permisos a roles
+  },
+  {
+    path: '/password-history',
+    title: 'Password History',
+    component: PasswordHistoryList, // Historial de contraseñas
+  },
+  {
+    path: '/user-answers',
+    title: 'User Answers',
+    component: UserAnswersList, // Respuestas de usuarios a preguntas de seguridad
   },
 ];
 

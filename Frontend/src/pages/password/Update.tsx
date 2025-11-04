@@ -5,6 +5,9 @@ import { useNavigate, useParams } from 'react-router-dom';
 import Breadcrumb from '../../components/Breadcrumb';
 import Swal from 'sweetalert2';
 import { passwordService } from '../../services/Password/passwordService';
+import { updatePassword as firebaseUpdatePassword } from 'firebase/auth';
+import { auth } from '../../firebase';
+import { userService } from '../../services/userService';
 
 const formatDateToInput = (value: string | null) => {
   if (!value) return '';
@@ -29,6 +32,8 @@ const UpdatePassword: React.FC = () => {
   const [content, setContent] = useState('');
   const [startAt, setStartAt] = useState('');
   const [endAt, setEndAt] = useState('');
+  const [userId, setUserId] = useState<number | null>(null); // 🔑 Guardamos el user_id para actualizar Firebase
+  const [userEmail, setUserEmail] = useState<string | null>(null); // 📧 Email del usuario asociado
 
   useEffect(() => {
     const load = async () => {
@@ -38,6 +43,21 @@ const UpdatePassword: React.FC = () => {
       if (data) {
         setStartAt(formatDateToInput(data.startAt));
         setEndAt(formatDateToInput(data.endAt));
+        setUserId(data.user_id); // 🔑 Guardar el user_id
+        
+        // 📧 Obtener email del usuario desde el backend
+        if (data.user_id) {
+          try {
+            const allUsers = await userService.getUsers();
+            const user = allUsers.find((u: any) => u.id === data.user_id);
+            if (user) {
+              setUserEmail(user.email);
+              console.log('📧 Usuario asociado a la contraseña:', user.email);
+            }
+          } catch (err) {
+            console.error('Error obteniendo usuario:', err);
+          }
+        }
         // don't prefill content because it's hashed; let user enter new if they want
       } else {
         setError('Registro no encontrado');
@@ -59,13 +79,76 @@ const UpdatePassword: React.FC = () => {
       if (startAt) payload.startAt = formatDateToBackend(startAt);
       if (endAt) payload.endAt = formatDateToBackend(endAt);
 
+      // 📝 PASO 1: Actualizar contraseña en el BACKEND (Flask)
+      console.log('🔄 Actualizando contraseña en backend...');
       const updated = await passwordService.updatePassword(Number(id), payload);
-      if (!updated) throw new Error('No se pudo actualizar');
+      if (!updated) throw new Error('No se pudo actualizar en backend');
 
-      Swal.fire({ title: 'Actualizado', icon: 'success', timer: 1000, showConfirmButton: false });
-      setTimeout(() => navigate('/passwords/list'), 800);
+      // 🔥 PASO 2: Si se cambió la contraseña Y el usuario actual es el dueño, actualizar en FIREBASE
+      if (content && userEmail) {
+        const currentUser = auth.currentUser;
+        
+        // ✅ Verificar si el usuario actual es el dueño de esta contraseña
+        if (currentUser && currentUser.email === userEmail) {
+          console.log('🔥 Actualizando contraseña en Firebase Authentication...');
+          console.log('   Usuario actual:', currentUser.email);
+          console.log('   Nueva contraseña:', content.substring(0, 3) + '***');
+          
+          try {
+            // 🔐 Actualizar contraseña en Firebase (solo funciona para el usuario autenticado actual)
+            await firebaseUpdatePassword(currentUser, content);
+            console.log('✅ Contraseña actualizada en Firebase exitosamente');
+            
+            Swal.fire({ 
+              title: 'Actualizado', 
+              html: '✅ Contraseña actualizada en:<br/>• Base de datos Flask<br/>• Firebase Authentication',
+              icon: 'success', 
+              timer: 2000, 
+              showConfirmButton: false 
+            });
+          } catch (firebaseErr: any) {
+            console.error('❌ Error actualizando Firebase:', firebaseErr);
+            
+            // 🔄 Si el error es de re-autenticación, mostrar mensaje al usuario
+            if (firebaseErr.code === 'auth/requires-recent-login') {
+              Swal.fire({ 
+                title: 'Advertencia', 
+                html: '⚠️ La contraseña se actualizó en la base de datos, pero Firebase requiere que vuelvas a iniciar sesión para actualizar tu contraseña de autenticación.<br/><br/>Por favor, cierra sesión e inicia sesión nuevamente con tu nueva contraseña.',
+                icon: 'warning',
+                confirmButtonColor: '#10b981'
+              });
+            } else {
+              Swal.fire({ 
+                title: 'Parcialmente actualizado', 
+                html: '⚠️ La contraseña se actualizó en la base de datos, pero hubo un problema al sincronizar con Firebase.<br/><br/>Error: ' + firebaseErr.message,
+                icon: 'warning',
+                confirmButtonColor: '#10b981'
+              });
+            }
+          }
+        } else {
+          // ℹ️ Usuario actualizando contraseña de otro usuario (solo backend)
+          console.log('ℹ️ Actualizando contraseña de otro usuario (solo backend)');
+          console.log('   Usuario actual:', currentUser?.email || 'No autenticado');
+          console.log('   Dueño de la contraseña:', userEmail);
+          
+          Swal.fire({ 
+            title: 'Actualizado', 
+            html: 'ℹ️ Contraseña actualizada en la base de datos.<br/><br/><small>Nota: La contraseña de Firebase solo se actualiza cuando el usuario modifica su propia contraseña.</small>',
+            icon: 'info',
+            timer: 3000,
+            showConfirmButton: true,
+            confirmButtonColor: '#10b981'
+          });
+        }
+      } else {
+        // Solo se actualizaron fechas (startAt/endAt), no la contraseña
+        Swal.fire({ title: 'Actualizado', icon: 'success', timer: 1000, showConfirmButton: false });
+      }
+
+      setTimeout(() => navigate('/passwords/list'), 1500);
     } catch (err) {
-      console.error(err);
+      console.error('❌ Error general:', err);
       setError('Error al actualizar la contraseña');
       Swal.fire({ title: 'Error', text: 'No se pudo actualizar', icon: 'error' });
     } finally {

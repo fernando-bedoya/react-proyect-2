@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Shield, Save, RefreshCw } from "lucide-react";
+import ThemeSelector from "../../components/ThemeSelector";
 import Swal from "sweetalert2";
 import rolePermissionService from "../../services/rolePermissionService";
 import { permissionService } from "../../services/permissionService";
@@ -185,6 +186,7 @@ const AdministratorPermissions: React.FC = () => {
                         </p>
                     </div>
                     <div className="flex gap-2">
+                        <ThemeSelector />
                         <button
                             onClick={handleRefresh}
                             disabled={loading}

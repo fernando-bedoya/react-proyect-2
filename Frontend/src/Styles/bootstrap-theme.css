@@ -22,17 +22,156 @@
 
 /* ==================== Bootstrap Overrides ==================== */
 
+/* 🎨 SISTEMA DE BOTONES CON ALTO CONTRASTE */
+/* Todos los botones tienen texto legible con buen contraste visual */
+
 /* Primary Button - Verde */
 .btn-primary {
   background-color: var(--bs-primary) !important;
   border-color: var(--bs-primary) !important;
+  color: #ffffff !important; /* ✅ Texto blanco para contraste */
+  font-weight: 500;
 }
 
 .btn-primary:hover,
 .btn-primary:focus {
   background-color: var(--bs-primary-dark) !important;
   border-color: var(--bs-primary-dark) !important;
+  color: #ffffff !important; /* ✅ Mantener texto blanco en hover */
   box-shadow: 0 0 0 0.25rem rgba(16, 185, 129, 0.25) !important;
+}
+
+/* Success Button - Verde (igual que primary para consistencia) */
+.btn-success {
+  background-color: #10b981 !important; /* Verde brillante */
+  border-color: #10b981 !important;
+  color: #ffffff !important; /* ✅ Texto blanco para contraste */
+  font-weight: 500;
+}
+
+.btn-success:hover,
+.btn-success:focus,
+.btn-success:active {
+  background-color: #059669 !important; /* Verde más oscuro en hover */
+  border-color: #059669 !important;
+  color: #ffffff !important; /* ✅ Mantener texto blanco en hover */
+  box-shadow: 0 0 0 0.25rem rgba(16, 185, 129, 0.25) !important;
+}
+
+/* Danger Button - Rojo */
+.btn-danger {
+  background-color: #ef4444 !important; /* Rojo brillante */
+  border-color: #ef4444 !important;
+  color: #ffffff !important; /* ✅ Texto blanco para contraste */
+  font-weight: 500;
+}
+
+.btn-danger:hover,
+.btn-danger:focus,
+.btn-danger:active {
+  background-color: #dc2626 !important; /* Rojo más oscuro en hover */
+  border-color: #dc2626 !important;
+  color: #ffffff !important; /* ✅ Mantener texto blanco en hover */
+  box-shadow: 0 0 0 0.25rem rgba(239, 68, 68, 0.25) !important;
+}
+
+/* Secondary Button - Gris */
+.btn-secondary {
+  background-color: #6b7280 !important; /* Gris medio */
+  border-color: #6b7280 !important;
+  color: #ffffff !important; /* ✅ Texto blanco para contraste */
+  font-weight: 500;
+}
+
+.btn-secondary:hover,
+.btn-secondary:focus,
+.btn-secondary:active {
+  background-color: #4b5563 !important; /* Gris más oscuro en hover */
+  border-color: #4b5563 !important;
+  color: #ffffff !important; /* ✅ Mantener texto blanco en hover */
+  box-shadow: 0 0 0 0.25rem rgba(107, 114, 128, 0.25) !important;
+}
+
+/* Warning Button - Ámbar */
+.btn-warning {
+  background-color: #f59e0b !important; /* Ámbar brillante */
+  border-color: #f59e0b !important;
+  color: #ffffff !important; /* ✅ Texto blanco para contraste */
+  font-weight: 500;
+}
+
+.btn-warning:hover,
+.btn-warning:focus,
+.btn-warning:active {
+  background-color: #d97706 !important; /* Ámbar más oscuro en hover */
+  border-color: #d97706 !important;
+  color: #ffffff !important; /* ✅ Mantener texto blanco en hover */
+  box-shadow: 0 0 0 0.25rem rgba(245, 158, 11, 0.25) !important;
+}
+
+/* Info Button - Azul */
+.btn-info {
+  background-color: #3b82f6 !important; /* Azul brillante */
+  border-color: #3b82f6 !important;
+  color: #ffffff !important; /* ✅ Texto blanco para contraste */
+  font-weight: 500;
+}
+
+.btn-info:hover,
+.btn-info:focus,
+.btn-info:active {
+  background-color: #2563eb !important; /* Azul más oscuro en hover */
+  border-color: #2563eb !important;
+  color: #ffffff !important; /* ✅ Mantener texto blanco en hover */
+  box-shadow: 0 0 0 0.25rem rgba(59, 130, 246, 0.25) !important;
+}
+
+/* Light Button - Gris muy claro */
+.btn-light {
+  background-color: #f3f4f6 !important; /* Gris muy claro */
+  border-color: #d1d5db !important;
+  color: #1f2937 !important; /* ✅ Texto oscuro para contraste con fondo claro */
+  font-weight: 500;
+}
+
+.btn-light:hover,
+.btn-light:focus,
+.btn-light:active {
+  background-color: #e5e7eb !important; /* Gris claro más oscuro en hover */
+  border-color: #9ca3af !important;
+  color: #1f2937 !important; /* ✅ Mantener texto oscuro en hover */
+  box-shadow: 0 0 0 0.25rem rgba(209, 213, 219, 0.25) !important;
+}
+
+/* Dark Button - Gris muy oscuro */
+.btn-dark {
+  background-color: #1f2937 !important; /* Gris muy oscuro */
+  border-color: #1f2937 !important;
+  color: #ffffff !important; /* ✅ Texto blanco para contraste */
+  font-weight: 500;
+}
+
+.btn-dark:hover,
+.btn-dark:focus,
+.btn-dark:active {
+  background-color: #111827 !important; /* Negro en hover */
+  border-color: #111827 !important;
+  color: #ffffff !important; /* ✅ Mantener texto blanco en hover */
+  box-shadow: 0 0 0 0.25rem rgba(31, 41, 55, 0.25) !important;
+}
+
+/* 🎯 Botones pequeños (btn-sm) - mantienen el mismo contraste */
+.btn-sm {
+  font-weight: 500;
+}
+
+/* 🔗 Dropdown Buttons - asegurar contraste */
+.dropdown-toggle {
+  font-weight: 500;
+}
+
+.dropdown-toggle::after {
+  margin-left: 0.5em;
 }
 
 /* Success Badge - Verde */

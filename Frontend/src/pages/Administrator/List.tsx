@@ -2,7 +2,8 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Shield, Plus } from "lucide-react";
 import Swal from "sweetalert2";
-import GenericTableTailwind from "../../components/tailwindGenerics/GenericTableTailwind";
+import GenericTable from "../../components/GenericTable";
+import ThemeSelector from "../../components/ThemeSelector";
 import rolePermissionService from "../../services/rolePermissionService";
 import { RolePermission } from "../../models/RolePermission";
 
@@ -134,13 +135,17 @@ const AdministratorList: React.FC = () => {
                             Lista de asignaciones de permisos a roles
                         </p>
                     </div>
-                    <button
-                        onClick={() => navigate("/administrator/permissions")}
-                        className="inline-flex items-center gap-2 bg-meta-3 text-white px-4 py-2 rounded text-sm hover:bg-meta-3/90 transition-colors"
-                    >
-                        <Plus size={18} />
-                        Asignar Permisos
-                    </button>
+                    <div className="flex gap-2 items-center">
+                        {/* 🎨 Selector de tema unificado */}
+                        <ThemeSelector />
+                        <button
+                            onClick={() => navigate("/administrator/permissions")}
+                            className="inline-flex items-center gap-2 bg-meta-3 text-white px-4 py-2 rounded text-sm hover:bg-meta-3/90 transition-colors"
+                        >
+                            <Plus size={18} />
+                            Asignar Permisos
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -162,9 +167,10 @@ const AdministratorList: React.FC = () => {
                         <p className="mt-3 text-muted">Cargando...</p>
                     </div>
                 ) : (
-                    <GenericTableTailwind
+                    /* 📊 Tabla genérica unificada - se adapta automáticamente al tema */
+                    <GenericTable
                         data={rolePermissions}
-                        columns={visibleColumns} // Usar las columnas visibles
+                        columns={visibleColumns as any} // Usar las columnas visibles (con custom renders)
                         actions={actions}
                         onAction={handleAction}
                         striped
