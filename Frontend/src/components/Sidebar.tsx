@@ -235,29 +235,6 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                     </NavLink>
                   </li>
 
-                  {/* ➕ MENU ITEM: Create User - Crear nuevo usuario */}
-                  <li>
-                    <NavLink
-                      to="/users/create"
-                      className={({ isActive }) =>
-                        `group relative flex items-center gap-3 rounded-lg py-3 px-4 font-medium transition-all duration-300 ease-in-out hover:shadow-lg ${
-                          isActive ? 'bg-gradient-to-r from-sky-600 to-sky-500 shadow-lg' : ''
-                        }`
-                      }
-                      style={({ isActive }) => ({
-                        color: '#07373a',
-                        fontWeight: isActive ? 600 : 500,
-                      })}
-                    >
-                      <svg className="fill-current" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M10 0C8.34315 0 7 1.34315 7 3C7 4.65685 8.34315 6 10 6C11.6569 6 13 4.65685 13 3C13 1.34315 11.6569 0 10 0Z" fill=""/>
-                        <path d="M5.5 15C4.67157 15 4 15.6716 4 16.5V18.5H16V16.5C16 15.6716 15.3284 15 14.5 15H5.5Z" fill=""/>
-                        <path d="M15 8H17V10H19V12H17V14H15V12H13V10H15V8Z" fill=""/>
-                      </svg>
-                      <span className="font-semibold">Create User</span>
-                    </NavLink>
-                  </li>
-
                   {/* 🔗 MENU ITEM: Assign Roles - Asignar roles a usuarios */}
                   <li>
                     <NavLink
@@ -301,28 +278,6 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                         <path fillRule="evenodd" clipRule="evenodd" d="M10 3C10.4142 3 10.75 3.33579 10.75 3.75V11.25C10.75 11.6642 10.4142 12 10 12C9.58579 12 9.25 11.6642 9.25 11.25V3.75C9.25 3.33579 9.58579 3 10 3Z" fill=""/>
                       </svg>
                       <span className="font-semibold">Roles List</span>
-                    </NavLink>
-                  </li>
-
-                  {/* ➕ MENU ITEM: Create Role - Crear nuevo rol */}
-                  <li>
-                    <NavLink
-                      to="/roles/create"
-                      className={({ isActive }) =>
-                        `group relative flex items-center gap-3 rounded-lg py-3 px-4 font-medium transition-all duration-300 ease-in-out hover:shadow-lg ${
-                          isActive ? 'bg-gradient-to-r from-emerald-600 to-emerald-500 shadow-lg' : ''
-                        }`
-                      }
-                      style={({ isActive }) => ({
-                        color: '#07373a',
-                        fontWeight: isActive ? 600 : 500,
-                      })}
-                    >
-                      <svg className="fill-current" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M10 2L3 5V9C3 13.5 6 17 10 18C14 17 17 13.5 17 9V5L10 2Z" fill="" opacity="0.5"/>
-                        <path d="M10 7V13M7 10H13" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                      </svg>
-                      <span className="font-semibold">Create Role</span>
                     </NavLink>
                   </li>
 
@@ -385,28 +340,6 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                     </NavLink>
                   </li>
 
-                  {/* ➕ MENU ITEM: Create Permission - Crear nuevo permiso */}
-                  <li>
-                    <NavLink
-                      to="/permissions/create"
-                      className={({ isActive }) =>
-                        `group relative flex items-center gap-3 rounded-lg py-3 px-4 font-medium transition-all duration-300 ease-in-out hover:shadow-lg ${
-                          isActive ? 'bg-gradient-to-r from-fuchsia-600 to-fuchsia-500 shadow-lg' : ''
-                        }`
-                      }
-                      style={({ isActive }) => ({
-                        color: '#07373a',
-                        fontWeight: isActive ? 600 : 500,
-                      })}
-                    >
-                      <svg className="fill-current" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M14 7C14 4.23858 11.7614 2 9 2C6.23858 2 4 4.23858 4 7C4 9.41987 5.72757 11.4349 8 11.9V18H10V11.9C12.2724 11.4349 14 9.41987 14 7Z" fill=""/>
-                        <path d="M15 14H17V16H19V18H17V20H15V18H13V16H15V14Z" fill=""/>
-                      </svg>
-                      <span className="font-semibold">Create Permission</span>
-                    </NavLink>
-                  </li>
-
                   {/* 🔐 MENU ITEM: Administrator Permissions - Permisos de administrador */}
                   <li>
                     <NavLink
@@ -427,29 +360,6 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                         <path d="M10 10V14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
                       </svg>
                       <span className="font-semibold">Admin Permissions</span>
-                    </NavLink>
-                  </li>
-
-                  {/* � MENU ITEM: Permissions-Roles - Relación permisos-roles */}
-                  <li>
-                    <NavLink
-                      to="/permissions-roles/list"
-                      className={({ isActive }) =>
-                        `group relative flex items-center gap-3 rounded-lg py-3 px-4 font-medium transition-all duration-300 ease-in-out hover:shadow-lg ${
-                          isActive ? 'bg-gradient-to-r from-rose-600 to-rose-500 shadow-lg' : ''
-                        }`
-                      }
-                      style={({ isActive }) => ({
-                        color: '#07373a',
-                        fontWeight: isActive ? 600 : 500,
-                      })}
-                    >
-                      <svg className="fill-current" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <circle cx="5" cy="10" r="3" fill=""/>
-                        <circle cx="15" cy="10" r="3" fill=""/>
-                        <path d="M8 10H12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                      </svg>
-                      <span className="font-semibold">Permissions-Roles</span>
                     </NavLink>
                   </li>
 
@@ -476,29 +386,6 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                     </NavLink>
                   </li>
 
-                  {/* ➕ MENU ITEM: Create Password - Crear nueva contraseña */}
-                  <li>
-                    <NavLink
-                      to="/passwords/create"
-                      className={({ isActive }) =>
-                        `group relative flex items-center gap-3 rounded-lg py-3 px-4 font-medium transition-all duration-300 ease-in-out hover:shadow-lg ${
-                          isActive ? 'bg-gradient-to-r from-yellow-600 to-yellow-500 shadow-lg' : ''
-                        }`
-                      }
-                      style={({ isActive }) => ({
-                        color: '#07373a',
-                        fontWeight: isActive ? 600 : 500,
-                      })}
-                    >
-                      <svg className="fill-current" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <rect x="3" y="8" width="14" height="10" rx="2" fill="" opacity="0.3"/>
-                        <path d="M6 8V6C6 3.79086 7.79086 2 10 2C12.2091 2 14 3.79086 14 6V8" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                        <path d="M10 11V15M8 13H12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                      </svg>
-                      <span className="font-semibold">Create Password</span>
-                    </NavLink>
-                  </li>
-
                   {/* 🕐 MENU ITEM: Sessions List - Listado de sesiones */}
                   <li>
                     <NavLink
@@ -521,29 +408,6 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                     </NavLink>
                   </li>
 
-                  {/* ➕ MENU ITEM: Create Session - Crear nueva sesión */}
-                  <li>
-                    <NavLink
-                      to="/sessions/create"
-                      className={({ isActive }) =>
-                        `group relative flex items-center gap-3 rounded-lg py-3 px-4 font-medium transition-all duration-300 ease-in-out hover:shadow-lg ${
-                          isActive ? 'bg-gradient-to-r from-teal-600 to-teal-500 shadow-lg' : ''
-                        }`
-                      }
-                      style={({ isActive }) => ({
-                        color: '#07373a',
-                        fontWeight: isActive ? 600 : 500,
-                      })}
-                    >
-                      <svg className="fill-current" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <circle cx="10" cy="10" r="8" stroke="currentColor" strokeWidth="1.5" fill="none"/>
-                        <path d="M10 6V10L13 13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                        <circle cx="15" cy="15" r="3" fill="currentColor"/>
-                        <path d="M15 13V17M13 15H17" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
-                      </svg>
-                      <span className="font-semibold">Create Session</span>
-                    </NavLink>
-                  </li>
 
                   {/* ❓ MENU ITEM: Security Questions - Preguntas de seguridad */}
                   <li>
@@ -622,29 +486,6 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                         <path d="M10 2C7.24 2 5 4.24 5 7C5 11.25 10 18 10 18C10 18 15 11.25 15 7C15 4.24 12.76 2 10 2ZM10 9C8.9 9 8 8.1 8 7C8 5.9 8.9 5 10 5C11.1 5 12 5.9 12 7C12 8.1 11.1 9 10 9Z" fill=""/>
                       </svg>
                       <span className="font-semibold">Address List</span>
-                    </NavLink>
-                  </li>
-
-                  {/* 📍 MENU ITEM: Create Address - Crear dirección */}
-                  <li>
-                    <NavLink
-                      to="/addresses/create"
-                      className={({ isActive }) =>
-                        `group relative flex items-center gap-3 rounded-lg py-3 px-4 font-medium transition-all duration-300 ease-in-out hover:shadow-lg ${
-                          isActive ? 'bg-gradient-to-r from-red-600 to-red-500 shadow-lg' : ''
-                        }`
-                      }
-                      style={({ isActive }) => ({
-                        color: '#07373a',
-                        fontWeight: isActive ? 600 : 500,
-                      })}
-                    >
-                      <svg className="fill-current" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M10 2C7.24 2 5 4.24 5 7C5 11.25 10 18 10 18C10 18 15 11.25 15 7C15 4.24 12.76 2 10 2ZM10 9C8.9 9 8 8.1 8 7C8 5.9 8.9 5 10 5C11.1 5 12 5.9 12 7C12 8.1 11.1 9 10 9Z" fill=""/>
-                        <circle cx="15" cy="15" r="3" fill="currentColor"/>
-                        <path d="M15 13V17M13 15H17" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
-                      </svg>
-                      <span className="font-semibold">Create Address</span>
                     </NavLink>
                   </li>
 
