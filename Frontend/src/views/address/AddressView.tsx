@@ -25,6 +25,7 @@ const AddressView: React.FC = () => {
   const [modalMode, setModalMode] = useState<'create' | 'edit'>('create');
   const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
   const [selectedUserForCreate, setSelectedUserForCreate] = useState<number | null>(null);
+  const [loadingUserAddress, setLoadingUserAddress] = useState(false);
 
   // Cargar usuarios
   useEffect(() => {
@@ -38,6 +39,39 @@ const AddressView: React.FC = () => {
     };
     loadUsers();
   }, []);
+
+  // Cargar dirección del usuario seleccionado automáticamente
+  // Esto permite pre-cargar los datos si el usuario ya tiene dirección
+  useEffect(() => {
+    const loadUserAddress = async () => {
+      if (!selectedUserForCreate || modalMode !== 'create') return;
+      
+      setLoadingUserAddress(true);
+      try {
+        // Intentar obtener la dirección del usuario seleccionado
+        const existingAddress = await addressService.getAddressByUserId(selectedUserForCreate);
+        if (existingAddress) {
+          // Si el usuario ya tiene dirección, cambiar a modo edición
+          setSelectedAddress(existingAddress);
+          setModalMode('edit');
+          Swal.fire({
+            icon: 'info',
+            title: 'Usuario con dirección existente',
+            text: 'Este usuario ya tiene una dirección. Se ha cargado para edición.',
+            timer: 3000,
+            timerProgressBar: true,
+          });
+        }
+      } catch (err: any) {
+        // Si no tiene dirección (404), está bien - continuar con creación
+        console.log('Usuario sin dirección existente, continuar con creación');
+      } finally {
+        setLoadingUserAddress(false);
+      }
+    };
+    
+    loadUserAddress();
+  }, [selectedUserForCreate, modalMode]);
 
   // Cargar direcciones
   const loadAddresses = async () => {
@@ -294,6 +328,12 @@ const AddressView: React.FC = () => {
                 Cancelar
               </Button>
             </div>
+          </div>
+        ) : loadingUserAddress ? (
+          // Indicador de carga mientras se verifica si el usuario tiene dirección
+          <div className="p-5 text-center">
+            <Spinner animation="border" variant="primary" className="mb-3" />
+            <p className="text-muted">Verificando dirección del usuario...</p>
           </div>
         ) : (
           // Formulario de dirección con mapa

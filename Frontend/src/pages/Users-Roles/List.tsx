@@ -143,28 +143,32 @@ const ListUsersWithRoles: React.FC = () => {
     }
   };
 
-  const columns: any[] = [
-    { key: 'id', label: 'ID' },
-    { key: 'name', label: 'Nombre' },
-    { key: 'email', label: 'Correo' },
-    {
-      key: 'roles',
-      label: 'Roles',
-      render: (row: any) => {
-        const ids = userRolesMap[String(row.id)] || [];
-        if (!ids.length) return '-';
-        return ids.map((rid) => {
+  // GenericTable espera un array de strings para columns
+  // Y un objeto columnLabels para los títulos personalizados
+  const columns = ['id', 'name', 'email', 'roles'];
+  
+  const columnLabels = {
+    id: 'ID',
+    name: 'Nombre',
+    email: 'Correo',
+    roles: 'Roles'
+  };
+
+  // Formatear los datos de la tabla con el campo 'roles' como string
+  const tableData = (filteredUsers || []).map(user => {
+    const ids = userRolesMap[String(user.id)] || [];
+    const rolesText = ids.length
+      ? ids.map((rid) => {
           const r = roles.find((x: any) => Number(x.id) === Number(rid));
           return r?.name ?? `#${rid}`;
-        }).join(', ');
-      },
-    },
-  ];
-
-  const tableData = (filteredUsers || []).map(user => ({
-    ...user,
-    roles: userRolesMap[String(user.id)] || []
-  }));
+        }).join(', ')
+      : '-';
+    
+    return {
+      ...user,
+      roles: rolesText
+    };
+  });
 
   return (
     <Container fluid className="py-4">
@@ -203,6 +207,7 @@ const ListUsersWithRoles: React.FC = () => {
                 <GenericTable
                   data={tableData}
                   columns={columns}
+                  columnLabels={columnLabels}
                   actions={listActions}
                   onAction={handleAction}
                   striped

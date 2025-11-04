@@ -422,9 +422,30 @@ const GenericAddressForm: React.FC<Props> = ({
         toast.success('Dirección guardada');
         onSaved && onSaved(saved);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Save address error', err);
-      toast.error('Error al guardar la dirección');
+      
+      // Manejo de errores específicos del backend
+      // El backend retorna error 400 cuando el usuario ya tiene una dirección
+      if (err?.response?.status === 400) {
+        const errorMsg = err?.response?.data?.error || '';
+        if (errorMsg.includes('already has an address')) {
+          toast.error('❌ Este usuario ya tiene una dirección registrada. Solo puede tener una dirección por usuario.', {
+            duration: 5000,
+            style: {
+              maxWidth: '500px',
+            }
+          });
+        } else if (errorMsg.includes('required')) {
+          toast.error('⚠️ Faltan campos requeridos: Street y Number');
+        } else {
+          toast.error(`Error: ${errorMsg || 'No se pudo guardar la dirección'}`);
+        }
+      } else if (err?.response?.status === 404) {
+        toast.error('❌ Usuario no encontrado en el sistema');
+      } else {
+        toast.error('Error al guardar la dirección');
+      }
     } finally {
       setSubmitting(false);
     }

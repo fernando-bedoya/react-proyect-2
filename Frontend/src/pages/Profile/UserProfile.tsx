@@ -16,11 +16,13 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../../store/store';
 import { setUser } from '../../store/userSlice';
-import { User as UserIcon, Mail, Phone, Edit, ArrowLeft } from 'lucide-react';
+import { User as UserIcon, Mail, Phone, Edit, ArrowLeft, Camera, FileSignature } from 'lucide-react';
 import GenericModal from '../../components/GenericModal';
 import GenericForm from '../../components/GenericForm';
+import GenericImageUpload from '../../components/GenericImageUpload';
 import { useTheme } from '../../context/ThemeContext';
 import { userService } from '../../services/userService';
+import uploadService from '../../services/uploadService';
 import Swal from 'sweetalert2';
 
 /**
@@ -70,21 +72,50 @@ const UserProfile: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [showEditModal, setShowEditModal] = useState(false);
   
+  // Estados para manejo de imágenes (foto de perfil y firma digital)
+  const [showPhotoModal, setShowPhotoModal] = useState(false); // Modal para subir foto de perfil
+  const [showSignatureModal, setShowSignatureModal] = useState(false); // Modal para subir firma digital
+  const [selectedPhoto, setSelectedPhoto] = useState<File | null>(null); // Archivo de foto seleccionado
+  const [selectedSignature, setSelectedSignature] = useState<File | null>(null); // Archivo de firma seleccionado
+  const [uploading, setUploading] = useState(false); // Estado de carga durante upload
+  const [profile, setProfile] = useState<any>(null); // Datos del perfil (con foto)
+  const [signature, setSignature] = useState<any>(null); // Datos de la firma digital
+  
   /**
-   * Cargar datos del usuario al montar el componente
+   * Cargar datos del usuario, perfil (foto) y firma digital al montar el componente
    * Si hay ID en la URL, carga ese usuario, sino usa el usuario logueado
    */
   useEffect(() => {
-    const loadUser = async () => {
+    const loadUserData = async () => {
       setLoading(true);
       try {
+        let userData;
         if (id) {
           // Cargar usuario específico por ID
-          const userData = await userService.getUserById(parseInt(id));
-          setUserData(userData);
+          userData = await userService.getUserById(parseInt(id));
         } else {
           // Usar usuario actual de Redux
-          setUserData(currentUser);
+          userData = currentUser;
+        }
+        
+        setUserData(userData);
+        
+        // Cargar perfil (foto) si existe
+        if (userData?.id) {
+          try {
+            const profileData = await uploadService.getProfileByUserId(userData.id);
+            setProfile(profileData);
+          } catch (error) {
+            console.log('Usuario sin foto de perfil');
+          }
+          
+          // Cargar firma digital si existe
+          try {
+            const signatureData = await uploadService.getDigitalSignatureByUserId(userData.id);
+            setSignature(signatureData);
+          } catch (error) {
+            console.log('Usuario sin firma digital');
+          }
         }
       } catch (error) {
         console.error('Error al cargar usuario:', error);
@@ -94,7 +125,7 @@ const UserProfile: React.FC = () => {
       }
     };
     
-    loadUser();
+    loadUserData();
   }, [id, currentUser]);
   
   /**
@@ -126,6 +157,95 @@ const UserProfile: React.FC = () => {
     } catch (error) {
       console.error('Error al actualizar perfil:', error);
       Swal.fire('Error', 'No se pudo actualizar el perfil', 'error');
+    }
+  };
+
+  /**
+   * Maneja la subida de foto de perfil
+   * Usa el servicio uploadService para enviar la imagen al backend
+   * El backend la guarda en Backend/app/static/uploads/profiles
+   */
+  const handleUploadPhoto = async () => {
+    if (!selectedPhoto || !user?.id) {
+      Swal.fire('Error', 'Por favor selecciona una foto primero', 'error');
+      return;
+    }
+
+    setUploading(true);
+    try {
+      // Subir foto usando el servicio (crea o actualiza según si existe profile)
+      const result = await uploadService.uploadProfilePhoto(
+        user.id,
+        selectedPhoto,
+        profile?.id, // Si existe profile, se actualiza; si no, se crea
+        { name: user.name } // Datos adicionales opcionales
+      );
+
+      // Actualizar estado con la nueva foto
+      setProfile(result);
+      setShowPhotoModal(false);
+      setSelectedPhoto(null);
+
+      Swal.fire({
+        title: '¡Foto Actualizada!',
+        text: 'Tu foto de perfil se actualizó correctamente',
+        icon: 'success',
+        timer: 2000,
+        showConfirmButton: false
+      });
+    } catch (error: any) {
+      console.error('Error al subir foto:', error);
+      Swal.fire(
+        'Error',
+        error.response?.data?.error || 'No se pudo subir la foto de perfil',
+        'error'
+      );
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  /**
+   * Maneja la subida de firma digital
+   * Usa el servicio uploadService para enviar la firma al backend
+   * El backend la guarda en Backend/app/static/uploads/digital-signatures
+   */
+  const handleUploadSignature = async () => {
+    if (!selectedSignature || !user?.id) {
+      Swal.fire('Error', 'Por favor selecciona una firma primero', 'error');
+      return;
+    }
+
+    setUploading(true);
+    try {
+      // Subir firma usando el servicio (crea o actualiza según si existe signature)
+      const result = await uploadService.uploadDigitalSignature(
+        user.id,
+        selectedSignature,
+        signature?.id // Si existe signature, se actualiza; si no, se crea
+      );
+
+      // Actualizar estado con la nueva firma
+      setSignature(result);
+      setShowSignatureModal(false);
+      setSelectedSignature(null);
+
+      Swal.fire({
+        title: '¡Firma Actualizada!',
+        text: 'Tu firma digital se actualizó correctamente',
+        icon: 'success',
+        timer: 2000,
+        showConfirmButton: false
+      });
+    } catch (error: any) {
+      console.error('Error al subir firma:', error);
+      Swal.fire(
+        'Error',
+        error.response?.data?.error || 'No se pudo subir la firma digital',
+        'error'
+      );
+    } finally {
+      setUploading(false);
     }
   };
   
@@ -228,16 +348,36 @@ const UserProfile: React.FC = () => {
         <div className={`${colors.card} rounded-3xl overflow-hidden`}>
           {/* Header con avatar grande */}
           <div className="bg-gradient-to-r from-gray-800 via-gray-900 to-black p-12 text-center relative">
-            {/* Avatar con iniciales */}
-            <div 
-              className="w-32 h-32 rounded-full mx-auto flex items-center justify-center text-white text-5xl font-bold shadow-2xl"
-              style={{ 
-                backgroundColor: getAvatarColor(user.name),
-                boxShadow: '0 20px 60px rgba(0, 0, 0, 0.4)'
-              }}
+            {/* Avatar con foto de perfil o iniciales */}
+            {profile?.photo ? (
+              // Si existe foto de perfil, mostrarla
+              <img
+                src={uploadService.getImageUrl(profile.photo, 'profile')}
+                alt={user.name}
+                className="w-32 h-32 rounded-full mx-auto shadow-2xl object-cover"
+                style={{ boxShadow: '0 20px 60px rgba(0, 0, 0, 0.4)' }}
+              />
+            ) : (
+              // Si no existe foto, mostrar iniciales
+              <div 
+                className="w-32 h-32 rounded-full mx-auto flex items-center justify-center text-white text-5xl font-bold shadow-2xl"
+                style={{ 
+                  backgroundColor: getAvatarColor(user.name),
+                  boxShadow: '0 20px 60px rgba(0, 0, 0, 0.4)'
+                }}
+              >
+                {getInitials(user.name)}
+              </div>
+            )}
+            
+            {/* Botón para cambiar foto (sobre el avatar) */}
+            <button
+              onClick={() => setShowPhotoModal(true)}
+              className="absolute top-[120px] left-1/2 transform -translate-x-1/2 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 p-2 rounded-full shadow-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-all"
+              title="Cambiar foto de perfil"
             >
-              {getInitials(user.name)}
-            </div>
+              <Camera size={20} />
+            </button>
             
             {/* Nombre del usuario */}
             <h1 className="text-3xl font-bold text-white mt-6 mb-2">
@@ -310,6 +450,45 @@ const UserProfile: React.FC = () => {
                   </p>
                 </div>
               </div>
+
+              {/* Firma Digital */}
+              <div className="flex items-start gap-4 p-6 bg-gray-50 dark:bg-gray-800 rounded-2xl">
+                <div className={`${colors.icon} mt-1`}>
+                  <FileSignature size={24} />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm text-gray-500 dark:text-gray-400 font-medium mb-1">
+                    Firma Digital
+                  </p>
+                  {signature?.photo ? (
+                    <div className="flex items-center gap-4">
+                      <img
+                        src={uploadService.getImageUrl(signature.photo, 'signature')}
+                        alt="Firma digital"
+                        className="h-16 border-2 border-gray-300 dark:border-gray-600 rounded-lg object-contain bg-white"
+                      />
+                      <button
+                        onClick={() => setShowSignatureModal(true)}
+                        className={`${colors.button} text-white px-4 py-2 rounded-lg font-semibold text-sm transition-all`}
+                      >
+                        Cambiar Firma
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-4">
+                      <p className="text-gray-500 dark:text-gray-400 italic">
+                        No has subido una firma digital
+                      </p>
+                      <button
+                        onClick={() => setShowSignatureModal(true)}
+                        className={`${colors.button} text-white px-4 py-2 rounded-lg font-semibold text-sm transition-all`}
+                      >
+                        Subir Firma
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -335,6 +514,110 @@ const UserProfile: React.FC = () => {
           cancelLabel="Cancelar"
           onCancel={() => setShowEditModal(false)}
         />
+      </GenericModal>
+
+      {/* Modal para subir foto de perfil */}
+      <GenericModal
+        show={showPhotoModal}
+        onHide={() => {
+          setShowPhotoModal(false);
+          setSelectedPhoto(null); // Limpiar selección al cerrar
+        }}
+        title="Actualizar Foto de Perfil"
+        size="lg"
+        centered
+      >
+        <div className="p-4">
+          {/* Componente reutilizable GenericImageUpload para seleccionar imagen */}
+          <GenericImageUpload
+            onImageSelect={(file) => setSelectedPhoto(file)}
+            currentImageUrl={profile?.photo ? uploadService.getImageUrl(profile.photo, 'profile') : undefined}
+            label="Foto de Perfil"
+            circularPreview={true} // Vista circular para fotos de perfil
+            helpText="Selecciona una foto para tu perfil (JPG, PNG, GIF - máximo 5MB)"
+            buttonText="Seleccionar Foto"
+          />
+
+          {/* Botones de acción con colores del tema activo */}
+          <div className="d-flex gap-2 mt-4">
+            <button
+              onClick={handleUploadPhoto}
+              disabled={!selectedPhoto || uploading}
+              className={`flex-1 ${colors.button} text-white px-4 py-2 rounded-lg font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed`}
+            >
+              {uploading ? (
+                <>
+                  <span className="spinner-border spinner-border-sm me-2"></span>
+                  Subiendo...
+                </>
+              ) : (
+                'Guardar Foto'
+              )}
+            </button>
+            <button
+              onClick={() => {
+                setShowPhotoModal(false);
+                setSelectedPhoto(null);
+              }}
+              disabled={uploading}
+              className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Cancelar
+            </button>
+          </div>
+        </div>
+      </GenericModal>
+
+      {/* Modal para subir firma digital */}
+      <GenericModal
+        show={showSignatureModal}
+        onHide={() => {
+          setShowSignatureModal(false);
+          setSelectedSignature(null); // Limpiar selección al cerrar
+        }}
+        title="Actualizar Firma Digital"
+        size="lg"
+        centered
+      >
+        <div className="p-4">
+          {/* Componente reutilizable GenericImageUpload para seleccionar imagen */}
+          <GenericImageUpload
+            onImageSelect={(file) => setSelectedSignature(file)}
+            currentImageUrl={signature?.photo ? uploadService.getImageUrl(signature.photo, 'signature') : undefined}
+            label="Firma Digital"
+            circularPreview={false} // Vista rectangular para firmas
+            helpText="Selecciona una imagen de tu firma digital (JPG, PNG, GIF - máximo 5MB)"
+            buttonText="Seleccionar Firma"
+          />
+
+          {/* Botones de acción con colores del tema activo */}
+          <div className="d-flex gap-2 mt-4">
+            <button
+              onClick={handleUploadSignature}
+              disabled={!selectedSignature || uploading}
+              className={`flex-1 ${colors.button} text-white px-4 py-2 rounded-lg font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed`}
+            >
+              {uploading ? (
+                <>
+                  <span className="spinner-border spinner-border-sm me-2"></span>
+                  Subiendo...
+                </>
+              ) : (
+                'Guardar Firma'
+              )}
+            </button>
+            <button
+              onClick={() => {
+                setShowSignatureModal(false);
+                setSelectedSignature(null);
+              }}
+              disabled={uploading}
+              className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Cancelar
+            </button>
+          </div>
+        </div>
       </GenericModal>
     </div>
   );

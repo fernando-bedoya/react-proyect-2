@@ -46,7 +46,7 @@ const SignIn: React.FC = () => {
       await new Promise(resolve => setTimeout(resolve, 500));
       
       // ✅ Redirección a la página de usuarios después del login exitoso
-      navigate("/users");
+      navigate("/users/list");
     } catch (error: any) {
       console.error('Error al iniciar sesión', error);
       
@@ -160,7 +160,7 @@ const SignIn: React.FC = () => {
       });
 
       // ✅ Redirección a la página de usuarios después del login exitoso con Google
-      navigate('/users');
+      navigate('/users/list');
     } catch (error: any) {
       console.error('Error al iniciar sesión con Google:', error);
       
@@ -232,7 +232,7 @@ const SignIn: React.FC = () => {
       });
 
       // ✅ Redirección a la página de usuarios después del login exitoso con GitHub
-      navigate('/users');
+      navigate('/users/list');
     } catch (error: any) {
       console.error('Error al iniciar sesión con GitHub:', error);
       
@@ -304,7 +304,7 @@ const SignIn: React.FC = () => {
       });
 
       // ✅ Redirección a la página de usuarios después del login exitoso con Microsoft
-      navigate('/users');
+      navigate('/users/list');
     } catch (error: any) {
       console.error('Error al iniciar sesión con Microsoft:', error);
       
