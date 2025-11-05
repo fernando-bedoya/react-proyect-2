@@ -1,29 +1,26 @@
 import React, { useEffect, useState } from "react";
-import { Container, Row, Col, Card, Form, Button, Spinner, Badge, Alert } from "react-bootstrap";
-import { UserPlus, RefreshCw } from "lucide-react";
+import { Container, Row, Col, Card, Spinner, Alert, Form, Badge } from "react-bootstrap";
+import { UserPlus } from "lucide-react";
 import { userService } from "../../services/userService";
 import { roleService } from "../../services/Role/roleService";
 import { userRoleService } from "../../services/userRoleService";
 import type { User } from "../../models/User";
 import type { Role } from "../../models/Role";
 import Swal from "sweetalert2";
+import GenericForm, { FieldConfig } from "../GenericForm";
 
 /**
  * Componente para asignar uno o varios roles a un usuario.
- * - Usa Autocomplete para seleccionar usuario
- * - Usa Autocomplete multiple para seleccionar roles
- * - Botón 'Asignar' que llama a userRoleService.assignRoles
+ * Refactorizado para usar GenericForm con un selector múltiple personalizado.
  * Buenas prácticas: hooks, manejo de errores, modularidad.
- * Usa color 'warning' (amarillo) para el tema visual solicitado.
  */
 export const AssignRoles: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [roles, setRoles] = useState<Role[]>([]);
-  const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
-  const [selectedRoleIds, setSelectedRoleIds] = useState<number[]>([]);
   const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
+  const [selectedRoleIds, setSelectedRoleIds] = useState<number[]>([]);
 
   useEffect(() => {
     let mounted = true;
@@ -45,14 +42,23 @@ export const AssignRoles: React.FC = () => {
     return () => { mounted = false; };
   }, []);
 
-  const handleAssign = async () => {
-    if (!selectedUserId || !selectedRoleIds.length) return;
-    setLoading(true);
+  const handleAssign = async (data: Record<string, any>) => {
+    const { userId } = data;
+    
+    if (!userId || selectedRoleIds.length === 0) {
+      await Swal.fire({
+        title: 'Error',
+        text: 'Debes seleccionar un usuario y al menos un rol',
+        icon: 'error'
+      });
+      return;
+    }
+    
+    setSubmitting(true);
     setError(null);
-    setSuccess(null);
     
     try {
-      const ok = await userRoleService.assignRoles(selectedUserId, selectedRoleIds);
+      const ok = await userRoleService.assignRoles(Number(userId), selectedRoleIds);
       if (ok) {
         await Swal.fire({
           title: '¡Éxito!',
@@ -61,8 +67,7 @@ export const AssignRoles: React.FC = () => {
           timer: 2000,
           showConfirmButton: false
         });
-        setSuccess("Roles asignados correctamente");
-        setSelectedUserId(null);
+        // Limpiar selección de roles después de éxito
         setSelectedRoleIds([]);
       } else {
         setError("No se pudieron asignar los roles");
@@ -77,7 +82,7 @@ export const AssignRoles: React.FC = () => {
         icon: 'error'
       });
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
   };
 
@@ -88,6 +93,24 @@ export const AssignRoles: React.FC = () => {
         : [...prev, roleId]
     );
   };
+
+  // Configuración de campos para GenericForm (solo el selector de usuario)
+  const formFields: FieldConfig[] = [
+    {
+      name: 'userId',
+      label: '👤 Seleccionar Usuario',
+      type: 'select',
+      required: true,
+      placeholder: '-- Selecciona un usuario --',
+      options: users.map(user => ({
+        value: user.id as number,
+        label: user.name || user.email || `Usuario #${user.id}`
+      })),
+      helpText: 'Usuario al que se asignarán los roles seleccionados',
+      disabled: loading || submitting,
+      cols: 12
+    }
+  ];
 
   return (
     <Container fluid className="py-4">
@@ -106,15 +129,10 @@ export const AssignRoles: React.FC = () => {
         </Col>
       </Row>
 
-      {/* Error/Success Messages */}
+      {/* Error Messages */}
       {error && (
         <Alert variant="danger" dismissible onClose={() => setError(null)} className="mb-3">
           {error}
-        </Alert>
-      )}
-      {success && (
-        <Alert variant="success" dismissible onClose={() => setSuccess(null)} className="mb-3">
-          {success}
         </Alert>
       )}
 
@@ -122,118 +140,90 @@ export const AssignRoles: React.FC = () => {
       {loading && (
         <div className="d-flex align-items-center gap-2 mb-3">
           <Spinner animation="border" size="sm" variant="success" />
-          <span className="text-muted">Cargando...</span>
+          <span className="text-muted">Cargando datos...</span>
         </div>
       )}
 
       {/* Form Card */}
       <Card className="shadow-sm">
         <Card.Body className="p-4">
-          <Row className="g-4">
-            {/* Select User */}
-            <Col md={6}>
-              <Form.Group>
-                <Form.Label className="fw-semibold text-success">
-                  <span className="me-2">👤</span>
-                  Seleccionar Usuario *
-                </Form.Label>
-                <Form.Select
-                  value={selectedUserId || ''}
-                  onChange={(e) => setSelectedUserId(e.target.value ? Number(e.target.value) : null)}
-                  disabled={loading}
-                  className="form-select-lg"
-                >
-                  <option value="">-- Selecciona un usuario --</option>
-                  {users.map(user => (
-                    <option key={user.id} value={user.id}>
-                      {user.name || user.email || `Usuario #${user.id}`}
-                    </option>
-                  ))}
-                </Form.Select>
-                <Form.Text className="text-muted">
-                  Usuario al que se asignarán los roles seleccionados
-                </Form.Text>
-              </Form.Group>
-            </Col>
+          {!loading && users.length > 0 && roles.length > 0 ? (
+            <>
+              {/* Selector de Usuario con GenericForm */}
+              <GenericForm
+                fields={formFields}
+                onSubmit={handleAssign}
+                submitLabel="Asignar Roles"
+                showReset={true}
+                resetLabel="Limpiar Formulario"
+                loading={submitting}
+              />
 
-            {/* Select Roles */}
-            <Col md={6}>
-              <Form.Label className="fw-semibold text-success">
-                <span className="me-2">🛡️</span>
-                Seleccionar Roles * ({selectedRoleIds.length} seleccionados)
-              </Form.Label>
-              <div className="border rounded p-3" style={{ maxHeight: '300px', overflowY: 'auto' }}>
-                {roles.length === 0 ? (
-                  <p className="text-muted mb-0">No hay roles disponibles</p>
-                ) : (
-                  roles.map(role => (
-                    <Form.Check
-                      key={role.id}
-                      type="checkbox"
-                      id={`role-${role.id}`}
-                      label={
-                        <span>
-                          {role.name || `Rol #${role.id}`}
-                          {selectedRoleIds.includes(role.id as number) && (
-                            <Badge bg="success" className="ms-2">✓</Badge>
-                          )}
-                        </span>
-                      }
-                      checked={selectedRoleIds.includes(role.id as number)}
-                      onChange={() => handleRoleToggle(role.id as number)}
-                      disabled={loading}
-                      className="mb-2"
-                    />
-                  ))
-                )}
-              </div>
-              <Form.Text className="text-muted">
-                Selecciona uno o más roles para asignar
-              </Form.Text>
-            </Col>
-          </Row>
-
-          {/* Action Buttons */}
-          <Row className="mt-4">
-            <Col>
-              <div className="d-flex gap-2">
-                <Button
-                  variant="success"
-                  size="lg"
-                  disabled={!selectedUserId || selectedRoleIds.length === 0 || loading}
-                  onClick={handleAssign}
-                  className="px-4"
-                >
-                  {loading ? (
-                    <>
-                      <Spinner animation="border" size="sm" className="me-2" />
-                      Asignando...
-                    </>
-                  ) : (
-                    <>
-                      <UserPlus size={18} className="me-2" />
-                      Asignar Roles
-                    </>
-                  )}
-                </Button>
-
-                <Button
-                  variant="outline-secondary"
-                  size="lg"
-                  onClick={() => {
-                    setSelectedUserId(null);
-                    setSelectedRoleIds([]);
-                    setError(null);
-                    setSuccess(null);
-                  }}
-                  disabled={loading}
-                >
-                  <RefreshCw size={18} className="me-2" />
-                  Limpiar
-                </Button>
-              </div>
-            </Col>
-          </Row>
+              {/* Selector Múltiple de Roles (Personalizado) */}
+              <Row className="mt-4">
+                <Col>
+                  <Form.Label className="fw-semibold text-success">
+                    <span className="me-2">🛡️</span>
+                    Seleccionar Roles * ({selectedRoleIds.length} seleccionados)
+                  </Form.Label>
+                  <div 
+                    className="border rounded p-3" 
+                    style={{ 
+                      maxHeight: '300px', 
+                      overflowY: 'auto',
+                      border: '2px solid #6ee7b7',
+                      borderRadius: '8px',
+                      backgroundColor: '#f0fdf4'
+                    }}
+                  >
+                    {roles.length === 0 ? (
+                      <p className="text-muted mb-0">No hay roles disponibles</p>
+                    ) : (
+                      roles.map(role => (
+                        <Form.Check
+                          key={role.id}
+                          type="checkbox"
+                          id={`role-${role.id}`}
+                          label={
+                            <span className="d-flex justify-content-between align-items-center">
+                              <span style={{ fontWeight: '500', color: '#047857' }}>
+                                {role.name || `Rol #${role.id}`}
+                              </span>
+                              {selectedRoleIds.includes(role.id as number) && (
+                                <Badge bg="success" className="ms-2">✓</Badge>
+                              )}
+                            </span>
+                          }
+                          checked={selectedRoleIds.includes(role.id as number)}
+                          onChange={() => handleRoleToggle(role.id as number)}
+                          disabled={loading || submitting}
+                          className="mb-2 p-2"
+                          style={{
+                            border: selectedRoleIds.includes(role.id as number) 
+                              ? '1px solid #10b981' 
+                              : '1px solid transparent',
+                            borderRadius: '6px',
+                            backgroundColor: selectedRoleIds.includes(role.id as number) 
+                              ? '#d1fae5' 
+                              : 'transparent',
+                            transition: 'all 0.2s ease'
+                          }}
+                        />
+                      ))
+                    )}
+                  </div>
+                  <Form.Text className="text-muted">
+                    Selecciona uno o más roles para asignar al usuario
+                  </Form.Text>
+                </Col>
+              </Row>
+            </>
+          ) : !loading && (
+            <Alert variant="warning">
+              {users.length === 0 && "No hay usuarios disponibles. "}
+              {roles.length === 0 && "No hay roles disponibles."}
+            </Alert>
+          )}
         </Card.Body>
       </Card>
     </Container>

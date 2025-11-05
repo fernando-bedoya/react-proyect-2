@@ -364,7 +364,7 @@ const UserProfile: React.FC = () => {
         {/* Card principal del perfil */}
         <div className={`${colors.card} rounded-3xl overflow-hidden`}>
           {/* Header con avatar grande - Color cambia según el tema activo */}
-          <div className={`${colors.headerBg} p-12 text-center relative`}>
+          <div className={`${colors.headerBg} p-12 text-center relative`} style={{ minHeight: '400px' }}>
             {/* Avatar con foto de perfil o iniciales */}
             {profile?.photo ? (
               // Si existe foto de perfil, mostrarla
@@ -377,10 +377,11 @@ const UserProfile: React.FC = () => {
             ) : (
               // Si no existe foto, mostrar iniciales
               <div 
-                className="w-32 h-32 rounded-full mx-auto flex items-center justify-center text-white text-5xl font-bold shadow-2xl"
+                className="w-32 h-32 rounded-full mx-auto flex items-center justify-center !text-white text-5xl font-bold shadow-2xl"
                 style={{ 
                   backgroundColor: getAvatarColor(user.name),
-                  boxShadow: '0 20px 60px rgba(0, 0, 0, 0.4)'
+                  boxShadow: '0 20px 60px rgba(0, 0, 0, 0.4)',
+                  color: '#ffffff !important'
                 }}
               >
                 {getInitials(user.name)}
@@ -397,19 +398,20 @@ const UserProfile: React.FC = () => {
             </button>
             
             {/* Nombre del usuario */}
-            <h1 className="text-3xl font-bold text-white mt-6 mb-2">
+            <h1 className="text-3xl font-bold !text-black mt-6 mb-2" style={{ color: '#000000 !important' }}>
               {user.name || 'Usuario'}
             </h1>
             
             {/* Email del usuario */}
-            <p className="text-gray-300 text-lg">
+            <p className="!text-gray-600 text-lg" style={{ color: '#4b5563 !important' }}>
               {user.email || 'email@ejemplo.com'}
             </p>
             
             {/* Botón de editar (floating) */}
             <button
               onClick={() => setShowEditModal(true)}
-              className={`absolute top-6 right-6 ${colors.button} text-white px-6 py-3 rounded-xl font-semibold flex items-center gap-2 transition-all transform hover:scale-105 shadow-lg`}
+              className="absolute top-6 right-6 !bg-black hover:!bg-gray-800 !text-white px-6 py-3 rounded-xl font-semibold flex items-center gap-2 transition-all transform hover:scale-105 shadow-lg"
+              style={{ backgroundColor: '#000000 !important', color: '#ffffff !important' }}
             >
               <Edit size={18} />
               <span>Editar Perfil</span>
@@ -492,8 +494,8 @@ const UserProfile: React.FC = () => {
                       {/* Botón con estilos mejorados y más visibles */}
                       <button
                         onClick={() => setShowSignatureModal(true)}
-                        className={`${colors.button} text-white px-5 py-2.5 rounded-lg font-semibold text-sm transition-all transform hover:scale-105 shadow-md hover:shadow-lg`}
-                        style={{ minWidth: '140px' }}
+                        className="!bg-black hover:!bg-gray-800 text-white px-5 py-2.5 rounded-lg font-semibold text-sm transition-all transform hover:scale-105 shadow-md hover:shadow-lg"
+                        style={{ minWidth: '140px', backgroundColor: '#000000 !important' }}
                       >
                         Cambiar Firma
                       </button>
@@ -506,8 +508,8 @@ const UserProfile: React.FC = () => {
                       {/* Botón con estilos mejorados y más visibles */}
                       <button
                         onClick={() => setShowSignatureModal(true)}
-                        className={`${colors.button} text-white px-5 py-2.5 rounded-lg font-semibold text-sm transition-all transform hover:scale-105 shadow-md hover:shadow-lg`}
-                        style={{ minWidth: '140px' }}
+                        className="!bg-black hover:!bg-gray-800 text-white px-5 py-2.5 rounded-lg font-semibold text-sm transition-all transform hover:scale-105 shadow-md hover:shadow-lg"
+                        style={{ minWidth: '140px', backgroundColor: '#000000 !important' }}
                       >
                         Subir Firma
                       </button>
@@ -621,7 +623,8 @@ const UserProfile: React.FC = () => {
             <button
               onClick={handleUploadSignature}
               disabled={!selectedSignature || uploading}
-              className={`flex-1 ${colors.button} text-white px-6 py-3 rounded-lg font-bold text-base transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none`}
+              className="flex-1 !bg-black hover:!bg-gray-800 text-white px-6 py-3 rounded-lg font-bold text-base transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+              style={{ backgroundColor: '#000000 !important' }}
             >
               {uploading ? (
                 <span className="flex items-center justify-center gap-2">
@@ -638,7 +641,8 @@ const UserProfile: React.FC = () => {
                 setSelectedSignature(null);
               }}
               disabled={uploading}
-              className="flex-1 bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg font-bold text-base transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+              className="flex-1 !bg-black hover:!bg-gray-800 text-white px-6 py-3 rounded-lg font-bold text-base transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+              style={{ backgroundColor: '#000000 !important' }}
             >
               Cancelar
             </button>

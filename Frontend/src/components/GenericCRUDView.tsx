@@ -78,6 +78,9 @@ export interface GenericCRUDViewProps {
   onAfterUpdate?: (id: any, data: any) => void;
   onBeforeDelete?: (id: any) => boolean | Promise<boolean>;
   onAfterDelete?: (id: any) => void;
+  
+  // Handler personalizado para crear (cuando el backend tiene un endpoint no estándar)
+  customCreateHandler?: (data: any) => Promise<any>;
 }
 
 const GenericCRUDView: React.FC<GenericCRUDViewProps> = ({
@@ -100,7 +103,8 @@ const GenericCRUDView: React.FC<GenericCRUDViewProps> = ({
   onBeforeUpdate,
   onAfterUpdate,
   onBeforeDelete,
-  onAfterDelete
+  onAfterDelete,
+  customCreateHandler
 }) => {
   const [data, setData] = useState<any[]>([]);
   const [relatedData, setRelatedData] = useState<Record<string, any[]>>({});
@@ -207,13 +211,19 @@ const GenericCRUDView: React.FC<GenericCRUDViewProps> = ({
         // Callback antes de crear
         const dataToSend = onBeforeCreate ? onBeforeCreate(formData) : formData;
         
-        await create(endpoint, dataToSend);
-        await Swal.fire({
-          title: '¡Creado!',
-          text: `${entityNameSingular.charAt(0).toUpperCase() + entityNameSingular.slice(1)} creado exitosamente`,
-          icon: 'success',
-          confirmButtonColor: '#10b981'
-        });
+        // Si hay un handler personalizado para crear, usarlo en lugar del estándar
+        if (customCreateHandler) {
+          await customCreateHandler(dataToSend);
+          // El customCreateHandler debe manejar sus propios mensajes
+        } else {
+          await create(endpoint, dataToSend);
+          await Swal.fire({
+            title: '¡Creado!',
+            text: `${entityNameSingular.charAt(0).toUpperCase() + entityNameSingular.slice(1)} creado exitosamente`,
+            icon: 'success',
+            confirmButtonColor: '#10b981'
+          });
+        }
         
         // Callback después de crear
         if (onAfterCreate) {

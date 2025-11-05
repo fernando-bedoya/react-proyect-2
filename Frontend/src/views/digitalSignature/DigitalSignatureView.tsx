@@ -1,16 +1,19 @@
 /**
- * DigitalSignatureView - Vista personalizada con subida de archivos
+ * DigitalSignatureView - Vista con GenericTable y soporte de temas
  * 
  * Permite subir firmas digitales (imágenes) al servidor
  * Guarda en: Backend/app/static/uploads/digital-signatures/
+ * Usa GenericTable para aprovechar los colores del tema (Bootstrap/Tailwind/Material)
  */
 
 import React, { useState, useEffect } from 'react';
-import { Container, Card, Table, Button, Modal, Form, Alert, Badge, Spinner, Image } from 'react-bootstrap';
-import { Plus, Edit2, Trash2, Upload, Eye, Download } from 'lucide-react';
+import { Container, Button, Modal, Form, Alert, Spinner, Image } from 'react-bootstrap';
+import { Plus, Upload } from 'lucide-react';
 import Swal from 'sweetalert2';
 import axios from 'axios';
 import { userService } from '../../services/userService';
+import GenericTable from '../../components/GenericTable';
+import { useTheme } from '../../context/ThemeContext';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
@@ -32,6 +35,9 @@ interface DigitalSignature {
 }
 
 const DigitalSignatureView: React.FC = () => {
+  // Hook del tema para colores dinámicos (Bootstrap=verde, Tailwind=azul, Material=amarillo)
+  const { designLibrary } = useTheme();
+  
   const [signatures, setSignatures] = useState<DigitalSignature[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
@@ -44,6 +50,27 @@ const DigitalSignatureView: React.FC = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string>('');
   const [editingId, setEditingId] = useState<number | null>(null);
+
+  // Colores del tema actual para botones y headers
+  const themeColors = {
+    bootstrap: {
+      primary: 'success', // Verde
+      headerBg: 'bg-success',
+      buttonClass: 'btn-success'
+    },
+    tailwind: {
+      primary: 'primary', // Azul
+      headerBg: 'bg-primary', 
+      buttonClass: 'btn-primary'
+    },
+    material: {
+      primary: 'warning', // Amarillo
+      headerBg: 'bg-warning',
+      buttonClass: 'btn-warning'
+    }
+  };
+
+  const currentTheme = themeColors[designLibrary as keyof typeof themeColors] || themeColors.bootstrap;
 
   useEffect(() => {
     loadData();
@@ -209,121 +236,105 @@ const DigitalSignatureView: React.FC = () => {
     );
   }
 
+  // Preparar datos para GenericTable
+  const tableData = signatures.map(sig => ({
+    id: sig.id,
+    user_info: `${sig.user?.name || `Usuario #${sig.user_id}`} (${sig.user?.email || 'N/A'})`,
+    filename: sig.photo?.split('/').pop() || 'N/A',
+    created_at: sig.created_at ? new Date(sig.created_at).toLocaleDateString('es-ES', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    }) : 'N/A',
+    // Datos originales para acciones
+    _original: sig
+  }));
+
+  // Columnas simples (solo strings)
+  const columns = ['id', 'user_info', 'filename', 'created_at'];
+
+  // Acciones de la tabla
+  const actions = [
+    {
+      name: 'view',
+      label: 'Ver',
+      variant: 'info' as const,
+      icon: 'view' as const
+    },
+    {
+      name: 'edit',
+      label: 'Editar',
+      variant: currentTheme.primary as 'primary' | 'success' | 'warning',
+      icon: 'edit' as const
+    },
+    {
+      name: 'delete',
+      label: 'Eliminar',
+      variant: 'danger' as const,
+      icon: 'delete' as const
+    }
+  ];
+
+  // Manejador de acciones
+  const handleAction = (actionName: string, row: any) => {
+    const signature = row._original;
+    
+    switch (actionName) {
+      case 'view':
+        handlePreview(signature);
+        break;
+      case 'edit':
+        handleOpenModal(signature);
+        break;
+      case 'delete':
+        handleDelete(signature.id);
+        break;
+    }
+  };
+
   return (
     <Container fluid className="p-4">
+      {/* Header con colores del tema actual */}
       <div className="d-flex justify-content-between align-items-center mb-4">
         <div>
           <h2>📝 Firmas Digitales</h2>
           <p className="text-muted">Gestión de firmas digitales de usuarios</p>
         </div>
-        <Button variant="success" onClick={() => handleOpenModal()}>
+        <Button 
+          variant={currentTheme.primary} 
+          onClick={() => handleOpenModal()}
+          className="shadow-sm"
+        >
           <Plus size={20} className="me-2" />
           Nueva Firma
         </Button>
       </div>
 
-      {signatures.length === 0 ? (
+      {/* Tabla genérica con soporte de temas */}
+      {loading ? (
+        <div className="text-center p-5">
+          <Spinner animation="border" variant={currentTheme.primary} />
+          <p className="mt-3">Cargando firmas digitales...</p>
+        </div>
+      ) : signatures.length === 0 ? (
         <Alert variant="info">
           📭 No hay firmas digitales registradas
         </Alert>
       ) : (
-        <Card>
-          <Card.Body>
-            <Table responsive striped hover>
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Usuario</th>
-                  <th>Archivo</th>
-                  <th>Vista Previa</th>
-                  <th>Fecha de Creación</th>
-                  <th>Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                {signatures.map(signature => (
-                  <tr key={signature.id}>
-                    <td>{signature.id}</td>
-                    <td>
-                      <div>
-                        <strong>{signature.user?.name || `Usuario #${signature.user_id}`}</strong>
-                        <br />
-                        <small className="text-muted">{signature.user?.email}</small>
-                      </div>
-                    </td>
-                    <td>
-                      {/* El backend devuelve la ruta completa en el campo "photo", extraemos solo el nombre del archivo */}
-                      <code>{signature.photo?.split('/').pop() || 'N/A'}</code>
-                    </td>
-                    <td>
-                      {/* El backend sirve las imágenes desde /api/digital-signatures/{filename} */}
-                      <Image 
-                        src={`${API_URL}/digital-signatures/${signature.photo?.split('/').pop()}`}
-                        alt="Preview"
-                        thumbnail
-                        style={{ width: '80px', height: '50px', objectFit: 'cover', cursor: 'pointer' }}
-                        onClick={() => handlePreview(signature)}
-                        onError={(e) => {
-                          // Si la imagen no se carga, mostramos un placeholder
-                          e.currentTarget.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="80" height="50"%3E%3Crect fill="%23ddd" width="80" height="50"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" fill="%23999"%3ENo image%3C/text%3E%3C/svg%3E';
-                        }}
-                      />
-                    </td>
-                    <td>
-                      {signature.created_at ? (
-                        <small>
-                          {new Date(signature.created_at).toLocaleDateString('es-ES', {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit'
-                          })}
-                        </small>
-                      ) : 'N/A'}
-                    </td>
-                    <td>
-                      <div className="d-flex gap-2">
-                        <Button
-                          size="sm"
-                          variant="outline-info"
-                          onClick={() => handlePreview(signature)}
-                          title="Ver"
-                        >
-                          <Eye size={16} />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline-success"
-                          onClick={() => handleDownload(signature)}
-                          title="Descargar"
-                        >
-                          <Download size={16} />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline-primary"
-                          onClick={() => handleOpenModal(signature)}
-                          title="Editar"
-                        >
-                          <Edit2 size={16} />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline-danger"
-                          onClick={() => handleDelete(signature.id!)}
-                          title="Eliminar"
-                        >
-                          <Trash2 size={16} />
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </Table>
-          </Card.Body>
-        </Card>
+        <GenericTable
+          data={tableData}
+          columns={columns}
+          columnLabels={{
+            id: 'ID',
+            user_info: 'Usuario',
+            filename: 'Archivo',
+            created_at: 'Fecha de Creación'
+          }}
+          actions={actions}
+          onAction={handleAction}
+        />
       )}
 
       {/* Modal para crear/editar */}

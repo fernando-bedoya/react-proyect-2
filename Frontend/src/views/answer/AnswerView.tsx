@@ -7,12 +7,14 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Container, Card, Table, Button, Modal, Form, Alert, Badge, Spinner } from 'react-bootstrap';
-import { Plus, Edit2, Trash2, Eye, EyeOff } from 'lucide-react';
+import { Container, Button, Modal, Form, Alert, Spinner } from 'react-bootstrap';
+import { Plus } from 'lucide-react';
 import Swal from 'sweetalert2';
 import answerService, { Answer } from '../../services/answerService';
 import { userService } from '../../services/userService';
 import securityQuestionService, { SecurityQuestion } from '../../services/securityQuestionService';
+import GenericTable from '../../components/GenericTable';
+import { useTheme } from '../../context/ThemeContext';
 
 interface User {
   id: number;
@@ -26,12 +28,21 @@ interface AnswerWithDetails extends Answer {
 }
 
 const AnswerView: React.FC = () => {
+  const { designLibrary } = useTheme();
   const [answers, setAnswers] = useState<AnswerWithDetails[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [questions, setQuestions] = useState<SecurityQuestion[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [showAnswers, setShowAnswers] = useState<{ [key: number]: boolean }>({});
+
+  // Mapeo de colores por tema
+  const themeColors = {
+    bootstrap: { primary: 'success', buttonClass: 'btn-success' },
+    tailwind: { primary: 'primary', buttonClass: 'btn-primary' },
+    material: { primary: 'warning', buttonClass: 'btn-warning' }
+  };
+  const currentTheme = themeColors[designLibrary as keyof typeof themeColors] || themeColors.bootstrap;
   
   // Form state
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
@@ -154,10 +165,64 @@ const AnswerView: React.FC = () => {
     }));
   };
 
+  // Preparar datos para GenericTable
+  const tableData = answers.map(ans => ({
+    id: ans.id,
+    user_info: `${ans.user?.name || `Usuario #${ans.user_id}`} (${ans.user?.email || 'N/A'})`,
+    question_name: ans.question?.name || `Pregunta #${ans.security_question_id}`,
+    answer_content: showAnswers[ans.id!] ? ans.content : '••••••••',
+    created_at: ans.created_at ? new Date(ans.created_at).toLocaleDateString('es-ES') : 'N/A',
+    // Datos originales para acciones
+    _original: ans,
+    _isVisible: showAnswers[ans.id!]
+  }));
+
+  // Columnas
+  const columns = ['id', 'user_info', 'question_name', 'answer_content', 'created_at'];
+
+  // Acciones
+  const actions = [
+    {
+      name: 'toggle',
+      label: 'Ver/Ocultar',
+      variant: 'secondary' as const,
+      icon: 'view' as const
+    },
+    {
+      name: 'edit',
+      label: 'Editar',
+      variant: currentTheme.primary as 'primary' | 'success' | 'warning',
+      icon: 'edit' as const
+    },
+    {
+      name: 'delete',
+      label: 'Eliminar',
+      variant: 'danger' as const,
+      icon: 'delete' as const
+    }
+  ];
+
+  // Manejador de acciones
+  const handleAction = (actionName: string, row: any) => {
+    const answer = row._original;
+    
+    switch (actionName) {
+      case 'toggle':
+        toggleShowAnswer(answer.id!);
+        break;
+      case 'edit':
+        handleOpenModal(answer);
+        break;
+      case 'delete':
+        handleDelete(answer.id!);
+        break;
+    }
+  };
+
   if (loading) {
     return (
       <Container className="text-center p-5">
-        <Spinner animation="border" />
+        <Spinner animation="border" variant={currentTheme.primary} />
         <p className="mt-3">Cargando respuestas...</p>
       </Container>
     );
@@ -170,7 +235,7 @@ const AnswerView: React.FC = () => {
           <h2>💬 Respuestas de Seguridad</h2>
           <p className="text-muted">Gestión de respuestas de usuarios a preguntas de seguridad</p>
         </div>
-        <Button variant="success" onClick={() => handleOpenModal()}>
+        <Button variant={currentTheme.primary} onClick={() => handleOpenModal()}>
           <Plus size={20} className="me-2" />
           Nueva Respuesta
         </Button>
@@ -181,72 +246,19 @@ const AnswerView: React.FC = () => {
           📭 No hay respuestas de seguridad registradas
         </Alert>
       ) : (
-        <Card>
-          <Card.Body>
-            <Table responsive striped hover>
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Usuario</th>
-                  <th>Pregunta</th>
-                  <th>Respuesta</th>
-                  <th>Fecha</th>
-                  <th>Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                {answers.map(answer => (
-                  <tr key={answer.id}>
-                    <td>{answer.id}</td>
-                    <td>
-                      <div>
-                        <strong>{answer.user?.name || `Usuario #${answer.user_id}`}</strong>
-                        <br />
-                        <small className="text-muted">{answer.user?.email}</small>
-                      </div>
-                    </td>
-                    <td>{answer.question?.name || `Pregunta #${answer.security_question_id}`}</td>
-                    <td>
-                      <div className="d-flex align-items-center gap-2">
-                        <code>
-                          {showAnswers[answer.id!] ? answer.content : '••••••••'}
-                        </code>
-                        <Button
-                          size="sm"
-                          variant="outline-secondary"
-                          onClick={() => toggleShowAnswer(answer.id!)}
-                        >
-                          {showAnswers[answer.id!] ? <EyeOff size={16} /> : <Eye size={16} />}
-                        </Button>
-                      </div>
-                    </td>
-                    <td>
-                      <small>{new Date(answer.created_at!).toLocaleDateString()}</small>
-                    </td>
-                    <td>
-                      <div className="d-flex gap-2">
-                        <Button
-                          size="sm"
-                          variant="outline-primary"
-                          onClick={() => handleOpenModal(answer)}
-                        >
-                          <Edit2 size={16} />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline-danger"
-                          onClick={() => handleDelete(answer.id!)}
-                        >
-                          <Trash2 size={16} />
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </Table>
-          </Card.Body>
-        </Card>
+        <GenericTable
+          data={tableData}
+          columns={columns}
+          columnLabels={{
+            id: 'ID',
+            user_info: 'Usuario',
+            question_name: 'Pregunta',
+            answer_content: 'Respuesta',
+            created_at: 'Fecha'
+          }}
+          actions={actions}
+          onAction={handleAction}
+        />
       )}
 
       {/* Modal para crear/editar */}
@@ -323,7 +335,7 @@ const AnswerView: React.FC = () => {
             <Button variant="secondary" onClick={handleCloseModal}>
               Cancelar
             </Button>
-            <Button variant="success" type="submit">
+            <Button variant={currentTheme.primary} type="submit">
               {editingId ? 'Actualizar' : 'Crear'}
             </Button>
           </Modal.Footer>
