@@ -211,6 +211,31 @@ const GenericCRUDView: React.FC<GenericCRUDViewProps> = ({
         // Callback antes de crear
         const dataToSend = onBeforeCreate ? onBeforeCreate(formData) : formData;
         
+        // Normalizar formatos antes de enviar (p. ej. datetime-local => backend expects 'YYYY-MM-DD HH:MM:SS')
+        const normalizePayload = (payload: any) => {
+          try {
+            (formFields || []).forEach(field => {
+              const name = field.name;
+              if (!payload || payload[name] === undefined || payload[name] === null) return;
+
+              if (field.type === 'datetime-local' && typeof payload[name] === 'string') {
+                // Frontend sends e.g. '2025-11-26T17:28' or '2025-11-26T17:28:30'
+                const v: string = payload[name];
+                const m = v.match(/^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})(:\d{2})?$/);
+                if (m) {
+                  const datePart = m[1];
+                  const timePart = m[2] + (m[3] ? m[3] : ':00');
+                  payload[name] = `${datePart} ${timePart}`;
+                }
+              }
+            });
+          } catch (e) {
+            // noop
+          }
+        };
+
+        normalizePayload(dataToSend);
+
         // Si hay un handler personalizado para crear, usarlo en lugar del estándar
         if (customCreateHandler) {
           await customCreateHandler(dataToSend);
@@ -232,7 +257,26 @@ const GenericCRUDView: React.FC<GenericCRUDViewProps> = ({
       } else {
         // Callback antes de actualizar
         const dataToSend = onBeforeUpdate ? onBeforeUpdate(selectedItem.id, formData) : formData;
-        
+
+        // Normalizar formatos (datetime-local -> 'YYYY-MM-DD HH:MM:SS')
+        try {
+          (formFields || []).forEach(field => {
+            const name = field.name;
+            if (!dataToSend || dataToSend[name] === undefined || dataToSend[name] === null) return;
+            if (field.type === 'datetime-local' && typeof dataToSend[name] === 'string') {
+              const v: string = dataToSend[name];
+              const m = v.match(/^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})(:\d{2})?$/);
+              if (m) {
+                const datePart = m[1];
+                const timePart = m[2] + (m[3] ? m[3] : ':00');
+                dataToSend[name] = `${datePart} ${timePart}`;
+              }
+            }
+          });
+        } catch (e) {
+          // noop
+        }
+
         await update(endpoint, selectedItem.id, dataToSend);
         await Swal.fire({
           title: '¡Actualizado!',
