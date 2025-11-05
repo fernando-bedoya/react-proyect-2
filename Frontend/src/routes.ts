@@ -17,6 +17,7 @@ const AddressView = lazy(() => import('./views/address/AddressView'));
 
 // 🔄 REFACTORIZADO: Roles CRUD usando GenericCRUDView
 const RoleView = lazy(() => import('./views/role/RoleView'));
+const RoleDetailView = lazy(() => import('./views/role/RoleDetailView'));
 
 // User role manager (assign roles to users)
 const UserRoleManager = lazy(() => import('./components/UserRoleManager'));
@@ -114,6 +115,11 @@ const coreRoutes = [
     path: '/roles/list',
     title: 'Roles List',
     component: RoleView,
+  },
+  {
+    path: '/roles/view/:id',
+    title: 'Role Details',
+    component: RoleDetailView,
   },
   {
     path: '/permissions/list',
