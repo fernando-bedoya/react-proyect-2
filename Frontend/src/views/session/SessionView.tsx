@@ -50,6 +50,76 @@ const SessionView: React.FC = () => {
   // Controls: allow toggling between all sessions (CRUD) or filtered by userId
   const handleToggle = () => setShowAll(s => !s);
 
+  // Custom handler to create a session using sessionService.createSession
+  // GenericCRUDView by default posts to POST /sessions which may not match
+  // the backend API that expects POST /sessions/user/:userId. We provide
+  // this handler to ensure the correct endpoint is used and to convert
+  // the datetime-local value into the backend-expected format.
+  const customCreateHandler = async (formData: any) => {
+    try {
+      const userId = Number(formData.user_id ?? formData.userId ?? formData.user);
+      if (!userId || Number.isNaN(userId)) {
+        throw new Error('Usuario inválido. Seleccione un usuario válido.');
+      }
+
+      const payload: any = { ...formData };
+
+      // If the form includes user_id in the body, backend expects it in the URL
+      // so remove it from payload to avoid duplication (server may ignore it but be safe)
+      delete payload.user_id;
+
+      // GENERAR TOKEN AUTOMÁTICAMENTE si no viene en el form. Se usará como token de sesión
+      const generateRandomToken = () => {
+        try {
+          // Preferir crypto.randomUUID cuando esté disponible
+          if (typeof crypto !== 'undefined' && typeof (crypto as any).randomUUID === 'function') {
+            return (crypto as any).randomUUID();
+          }
+          // Fallback a getRandomValues (navegador)
+          if (typeof window !== 'undefined' && (window as any).crypto && (window as any).crypto.getRandomValues) {
+            const arr = new Uint8Array(16);
+            (window as any).crypto.getRandomValues(arr);
+            return Array.from(arr).map((b: number) => b.toString(16).padStart(2, '0')).join('');
+          }
+        } catch (e) {
+          // ignore and fallback
+        }
+        // Último recurso: timestamp + random
+        return 'tk_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
+      };
+
+      // Si existe un token de sesión en localStorage (Bearer), usarlo como token generado
+      const existingBearer = typeof window !== 'undefined' ? localStorage.getItem('session_token') : null;
+      if (existingBearer) {
+        payload.token = existingBearer;
+      } else if (!payload.token) {
+        payload.token = generateRandomToken();
+      }
+
+      // Normalize expiration value. GenericForm sends datetime-local like "YYYY-MM-DDTHH:MM"
+      // Backend expects "YYYY-MM-DD HH:MM:SS". Preserve seconds as :00 when absent.
+      if (payload.expiration && typeof payload.expiration === 'string') {
+        // Convert "2025-11-05T14:30" -> "2025-11-05 14:30:00"
+        payload.expiration = payload.expiration.replace('T', ' ');
+        if (!payload.expiration.match(/:\d{2}:\d{2}$/)) {
+          // If seconds absent, append :00
+          if (payload.expiration.match(/:\d{2}$/)) payload.expiration = payload.expiration + ':00';
+        }
+      }
+
+      // Call the sessionService helper which posts to /sessions/user/:userId
+      const created = await sessionService.createSession(userId, payload);
+
+      // Let the caller (GenericCRUDView) refresh the list. Provide a user-friendly message
+      await Swal.fire({ title: 'Sesión creada', text: 'La sesión se creó en el backend correctamente.', icon: 'success', confirmButtonColor: '#10b981' });
+      return created;
+    } catch (err: any) {
+      console.error('Error creando sesión manualmente:', err);
+      await Swal.fire({ title: 'Error', text: err?.response?.data?.message || err?.message || 'Error creando sesión', icon: 'error', confirmButtonColor: '#ef4444' });
+      throw err;
+    }
+  };
+
   // If showAll is true, render the full CRUD view
   if (showAll) {
     return (
@@ -87,15 +157,7 @@ const SessionView: React.FC = () => {
             relatedValueField: "id",
             relatedLabelField: "email"
           },
-          { 
-            name: "token", 
-            label: "Token de Sesión", 
-            type: "text", 
-            required: true, 
-            cols: 12,
-            placeholder: "Generado automáticamente o ingrese uno personalizado",
-            helpText: "Token único para identificar la sesión"
-          },
+          // Token se genera automáticamente al enviar el formulario; no se muestra en la UI
           { 
             name: "expiration", 
             label: "Fecha de Expiración", 
@@ -130,6 +192,9 @@ const SessionView: React.FC = () => {
         relatedEndpoints={[
           { name: "users", endpoint: "users", labelField: "email" }
         ]}
+        // Use a custom create handler so the session is created via POST /sessions/user/:userId
+        // and the expiration value is converted to the expected format.
+        customCreateHandler={customCreateHandler}
         dataTransformer={(sessions, relatedData) => {
           return sessions.map((session: any) => {
             const user = relatedData?.users?.find((u: any) => u.id === session.user_id);
