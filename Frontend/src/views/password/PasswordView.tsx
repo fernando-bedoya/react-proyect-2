@@ -378,6 +378,12 @@ const PasswordView: React.FC = () => {
           });
         }
       } else {
+        // En modo edición: si el usuario NO ingresó un nuevo contenido (empty string),
+        // no enviamos el campo `content` al backend para evitar sobrescribirlo.
+        if (!formData.content) {
+          delete payload.content;
+        }
+
         // Llamada al endpoint de actualización: PUT /api/passwords/{id}
         await axios.put(`${API_URL}${selectedPassword?.id}`, payload);
         await Swal.fire({
@@ -470,7 +476,12 @@ const PasswordView: React.FC = () => {
           label: 'Contraseña',
           type: 'password',
           required: modalMode === 'create',
-          disabled: modalMode === 'edit'
+          // Permitir que en edición el admin pueda ingresar una nueva contraseña.
+          // Si se deja vacío en edición, no se enviará el campo al backend (no se cambia la contraseña).
+          disabled: false,
+          placeholder: modalMode === 'edit' ? 'Dejar vacío para mantener la contraseña actual' : undefined,
+          helpText: modalMode === 'edit' ? 'Dejar vacío para no cambiar la contraseña. Si ingresas una nueva, se actualizará.' : undefined,
+          defaultValue: ''
         },
         {
           name: 'startAt',
