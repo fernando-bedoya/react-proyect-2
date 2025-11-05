@@ -43,10 +43,10 @@ const RoleView: React.FC = () => {
           name: "description", 
           label: "Descripción", 
           type: "textarea", 
-          required: false, 
+          required: true, 
           cols: 12,
           placeholder: "Describa las responsabilidades y permisos de este rol",
-          helpText: "Información adicional sobre el propósito del rol (opcional)"
+          helpText: "Información detallada sobre el propósito del rol (obligatorio)"
         }
       ]}
       customActions={[

@@ -183,7 +183,7 @@ const ListUsersWithRoles: React.FC = () => {
                 <RefreshCw size={16} />
                 Actualizar
               </Button>
-              <Button variant="success" onClick={() => navigate('/users/create')} className="d-flex align-items-center gap-2">
+              <Button variant="success" onClick={() => navigate('/users/assign-roles')} className="d-flex align-items-center gap-2">
                 <Plus size={18} />
                 Nuevo User-role
               </Button>
