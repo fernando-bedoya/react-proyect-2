@@ -20,6 +20,7 @@ import {
 import { auth } from '../../firebase';
 import { User } from '../../models/User';
 import { userService } from '../../services/userService';
+import sessionService from '../../services/sessionService';
 import Swal from 'sweetalert2';
 import { useDispatch } from 'react-redux';
 import { setUser } from '../../store/userSlice';
@@ -72,8 +73,23 @@ const SignUp: React.FC = () => {
       // 2. Guardar en backend
       const { confirmPassword, password, ...userData } = values;
       const createdUser = await saveUserToBackend(userData as { name: string; email: string });
-      
+
       if (createdUser) {
+        // Guardar en Redux
+        dispatch(setUser(createdUser.user));
+
+        // Intentar crear una sesión en el backend y guardar session_id/token
+        try {
+          const expiration = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24h
+          const newSession = await sessionService.createSession(createdUser.user.id, { expiration });
+          if (newSession?.id) localStorage.setItem('session_id', String(newSession.id));
+          if (newSession?.token) localStorage.setItem('session_token', String(newSession.token));
+          if (newSession) localStorage.setItem('session_obj', JSON.stringify(newSession));
+          console.log('Sesión creada en backend tras signup:', newSession);
+        } catch (err) {
+          console.warn('No se pudo crear sesión en backend tras signup:', err);
+        }
+
         Swal.fire({
           title: '¡Registro Exitoso!',
           text: 'Tu cuenta ha sido creada correctamente',
@@ -81,7 +97,7 @@ const SignUp: React.FC = () => {
           timer: 2000,
           showConfirmButton: false
         });
-        
+
         setTimeout(() => {
           navigate('/users/list');
         }, 2000);
@@ -128,6 +144,18 @@ const SignUp: React.FC = () => {
       
       // IMPORTANTE: Guardar el usuario en Redux para que se muestre en el header
       dispatch(setUser(backendResult.user));
+
+      // Crear sesión en backend
+      try {
+        const expiration = new Date(Date.now() + 24 * 60 * 60 * 1000);
+        const newSession = await sessionService.createSession(backendResult.user.id, { expiration });
+        if (newSession?.id) localStorage.setItem('session_id', String(newSession.id));
+        if (newSession?.token) localStorage.setItem('session_token', String(newSession.token));
+        if (newSession) localStorage.setItem('session_obj', JSON.stringify(newSession));
+        console.log('Sesión creada en backend tras Google signup/login:', newSession);
+      } catch (err) {
+        console.warn('No se pudo crear sesión en backend tras Google login:', err);
+      }
       
       if (backendResult.isNew) {
         // Usuario nuevo creado
@@ -186,6 +214,18 @@ const SignUp: React.FC = () => {
         // IMPORTANTE: Guardar el usuario en Redux para que se muestre en el header
         dispatch(setUser(backendResult.user));
 
+        // Crear sesión en backend
+        try {
+          const expiration = new Date(Date.now() + 24 * 60 * 60 * 1000);
+          const newSession = await sessionService.createSession(backendResult.user.id, { expiration });
+          if (newSession?.id) localStorage.setItem('session_id', String(newSession.id));
+          if (newSession?.token) localStorage.setItem('session_token', String(newSession.token));
+          if (newSession) localStorage.setItem('session_obj', JSON.stringify(newSession));
+          console.log('Sesión creada en backend tras GitHub signup/login:', newSession);
+        } catch (err) {
+          console.warn('No se pudo crear sesión en backend tras GitHub login:', err);
+        }
+
         if (backendResult.isNew) {
             // Usuario nuevo creado
             Swal.fire({
@@ -242,6 +282,18 @@ const SignUp: React.FC = () => {
       
       // IMPORTANTE: Guardar el usuario en Redux para que se muestre en el header
       dispatch(setUser(backendResult.user));
+
+        // Crear sesión en backend
+        try {
+          const expiration = new Date(Date.now() + 24 * 60 * 60 * 1000);
+          const newSession = await sessionService.createSession(backendResult.user.id, { expiration });
+          if (newSession?.id) localStorage.setItem('session_id', String(newSession.id));
+          if (newSession?.token) localStorage.setItem('session_token', String(newSession.token));
+          if (newSession) localStorage.setItem('session_obj', JSON.stringify(newSession));
+          console.log('Sesión creada en backend tras Microsoft signup/login:', newSession);
+        } catch (err) {
+          console.warn('No se pudo crear sesión en backend tras Microsoft login:', err);
+        }
       
       Swal.fire({
         title: '¡Bienvenido!',

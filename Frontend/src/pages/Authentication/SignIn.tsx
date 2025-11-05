@@ -16,6 +16,7 @@ import {
 } from 'firebase/auth';
 import { auth } from '../../firebase';
 import { userService } from '../../services/userService';
+import sessionService from '../../services/sessionService';
 import Swal from 'sweetalert2';
 import { useDispatch } from 'react-redux';
 import { setUser } from '../../store/userSlice';
@@ -30,6 +31,8 @@ const SignIn: React.FC = () => {
   const handleLogin = async (user: User) => {
     setLoading(true);
     setError(null);
+    let sessionCreated = false;
+    let createdSessionUserId: number | null = null;
     
     try {
       // 🔐 Iniciar sesión con SecurityService (maneja tokens JWT automáticamente)
@@ -39,14 +42,77 @@ const SignIn: React.FC = () => {
       // 🔄 Sincronizar estado con Redux Store (para que esté disponible globalmente)
       // Esto es crucial para el sistema de guardianes e interceptores
       dispatch(setUser(response.user || response));
-      
+
       // 💾 Guardar en localStorage (persistencia entre recargas)
       localStorage.setItem('user', JSON.stringify(response.user || response));
-      
+
+      // ----- Nuevo: crear sesión en el backend automáticamente -----
+      try {
+        // Buscar el usuario correspondiente en el backend por email
+        const email = (response.user && (response.user as any).email) || response.user?.email || '';
+        console.log('Buscando user en backend con email:', email);
+        if (email) {
+          const existingUser = await findUserInBackend(email);
+          console.log('Usuario encontrado en backend (existingUser):', existingUser);
+          if (existingUser && existingUser.id) {
+            // Calcular expiración (24 horas desde ahora)
+            const expiration = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+            // DEBUG: payload antes de enviar
+            const payload = { expiration };
+            console.log('Intentando crear sesión en backend con payload:', payload);
+
+            try {
+              // Crear sesión en backend (sessionService formatea la fecha si recibe Date)
+              const newSession = await sessionService.createSession(existingUser.id, payload);
+              console.log('Respuesta createSession:', newSession);
+
+              // Guardar datos mínimos de sesión para logout/revocar más tarde
+              try {
+                if (newSession?.token) localStorage.setItem('session_token', newSession.token);
+                if (newSession?.id) localStorage.setItem('session_id', String(newSession.id));
+                localStorage.setItem('session_obj', JSON.stringify(newSession));
+                console.log('✅ Sesión creada en backend y guardada en localStorage:', newSession);
+                sessionCreated = true;
+                createdSessionUserId = existingUser.id;
+              } catch (e) {
+                console.warn('No se pudo guardar la sesión en localStorage:', e);
+              }
+            } catch (createErr: any) {
+              console.error('Error al crear la sesión en backend (detalles):', createErr);
+              // Mostrar alerta al usuario para que vea el fallo (no bloqueamos el login)
+              try {
+                const msg = createErr?.response?.data?.message || createErr?.message || 'Error desconocido al crear sesión';
+                console.warn('Session creation failed message:', msg);
+                await Swal.fire({
+                  icon: 'warning',
+                  title: 'No se pudo crear la sesión',
+                  text: msg,
+                  confirmButtonColor: '#10b981'
+                });
+              } catch (swalErr) {
+                console.warn('No se pudo mostrar la alerta de fallo de sesión:', swalErr);
+              }
+            }
+          } else {
+            console.warn('Usuario autenticado no existe en backend; no se creó sesión.');
+          }
+        } else {
+          console.warn('No se encontró email en la respuesta de autenticación; no se creó sesión.');
+        }
+      } catch (sessionError) {
+        console.error('Error al intentar el flujo de creación de sesión:', sessionError);
+        // No bloqueamos el login por fallos en creación de sesión; continuar flujo normal
+      }
+
       await new Promise(resolve => setTimeout(resolve, 500));
-      
-      // ✅ Redirección a la página de usuarios después del login exitoso
-      navigate("/users/list");
+
+      // ✅ Redirección: si creamos sesión en backend, mostrar lista de sesiones (para ver la creada)
+      if (sessionCreated && createdSessionUserId) {
+        navigate(`/sessions/list?userId=${createdSessionUserId}`);
+      } else {
+        navigate("/users/list");
+      }
     } catch (error: any) {
       console.error('Error al iniciar sesión', error);
       
@@ -129,6 +195,25 @@ const SignIn: React.FC = () => {
     }
   };
 
+  // Helper: intentar crear sesión en backend para un usuario existente
+  const createBackendSession = async (existingUser: any) => {
+    try {
+      console.log('🔁 Intentando crear sesión en backend para user:', existingUser);
+      const expiration = new Date(Date.now() + 24 * 60 * 60 * 1000);
+      const payload = { expiration };
+      console.log('🔁 Payload de sesión:', payload);
+      const newSession = await sessionService.createSession(existingUser.id, payload);
+      console.log('✅ createSession response:', newSession);
+      if (newSession?.token) localStorage.setItem('session_token', newSession.token);
+      if (newSession?.id) localStorage.setItem('session_id', String(newSession.id));
+      localStorage.setItem('session_obj', JSON.stringify(newSession));
+      return newSession;
+    } catch (err: any) {
+      console.warn('⚠️ No se pudo crear sesión en backend:', err?.response?.data || err.message || err);
+      return null;
+    }
+  };
+
   // Manejo de login con Google
   const handleGoogleLogin = async () => {
     setLoading(true);
@@ -150,6 +235,9 @@ const SignIn: React.FC = () => {
       // Guardar en localStorage para el sistema JWT
       localStorage.setItem('user', JSON.stringify(existingUser));
 
+      // Intentar crear sesión en backend y redirigir apropiadamente
+      const createdSession = await createBackendSession(existingUser);
+
       // Mostrar notificación de bienvenida
       await Swal.fire({
         icon: 'success',
@@ -159,8 +247,11 @@ const SignIn: React.FC = () => {
         showConfirmButton: false
       });
 
-      // ✅ Redirección a la página de usuarios después del login exitoso con Google
-      navigate('/users/list');
+      if (createdSession) {
+        navigate(`/sessions/list?userId=${existingUser.id}`);
+      } else {
+        navigate('/users/list');
+      }
     } catch (error: any) {
       console.error('Error al iniciar sesión con Google:', error);
       
@@ -222,6 +313,9 @@ const SignIn: React.FC = () => {
       // Guardar en localStorage para el sistema JWT
       localStorage.setItem('user', JSON.stringify(existingUser));
 
+      // Intentar crear sesión en backend y redirigir apropiadamente
+      const createdSession = await createBackendSession(existingUser);
+
       // Mostrar notificación de bienvenida
       await Swal.fire({
         icon: 'success',
@@ -231,8 +325,11 @@ const SignIn: React.FC = () => {
         showConfirmButton: false
       });
 
-      // ✅ Redirección a la página de usuarios después del login exitoso con GitHub
-      navigate('/users/list');
+      if (createdSession) {
+        navigate(`/sessions/list?userId=${existingUser.id}`);
+      } else {
+        navigate('/users/list');
+      }
     } catch (error: any) {
       console.error('Error al iniciar sesión con GitHub:', error);
       

@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useSelector } from "react-redux";
 import { RootState } from "../store/store";
 import SecurityService from '../services/securityService';
+import sessionService from '../services/sessionService';
 import { useTheme } from '../context/ThemeContext';
 
 const DropdownUser = () => {
@@ -35,7 +36,29 @@ const DropdownUser = () => {
     console.log('🚪 Iniciando proceso de logout...');
     console.log('   Usuario actual:', user?.name, '(' + user?.email + ')');
     
-    // Paso 1: Llamar al servicio de seguridad para limpiar todo
+    // Paso 1: Intentar notificar al backend para revocar/eliminar la sesión
+    try {
+      const sessionId = localStorage.getItem('session_id');
+      if (!sessionId) {
+        console.log('No se encontró session_id en localStorage. No se intentará modificar sesión en backend.');
+      } else {
+        // Validación básica del formato UUID antes de intentar modificar
+        const uuidLike = /^[0-9a-fA-F\-]{36,}$/;
+        if (!uuidLike.test(sessionId)) {
+          console.warn('session_id presente pero no tiene formato UUID esperado. Se omitirá la operación en el backend.', sessionId);
+        } else {
+          // En lugar de eliminar la sesión, la marcamos como 'revoked' para mantener historial
+          sessionService.updateSession(sessionId, { state: 'revoked' }).then((updated) => {
+            if (updated) console.log('🔒 Sesión marcada como revocada en backend:', sessionId);
+            else console.warn('⚠ No se pudo marcar la sesión como revocada en backend:', sessionId);
+          }).catch(err => console.warn('Error al actualizar sesión en backend:', err));
+        }
+      }
+    } catch (err) {
+      console.warn('Error al intentar eliminar sesión en backend:', err);
+    }
+
+    // Paso 2: Llamar al servicio de seguridad para limpiar todo localmente
     SecurityService.logout();
     
     // Paso 2: Cerrar el dropdown
