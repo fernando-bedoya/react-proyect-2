@@ -1,27 +1,59 @@
 /**
- * SecurityService - Servicio reutilizable para autenticación con Firebase
+ * SecurityService - Servicio de autenticación con Firebase
  * 
- * Este servicio maneja todo el flujo de autenticación usando Firebase Authentication:
+ * =====================================================
+ * ARQUITECTURA DEL SISTEMA DE AUTENTICACIÓN
+ * =====================================================
  * 
- * FLUJO DE AUTENTICACIÓN:
- * 1. Usuario ingresa al login con email/password
- * 2. Se llama al método signInWithEmailAndPassword de Firebase
- * 3. Firebase valida las credenciales y responde con un token JWT
- * 4. El frontend guarda el token en localStorage (key: 'access_token')
- * 5. Se actualiza la sesión del usuario en Redux
- * 6. Todas las peticiones subsecuentes envían el token automáticamente via interceptor de Axios (api.js)
+ * Este servicio implementa autenticación usando FIREBASE AUTH como sistema principal:
  * 
- * RESPONSABILIDADES:
- * - Autenticar usuarios mediante email/password
- * - Almacenar el token JWT en localStorage
- * - Actualizar el estado del usuario en Redux
- * - Proporcionar métodos para verificar autenticación
- * - Limpiar tokens y sesión al cerrar sesión
+ * FIREBASE AUTH (Sistema de Login):
+ * - Valida credenciales (email/password)
+ * - Genera tokens JWT para sesiones
+ * - Maneja autenticación social (Google, GitHub, etc.)
+ * - Sistema de seguridad robusto y probado
  * 
- * INTEGRACIÓN CON AXIOS:
- * El archivo api.js ya tiene configurado un interceptor que automáticamente:
+ * BACKEND (Historial y Auditoría):
+ * - Guarda historial de contraseñas en tabla 'passwords'
+ * - Contraseñas hasheadas para auditoría
+ * - NO se usa para validar login
+ * - Solo para rastrear cambios y expiración
+ * 
+ * =====================================================
+ * FLUJO DE AUTENTICACIÓN
+ * =====================================================
+ * 
+ * LOGIN:
+ * 1. Usuario ingresa email/password en el formulario
+ * 2. Frontend llama a signInWithEmailAndPassword(email, password)
+ * 3. FIREBASE valida las credenciales contra su base de datos
+ * 4. Si válido: Firebase devuelve un token JWT
+ * 5. Token se guarda en localStorage (key: 'access_token')
+ * 6. Usuario queda autenticado en Redux
+ * 7. Axios interceptor agrega el token a todas las peticiones
+ * 
+ * NOTA IMPORTANTE:
+ * - El backend NO valida contraseñas durante el login
+ * - Las contraseñas del backend son solo para auditoría
+ * - Firebase Auth es la única fuente de verdad para autenticación
+ * 
+ * =====================================================
+ * RESPONSABILIDADES
+ * =====================================================
+ * 
+ * - Autenticar usuarios mediante Firebase Auth
+ * - Almacenar token JWT en localStorage
+ * - Actualizar estado del usuario en Redux
+ * - Verificar si hay sesión activa
+ * - Cerrar sesión y limpiar tokens
+ * 
+ * =====================================================
+ * INTEGRACIÓN CON AXIOS
+ * =====================================================
+ * 
+ * El interceptor de Axios automáticamente:
  * - Lee el token de localStorage ('access_token')
- * - Lo agrega a cada petición HTTP como header: Authorization: Bearer {token}
+ * - Lo agrega a cada petición HTTP: Authorization: Bearer {token}
  * - Maneja errores 401 (token inválido) redirigiendo al login
  */
 

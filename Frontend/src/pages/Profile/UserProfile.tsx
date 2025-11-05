@@ -305,35 +305,52 @@ const UserProfile: React.FC = () => {
     }
   ];
   
-  // Colores según el tema
-  const themeColors = {
+  // Colores según el tema activo (bootstrap, tailwind, material)
+  // Cada tema tiene su paleta de colores distintiva con ALTO CONTRASTE para máxima visibilidad
+  const themeColors: Record<string, {
+    bg: string;
+    card: string;
+    button: string;
+    text: string; // Siempre texto oscuro para contraste con fondo claro
+    icon: string;
+    headerBg: string; // Fondo distintivo del header por tema
+  }> = {
     bootstrap: {
       bg: 'bg-gradient-to-br from-emerald-50 to-green-100',
       card: 'bg-white border-4 border-emerald-500 shadow-2xl',
-      button: 'bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700',
-      text: 'text-emerald-900',
-      icon: 'text-emerald-600'
+      button: '!bg-gradient-to-r !from-emerald-600 !to-green-600 hover:!from-emerald-700 hover:!to-green-700',
+      text: '!text-gray-900', // Negro para máximo contraste
+      icon: '!text-emerald-600',
+      headerBg: 'bg-gradient-to-r from-emerald-700 via-emerald-800 to-green-900'
     },
     tailwind: {
       bg: 'bg-gradient-to-br from-blue-50 to-indigo-100',
       card: 'bg-white border-4 border-blue-500 shadow-2xl',
-      button: 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700',
-      text: 'text-blue-900',
-      icon: 'text-blue-600'
+      button: '!bg-gradient-to-r !from-blue-600 !to-indigo-600 hover:!from-blue-700 hover:!to-indigo-700',
+      text: '!text-gray-900', // Negro para máximo contraste
+      icon: '!text-blue-600',
+      headerBg: 'bg-gradient-to-r from-blue-700 via-blue-800 to-indigo-900'
     },
     material: {
       bg: 'bg-gradient-to-br from-amber-50 to-yellow-100',
       card: 'bg-white border-4 border-amber-500 shadow-2xl',
-      button: 'bg-gradient-to-r from-amber-600 to-yellow-600 hover:from-amber-700 hover:to-yellow-700',
-      text: 'text-amber-900',
-      icon: 'text-amber-600'
+      button: '!bg-gradient-to-r !from-amber-600 !to-yellow-600 hover:!from-amber-700 hover:!to-yellow-700',
+      text: '!text-gray-900', // Negro para máximo contraste
+      icon: '!text-amber-600',
+      headerBg: 'bg-gradient-to-r from-amber-700 via-amber-800 to-yellow-900'
     }
   };
   
-  const colors = themeColors[designLibrary];
+  // Obtener colores del tema actual con fallback a bootstrap si no existe
+  const colors = themeColors[designLibrary] || themeColors['bootstrap'];
+  
+  // Debug: Mostrar tema actual en consola (comentar en producción)
+  console.log('Tema activo en UserProfile:', designLibrary, colors);
   
   return (
-    <div className={`min-h-screen ${colors.bg} py-12 px-4`}>
+    // El atributo "key" fuerza a React a re-renderizar completamente cuando cambia el tema
+    // Esto asegura que todos los colores se actualicen correctamente
+    <div key={designLibrary} className={`min-h-screen ${colors.bg} py-12 px-4`}>
       <div className="max-w-4xl mx-auto">
         {/* Botón de regresar */}
         <button
@@ -346,8 +363,8 @@ const UserProfile: React.FC = () => {
         
         {/* Card principal del perfil */}
         <div className={`${colors.card} rounded-3xl overflow-hidden`}>
-          {/* Header con avatar grande */}
-          <div className="bg-gradient-to-r from-gray-800 via-gray-900 to-black p-12 text-center relative">
+          {/* Header con avatar grande - Color cambia según el tema activo */}
+          <div className={`${colors.headerBg} p-12 text-center relative`}>
             {/* Avatar con foto de perfil o iniciales */}
             {profile?.photo ? (
               // Si existe foto de perfil, mostrarla
@@ -400,58 +417,58 @@ const UserProfile: React.FC = () => {
           </div>
           
           {/* Información detallada */}
-          <div className="p-12">
-            <h2 className={`text-2xl font-bold ${colors.text} mb-8`}>
+          <div className="p-12" style={{ backgroundColor: '#ffffff' }}>
+            <h2 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '32px', color: '#111827' }}>
               Información del Perfil
             </h2>
             
             <div className="space-y-6">
               {/* Nombre */}
-              <div className="flex items-start gap-4 p-6 bg-gray-50 dark:bg-gray-800 rounded-2xl">
+              <div className="flex items-start gap-4 p-6 bg-gray-50 rounded-2xl border-2 border-gray-200">
                 <div className={`${colors.icon} mt-1`}>
                   <UserIcon size={24} />
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm text-gray-500 dark:text-gray-400 font-medium mb-1">
+                  <p style={{ color: '#6b7280', fontSize: '14px', fontWeight: 500, marginBottom: '4px' }}>
                     Nombre Completo
                   </p>
-                  <p className={`text-lg font-semibold ${colors.text} dark:text-white`}>
+                  <p style={{ color: '#111827', fontSize: '18px', fontWeight: 'bold' }}>
                     {user.name || 'No especificado'}
                   </p>
                 </div>
               </div>
               
               {/* Email */}
-              <div className="flex items-start gap-4 p-6 bg-gray-50 dark:bg-gray-800 rounded-2xl">
+              <div className="flex items-start gap-4 p-6 bg-gray-50 rounded-2xl border-2 border-gray-200">
                 <div className={`${colors.icon} mt-1`}>
                   <Mail size={24} />
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm text-gray-500 dark:text-gray-400 font-medium mb-1">
+                  <p style={{ color: '#6b7280', fontSize: '14px', fontWeight: 500, marginBottom: '4px' }}>
                     Correo Electrónico
                   </p>
-                  <p className={`text-lg font-semibold ${colors.text} dark:text-white`}>
+                  <p style={{ color: '#111827', fontSize: '18px', fontWeight: 'bold' }}>
                     {user.email || 'No especificado'}
                   </p>
                 </div>
               </div>
               
               {/* Teléfono */}
-              <div className="flex items-start gap-4 p-6 bg-gray-50 dark:bg-gray-800 rounded-2xl">
+              <div className="flex items-start gap-4 p-6 bg-gray-50 rounded-2xl border-2 border-gray-200">
                 <div className={`${colors.icon} mt-1`}>
                   <Phone size={24} />
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm text-gray-500 dark:text-gray-400 font-medium mb-1">
+                  <p style={{ color: '#6b7280', fontSize: '14px', fontWeight: 500, marginBottom: '4px' }}>
                     Teléfono
                   </p>
-                  <p className={`text-lg font-semibold ${colors.text} dark:text-white`}>
+                  <p style={{ color: '#111827', fontSize: '18px', fontWeight: 'bold' }}>
                     {user.phone || 'No especificado'}
                   </p>
                 </div>
               </div>
 
-              {/* Firma Digital */}
+              {/* Firma Digital - Sección mejorada con mejor contraste visual */}
               <div className="flex items-start gap-4 p-6 bg-gray-50 dark:bg-gray-800 rounded-2xl">
                 <div className={`${colors.icon} mt-1`}>
                   <FileSignature size={24} />
@@ -461,27 +478,36 @@ const UserProfile: React.FC = () => {
                     Firma Digital
                   </p>
                   {signature?.photo ? (
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-4 flex-wrap">
+                      {/* Imagen de la firma con borde visible */}
                       <img
                         src={uploadService.getImageUrl(signature.photo, 'signature')}
                         alt="Firma digital"
-                        className="h-16 border-2 border-gray-300 dark:border-gray-600 rounded-lg object-contain bg-white"
+                        className="h-16 border-2 border-gray-300 dark:border-gray-600 rounded-lg object-contain bg-white p-2"
+                        onError={(e) => {
+                          // Placeholder si la imagen no carga
+                          e.currentTarget.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="60"%3E%3Crect fill="%23e5e7eb" width="100" height="60"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" fill="%236b7280" font-size="10"%3ENo image%3C/text%3E%3C/svg%3E';
+                        }}
                       />
+                      {/* Botón con estilos mejorados y más visibles */}
                       <button
                         onClick={() => setShowSignatureModal(true)}
-                        className={`${colors.button} text-white px-4 py-2 rounded-lg font-semibold text-sm transition-all`}
+                        className={`${colors.button} text-white px-5 py-2.5 rounded-lg font-semibold text-sm transition-all transform hover:scale-105 shadow-md hover:shadow-lg`}
+                        style={{ minWidth: '140px' }}
                       >
                         Cambiar Firma
                       </button>
                     </div>
                   ) : (
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-4 flex-wrap">
                       <p className="text-gray-500 dark:text-gray-400 italic">
                         No has subido una firma digital
                       </p>
+                      {/* Botón con estilos mejorados y más visibles */}
                       <button
                         onClick={() => setShowSignatureModal(true)}
-                        className={`${colors.button} text-white px-4 py-2 rounded-lg font-semibold text-sm transition-all`}
+                        className={`${colors.button} text-white px-5 py-2.5 rounded-lg font-semibold text-sm transition-all transform hover:scale-105 shadow-md hover:shadow-lg`}
+                        style={{ minWidth: '140px' }}
                       >
                         Subir Firma
                       </button>
@@ -538,18 +564,18 @@ const UserProfile: React.FC = () => {
             buttonText="Seleccionar Foto"
           />
 
-          {/* Botones de acción con colores del tema activo */}
-          <div className="d-flex gap-2 mt-4">
+          {/* Botones de acción con mejor contraste y visibilidad */}
+          <div className="flex gap-3 mt-4">
             <button
               onClick={handleUploadPhoto}
               disabled={!selectedPhoto || uploading}
-              className={`flex-1 ${colors.button} text-white px-4 py-2 rounded-lg font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed`}
+              className={`flex-1 ${colors.button} text-white px-6 py-3 rounded-lg font-bold text-base transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none`}
             >
               {uploading ? (
-                <>
-                  <span className="spinner-border spinner-border-sm me-2"></span>
+                <span className="flex items-center justify-center gap-2">
+                  <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
                   Subiendo...
-                </>
+                </span>
               ) : (
                 'Guardar Foto'
               )}
@@ -560,7 +586,7 @@ const UserProfile: React.FC = () => {
                 setSelectedPhoto(null);
               }}
               disabled={uploading}
-              className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg font-bold text-base transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             >
               Cancelar
             </button>
@@ -590,18 +616,18 @@ const UserProfile: React.FC = () => {
             buttonText="Seleccionar Firma"
           />
 
-          {/* Botones de acción con colores del tema activo */}
-          <div className="d-flex gap-2 mt-4">
+          {/* Botones de acción con mejor contraste y visibilidad */}
+          <div className="flex gap-3 mt-4">
             <button
               onClick={handleUploadSignature}
               disabled={!selectedSignature || uploading}
-              className={`flex-1 ${colors.button} text-white px-4 py-2 rounded-lg font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed`}
+              className={`flex-1 ${colors.button} text-white px-6 py-3 rounded-lg font-bold text-base transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none`}
             >
               {uploading ? (
-                <>
-                  <span className="spinner-border spinner-border-sm me-2"></span>
+                <span className="flex items-center justify-center gap-2">
+                  <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
                   Subiendo...
-                </>
+                </span>
               ) : (
                 'Guardar Firma'
               )}
@@ -612,7 +638,7 @@ const UserProfile: React.FC = () => {
                 setSelectedSignature(null);
               }}
               disabled={uploading}
-              className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg font-bold text-base transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             >
               Cancelar
             </button>

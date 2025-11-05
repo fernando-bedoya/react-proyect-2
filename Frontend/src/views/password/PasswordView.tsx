@@ -1,3 +1,63 @@
+/**
+ * PasswordView - Gestión del Historial de Contraseñas
+ * 
+ * =====================================================
+ * ARQUITECTURA DEL SISTEMA DE CONTRASEÑAS
+ * =====================================================
+ * 
+ * Este sistema implementa un modelo HÍBRIDO:
+ * 
+ * 1. FIREBASE AUTH (Autenticación Real)
+ *    - Sistema de login principal
+ *    - Valida credenciales durante el inicio de sesión
+ *    - Genera tokens JWT para las sesiones
+ *    - Usuario ingresa email/password → Firebase valida → Token
+ * 
+ * 2. BACKEND (Historial y Auditoría)
+ *    - Guarda historial completo de contraseñas
+ *    - Tabla: passwords (user_id, content, startAt, endAt)
+ *    - Contraseñas hasheadas con werkzeug
+ *    - Validez temporal (startAt/endAt) para expiración
+ *    - NO se usa para autenticación, solo auditoría
+ * 
+ * =====================================================
+ * FLUJO DE TRABAJO
+ * =====================================================
+ * 
+ * REGISTRO DE USUARIO (SignUp.tsx):
+ * 1. Usuario crea cuenta con email/password
+ * 2. Firebase Auth crea usuario
+ * 3. Backend guarda datos del usuario (User table)
+ * 4. Backend guarda contraseña inicial en historial (passwords table)
+ * 
+ * CAMBIO DE CONTRASEÑA (Este componente):
+ * 1. Admin crea nueva contraseña para un usuario
+ * 2. Contraseña se guarda en backend (historial/auditoría)
+ * 3. Sistema pregunta si sincronizar con Firebase Auth
+ * 4. Si sí: actualiza Firebase Auth (afecta login)
+ * 5. Si no: solo queda en backend (auditoría)
+ * 
+ * LOGIN (securityService.ts):
+ * 1. Usuario ingresa email/password
+ * 2. Firebase Auth valida credenciales
+ * 3. Si válido: Firebase devuelve token JWT
+ * 4. Token se guarda en localStorage
+ * 5. Backend NO participa en la validación
+ * 
+ * =====================================================
+ * VENTAJAS DE ESTE MODELO
+ * =====================================================
+ * 
+ * ✓ Firebase maneja toda la seguridad de autenticación
+ * ✓ Backend mantiene historial completo (auditoría)
+ * ✓ Se puede rastrear cambios de contraseña
+ * ✓ Validez temporal con startAt/endAt
+ * ✓ No se exponen contraseñas en el proceso de login
+ * ✓ Sincronización opcional (flexibilidad)
+ * 
+ * =====================================================
+ */
+
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Container, Row, Col, Button, Spinner, Alert, Badge, Form } from 'react-bootstrap';
@@ -198,21 +258,46 @@ const PasswordView: React.FC = () => {
       };
 
       if (modalMode === 'create') {
-        // Llamada al endpoint de creación: POST /api/passwords/user/{user_id}
-        // El backend requiere el user_id en la URL, no en el body
-        await axios.post(`${API_URL}user/${formData.user_id}`, payload);
+        // ==========================================
+        // FLUJO DE CREACIÓN DE CONTRASEÑA
+        // ==========================================
+        // 1. Guardar en el historial del BACKEND (auditoría)
+        // 2. Intentar sincronizar con FIREBASE AUTH (autenticación)
+        //
+        // Sistema Híbrido:
+        // - Firebase Auth: Sistema de autenticación real (login)
+        // - Backend: Historial de contraseñas para auditoría
+        // ==========================================
         
+        // PASO 1: Guardar contraseña en el historial del backend
+        console.log('💾 Guardando contraseña en historial del backend...');
+        await axios.post(`${API_URL}user/${formData.user_id}`, payload);
+        console.log('✅ Contraseña guardada en backend (auditoría)');
+        
+        // PASO 2: Intentar sincronizar con Firebase Auth
         try {
           const { auth } = await import('../../firebase');
           const { updatePassword: firebaseUpdatePassword, EmailAuthProvider, reauthenticateWithCredential } = await import('firebase/auth');
           const currentUser = auth.currentUser;
           
           if (currentUser && formData.content) {
+            console.log('🔥 Intentando sincronizar con Firebase Auth...');
             // Firebase requiere reautenticación para cambiar contraseña
             // Solicitar la contraseña actual al usuario
             const { value: currentPassword } = await Swal.fire({
               title: 'Sincronización Firebase',
-              text: 'Para sincronizar con Firebase Auth, ingresa tu contraseña actual:',
+              html: `
+                <div class="text-start">
+                  <p>La contraseña se guardó exitosamente en el <strong>historial del backend</strong>.</p>
+                  <hr/>
+                  <p class="text-muted mb-0">
+                    <small>
+                      ¿Deseas también actualizar la contraseña de <strong>Firebase Auth</strong> (login)?<br/>
+                      Ingresa tu contraseña actual para sincronizar:
+                    </small>
+                  </p>
+                </div>
+              `,
               input: 'password',
               inputPlaceholder: 'Contraseña actual',
               inputAttributes: {
@@ -221,7 +306,7 @@ const PasswordView: React.FC = () => {
               },
               showCancelButton: true,
               confirmButtonText: 'Sincronizar',
-              cancelButtonText: 'Omitir',
+              cancelButtonText: 'Solo Backend',
               confirmButtonColor: '#10b981',
               cancelButtonColor: '#6c757d'
             });
@@ -235,51 +320,83 @@ const PasswordView: React.FC = () => {
                 );
                 await reauthenticateWithCredential(currentUser, credential);
                 
-                // Ahora actualizar la contraseña
+                // Ahora actualizar la contraseña en Firebase
                 await firebaseUpdatePassword(currentUser, formData.content);
                 
+                console.log('✅ Contraseña sincronizada con Firebase Auth');
                 await Swal.fire({
                   icon: 'success',
-                  title: 'Contraseña Sincronizada',
-                  text: 'La contraseña se guardó y sincronizó con Firebase Auth.',
+                  title: '✅ Sincronización Completa',
+                  html: `
+                    <div class="text-start">
+                      <p>✓ Contraseña guardada en <strong>backend</strong> (historial/auditoría)</p>
+                      <p>✓ Contraseña actualizada en <strong>Firebase Auth</strong> (login)</p>
+                    </div>
+                  `,
                   confirmButtonColor: '#10b981',
                   timer: 3000
                 });
               } catch (reAuthErr: any) {
-                console.error('Error de reautenticación:', reAuthErr);
+                console.error('❌ Error de reautenticación:', reAuthErr);
                 await Swal.fire({
                   icon: 'warning',
-                  title: 'Contraseña Guardada (Sin Sincronización)',
-                  html: '<p>La contraseña se guardó en la base de datos, pero <strong>no se pudo sincronizar con Firebase Auth</strong>.</p><small>Verifica tu contraseña actual.</small>',
-                  confirmButtonColor: '#10b981'
+                  title: '⚠️ Sincronización Parcial',
+                  html: `
+                    <div class="text-start">
+                      <p>✓ Contraseña guardada en <strong>backend</strong> (historial/auditoría)</p>
+                      <p>✗ <strong>No se pudo sincronizar con Firebase Auth</strong></p>
+                      <hr/>
+                      <small class="text-muted">Verifica tu contraseña actual o intenta nuevamente.</small>
+                    </div>
+                  `,
+                  confirmButtonColor: '#f59e0b'
                 });
               }
             } else {
               // Usuario canceló la sincronización
+              console.log('ℹ️ Usuario omitió sincronización con Firebase');
               await Swal.fire({
-                icon: 'success',
-                title: 'Contraseña Creada',
-                text: 'Contraseña guardada exitosamente (sin sincronización Firebase)',
+                icon: 'info',
+                title: 'Contraseña Guardada',
+                html: `
+                  <div class="text-start">
+                    <p>✓ Contraseña guardada en <strong>backend</strong> (historial/auditoría)</p>
+                    <p class="text-muted mb-0"><small>No se sincronizó con Firebase Auth</small></p>
+                  </div>
+                `,
                 confirmButtonColor: '#10b981',
-                timer: 2000
+                timer: 2500
               });
             }
           } else {
+            // No hay usuario autenticado actualmente
+            console.log('ℹ️ No hay usuario autenticado en Firebase');
             await Swal.fire({
               icon: 'success',
-              title: 'Contraseña Creada',
-              text: 'Contraseña guardada exitosamente',
+              title: 'Contraseña Guardada',
+              html: `
+                <div class="text-start">
+                  <p>✓ Contraseña guardada en <strong>backend</strong> (historial/auditoría)</p>
+                </div>
+              `,
               confirmButtonColor: '#10b981',
               timer: 2000
             });
           }
         } catch (firebaseErr: any) {
-          console.error('Error Firebase:', firebaseErr);
+          console.error('❌ Error Firebase:', firebaseErr);
           await Swal.fire({
             icon: 'warning',
-            title: 'Contraseña Guardada (Sin Sincronización)',
-            html: '<p>La contraseña se guardó en la base de datos, pero <strong>no se pudo sincronizar con Firebase Auth</strong>.</p>',
-            confirmButtonColor: '#10b981'
+            title: '⚠️ Sincronización Parcial',
+            html: `
+              <div class="text-start">
+                <p>✓ Contraseña guardada en <strong>backend</strong> (historial/auditoría)</p>
+                <p>✗ <strong>No se pudo sincronizar con Firebase Auth</strong></p>
+                <hr/>
+                <small class="text-muted">La contraseña solo está disponible en el backend como auditoría.</small>
+              </div>
+            `,
+            confirmButtonColor: '#f59e0b'
           });
         }
       } else {

@@ -204,9 +204,13 @@ class UploadService {
    * Construye la URL completa de una imagen
    * El backend sirve las imágenes desde /api/profiles/{filename} o /api/digital-signatures/{filename}
    * 
-   * @param filename - Nombre del archivo retornado por el backend
+   * IMPORTANTE: El backend guarda la ruta completa en la BD (ej: "profiles/uuid_file.png")
+   * pero el endpoint solo espera el nombre del archivo (ej: "uuid_file.png")
+   * por lo tanto debemos extraer solo el nombre del archivo de la ruta.
+   * 
+   * @param filename - Ruta del archivo retornado por el backend (ej: "profiles/uuid_file.png")
    * @param type - Tipo de imagen: 'profile' o 'signature'
-   * @returns URL completa de la imagen
+   * @returns URL completa de la imagen para mostrar en el frontend
    */
   getImageUrl(filename: string, type: 'profile' | 'signature'): string {
     if (!filename) return '';
@@ -216,9 +220,16 @@ class UploadService {
       return filename;
     }
     
-    // Construir URL según el tipo
+    // Extraer solo el nombre del archivo de la ruta completa
+    // Ej: "profiles/uuid_filename.png" → "uuid_filename.png"
+    // Ej: "digital-signatures/uuid_file.png" → "uuid_file.png"
+    const actualFilename = filename.split('/').pop() || filename;
+    
+    // Construir URL según el tipo de imagen
+    // profiles → /api/profiles/{filename}
+    // signature → /api/digital-signatures/{filename}
     const endpoint = type === 'profile' ? 'profiles' : 'digital-signatures';
-    return `${API_URL}/${endpoint}/${filename}`;
+    return `${API_URL}/${endpoint}/${actualFilename}`;
   }
 }
 

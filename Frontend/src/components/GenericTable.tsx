@@ -418,26 +418,61 @@ const GenericTable: React.FC<GenericTableProps> = ({
                       <td className="px-6 py-4 text-center">
                         <div className="flex gap-2 justify-center">
                           {actions.map((action) => {
-                            // 🎨 Colores específicos según el tipo de acción
-                            const actionColors = {
-                              edit: 'bg-blue-500 hover:bg-blue-600 text-white',
-                              delete: 'bg-red-500 hover:bg-red-600 text-white',
-                              view: 'bg-green-500 hover:bg-green-600 text-white'
+                            // 🎨 Colores específicos según el tipo de acción con estilos inline para garantizar visibilidad
+                            const actionStyles = {
+                              view: {
+                                backgroundColor: '#10b981',
+                                color: '#ffffff',
+                                border: 'none'
+                              },
+                              edit: {
+                                backgroundColor: '#3b82f6',
+                                color: '#ffffff',
+                                border: 'none'
+                              },
+                              delete: {
+                                backgroundColor: '#ef4444',
+                                color: '#ffffff',
+                                border: 'none'
+                              }
                             };
-                            const colorClass = actionColors[action.name as keyof typeof actionColors] || 'bg-blue-500 hover:bg-blue-600 text-white';
+                            const buttonStyle = actionStyles[action.name as keyof typeof actionStyles] || {
+                              backgroundColor: '#3b82f6',
+                              color: '#ffffff',
+                              border: 'none'
+                            };
                             
                             return (
                               <button
                                 key={action.name}
                                 onClick={() => onAction(action.name, item)}
                                 title={action.label}
-                                className={`px-3 py-2 rounded-lg font-bold text-xs uppercase tracking-wide ${colorClass} hover:scale-110 transform transition-all duration-200 shadow-md hover:shadow-xl`}
-                                style={{ fontFamily: '"Poppins", sans-serif' }}
+                                className="px-3 py-2 rounded-lg font-bold text-xs uppercase tracking-wide hover:scale-110 transform transition-all duration-200 shadow-md hover:shadow-xl"
+                                style={{
+                                  ...buttonStyle,
+                                  fontFamily: '"Poppins", sans-serif',
+                                  cursor: 'pointer',
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  minWidth: '40px',
+                                  minHeight: '40px'
+                                }}
+                                onMouseEnter={(e) => {
+                                  const btn = e.currentTarget;
+                                  if (action.name === 'view') btn.style.backgroundColor = '#059669';
+                                  else if (action.name === 'edit') btn.style.backgroundColor = '#2563eb';
+                                  else if (action.name === 'delete') btn.style.backgroundColor = '#dc2626';
+                                }}
+                                onMouseLeave={(e) => {
+                                  const btn = e.currentTarget;
+                                  if (action.name === 'view') btn.style.backgroundColor = '#10b981';
+                                  else if (action.name === 'edit') btn.style.backgroundColor = '#3b82f6';
+                                  else if (action.name === 'delete') btn.style.backgroundColor = '#ef4444';
+                                }}
                               >
-                                <span className="text-white">
-                                  {action.icon && getActionIcon(action.icon)}
-                                  {!action.icon && <span>{action.label}</span>}
-                                </span>
+                                {action.icon && getActionIcon(action.icon)}
+                                {!action.icon && <span>{action.label}</span>}
                               </button>
                             );
                           })}

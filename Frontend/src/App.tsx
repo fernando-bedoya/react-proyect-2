@@ -35,6 +35,7 @@ import { Toaster } from 'react-hot-toast';
 
 import SignIn from './pages/Authentication/SignIn';
 import SignUp from './pages/Authentication/SignUp';
+import ForgotPassword from './pages/Authentication/ForgotPassword';
 import Loader from './common/Loader';
 import routes from './routes';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -61,6 +62,7 @@ function App() {
         {/* 🔓 Rutas públicas - SIN layout (sin sidebar ni header) */}
         <Route path="/auth/signin" element={<SignIn />} />
         <Route path="/auth/signup" element={<SignUp />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
         
         {/* 🔐 Rutas protegidas - CON layout (con sidebar y header, solo para usuarios autenticados) */}
         <Route element={

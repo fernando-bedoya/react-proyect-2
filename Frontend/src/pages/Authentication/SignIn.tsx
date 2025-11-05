@@ -594,7 +594,16 @@ const SignIn: React.FC = () => {
 
                     <div className="d-flex justify-content-between align-items-center mb-4">
                       <Form.Check type="checkbox" id="remember-me" label="Recordarme" />
-                      <a href="#" style={{ color: '#10b981' }}>¿Olvidó su contraseña?</a>
+                      <a 
+                        href="/forgot-password" 
+                        style={{ color: '#10b981', textDecoration: 'none' }}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          navigate('/forgot-password');
+                        }}
+                      >
+                        ¿Olvidó su contraseña?
+                      </a>
                     </div>
 
                     <Button

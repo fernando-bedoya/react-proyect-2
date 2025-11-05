@@ -1,6 +1,17 @@
 /**
- * SecurityQuestionView - Usando GenericCRUDView
- * ¡Mira qué simple! Solo 18 líneas vs 150+ líneas de la versión anterior
+ * SecurityQuestionView - Gestión de Preguntas de Seguridad
+ * 
+ * BACKEND (ya implementado):
+ * - GET    /api/security-questions/     -> Todas las preguntas
+ * - POST   /api/security-questions/     -> Crear pregunta { name, description? }
+ * - PUT    /api/security-questions/:id  -> Actualizar pregunta
+ * - DELETE /api/security-questions/:id  -> Eliminar pregunta
+ * 
+ * MODELO:
+ * - id: number
+ * - name: string (texto de la pregunta) - REQUERIDO
+ * - description: string (descripción opcional)
+ * - created_at, updated_at
  */
 
 import React from 'react';
@@ -13,20 +24,30 @@ const SecurityQuestionView: React.FC = () => {
       entityNameSingular="pregunta"
       emoji="🔒"
       endpoint="security-questions"
-      columns={["id", "text"]}
+      columns={["id", "name", "description"]}
       columnLabels={{
         id: "ID",
-        text: "Pregunta de Seguridad"
+        name: "Pregunta",
+        description: "Descripción"
       }}
       formFields={[
         { 
-          name: "text", 
-          label: "Pregunta", 
+          name: "name", 
+          label: "Pregunta de Seguridad", 
           type: "textarea", 
           required: true, 
           cols: 12,
-          helpText: "Escribe una pregunta de seguridad clara y específica",
+          helpText: "Escribe una pregunta clara que el usuario pueda recordar fácilmente",
           placeholder: "¿Cuál es el nombre de tu primera mascota?"
+        },
+        {
+          name: "description",
+          label: "Descripción (opcional)",
+          type: "text",
+          required: false,
+          cols: 12,
+          helpText: "Descripción opcional para categorizar la pregunta",
+          placeholder: "Pregunta sobre mascotas"
         }
       ]}
       emptyMessage="📭 No hay preguntas de seguridad registradas en el sistema"

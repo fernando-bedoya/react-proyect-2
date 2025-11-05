@@ -20,6 +20,7 @@ import {
 import { auth } from '../../firebase';
 import { User } from '../../models/User';
 import { userService } from '../../services/userService';
+import { passwordService } from '../../services/Password/passwordService';
 import Swal from 'sweetalert2';
 import { useDispatch } from 'react-redux';
 import { setUser } from '../../store/userSlice';
@@ -71,9 +72,29 @@ const SignUp: React.FC = () => {
 
       // 2. Guardar en backend
       const { confirmPassword, password, ...userData } = values;
-      const createdUser = await saveUserToBackend(userData as { name: string; email: string });
+      const backendResult = await saveUserToBackend(userData as { name: string; email: string });
       
-      if (createdUser) {
+      if (backendResult && backendResult.user) {
+        // 3. Guardar contraseña inicial en el historial del backend (auditoría)
+        if (password && backendResult.user.id) {
+          try {
+            console.log('💾 Guardando contraseña inicial en historial del backend...');
+            const now = new Date();
+            const oneYearLater = new Date();
+            oneYearLater.setFullYear(now.getFullYear() + 1);
+            
+            await passwordService.createPassword(backendResult.user.id, {
+              content: password,
+              startAt: now.toISOString().slice(0, 19).replace('T', ' '),
+              endAt: oneYearLater.toISOString().slice(0, 19).replace('T', ' ')
+            });
+            console.log('✅ Contraseña inicial guardada en historial del backend');
+          } catch (pwdError) {
+            // No bloqueamos el registro si falla el guardado de contraseña
+            console.warn('⚠️ No se pudo guardar la contraseña en el historial:', pwdError);
+          }
+        }
+
         Swal.fire({
           title: '¡Registro Exitoso!',
           text: 'Tu cuenta ha sido creada correctamente',
