@@ -65,9 +65,9 @@ import { Plus, RefreshCw, Key } from 'lucide-react';
 import GenericTable from '../../components/GenericTable';
 import GenericModal from '../../components/GenericModal';
 import GenericForm, { FieldConfig } from '../../components/GenericForm';
+import ThemeSelector from '../../components/ThemeSelector';
 import axios from 'axios';
 import userService from '../../services/userService';
-import { passwordService } from '../../services/Password/passwordService';
 import type { User } from '../../models/User';
 import Swal from 'sweetalert2';
 
@@ -142,29 +142,7 @@ const PasswordView: React.FC = () => {
         const response = await axios.get(API_URL);
         data = response.data;
       }
-      // Mark current password per user (add is_current flag)
-      try {
-        const userIds = Array.from(new Set((data || []).map(d => d.user_id).filter(Boolean)));
-        const currentByUser: Record<number, number | null> = {};
-        await Promise.all(userIds.map(async (uid) => {
-          try {
-            const cp: any = await passwordService.getCurrentPassword(uid);
-            currentByUser[uid] = cp?.id ?? null;
-          } catch (err) {
-            currentByUser[uid] = null;
-          }
-        }));
-
-        const marked = (data || []).map((it: any) => ({
-          ...it,
-          is_current: currentByUser[it.user_id] === it.id
-        }));
-        setPasswords(marked);
-      } catch (markErr) {
-        // fallback: just set passwords without marking
-        console.error('Error marcando contraseñas actuales:', markErr);
-        setPasswords(data);
-      }
+      setPasswords(data);
     } catch (err: any) {
       console.error('Error al cargar contraseñas:', err);
       setError(err.message || 'Error al cargar las contraseñas');
@@ -512,6 +490,7 @@ const PasswordView: React.FC = () => {
 
   return (
     <>
+      <ThemeSelector />
       <Container fluid className="p-4">
         <Row className="mb-4 align-items-center">
           <Col>

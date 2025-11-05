@@ -1,7 +1,7 @@
-import axios from 'axios';
+// Import explicitly the axios-backed api implementation (api.js) which exposes get/post/put/delete
+import api from './api.js';
 import { Session } from '../models/Session';
 
-const API_URL = import.meta.env.VITE_API_URL || '';
 const BASE_PATH = '/sessions';
 
 class SessionService {
@@ -10,7 +10,7 @@ class SessionService {
    */
   async getSessions(): Promise<Session[]> {
     try {
-      const response = await axios.get(`${API_URL}${BASE_PATH}/`);
+      const response = await api.get(`${BASE_PATH}/`);
       return response.data;
     } catch (error) {
       console.error('Error fetching sessions:', error);
@@ -23,7 +23,7 @@ class SessionService {
    */
   async getSessionById(sessionId: string): Promise<Session> {
     try {
-      const response = await axios.get(`${API_URL}${BASE_PATH}/${sessionId}`);
+      const response = await api.get(`${BASE_PATH}/${sessionId}`);
       return response.data;
     } catch (error) {
       console.error(`Error fetching session ${sessionId}:`, error);
@@ -36,7 +36,7 @@ class SessionService {
    */
   async getSessionsByUserId(userId: number): Promise<Session[]> {
     try {
-      const response = await axios.get(`${API_URL}${BASE_PATH}/user/${userId}`);
+      const response = await api.get(`${BASE_PATH}/user/${userId}`);
       return response.data;
     } catch (error) {
       console.error(`Error fetching sessions for user ${userId}:`, error);
@@ -65,8 +65,8 @@ class SessionService {
         payload.expiration = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
       }
 
-      const response = await axios.post(
-        `${API_URL}${BASE_PATH}/user/${userId}`,
+      const response = await api.post(
+        `${BASE_PATH}/user/${userId}`,
         payload
       );
       return response.data;
@@ -95,8 +95,8 @@ class SessionService {
         payload.expiration = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
       }
 
-      const response = await axios.put(
-        `${API_URL}${BASE_PATH}/${sessionId}`,
+      const response = await api.put(
+        `${BASE_PATH}/${sessionId}`,
         payload
       );
       return response.data;
@@ -111,7 +111,20 @@ class SessionService {
    */
   async deleteSession(sessionId: string): Promise<boolean> {
     try {
-      await axios.delete(`${API_URL}${BASE_PATH}/${sessionId}`);
+      // Guard: no llamar si sessionId es falsy o no parece un UUID razonable
+      if (!sessionId || typeof sessionId !== 'string') {
+        console.warn('sessionService.deleteSession: sessionId inválido, omitiendo llamada al backend.', sessionId);
+        return false;
+      }
+
+      // Simple UUID-ish validation (36 chars con guiones) para evitar borrados accidentales
+      const uuidLike = /^[0-9a-fA-F\-]{36,}$/;
+      if (!uuidLike.test(sessionId)) {
+        console.warn('sessionService.deleteSession: sessionId no tiene formato esperado, omitiendo llamada al backend.', sessionId);
+        return false;
+      }
+
+      await api.delete(`${BASE_PATH}/${sessionId}`);
       return true;
     } catch (error) {
       console.error(`Error deleting session ${sessionId}:`, error);
