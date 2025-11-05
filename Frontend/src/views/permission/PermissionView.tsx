@@ -19,44 +19,59 @@ const PermissionView: React.FC = () => {
       entityNameSingular="permiso"
       emoji="🔑"
       endpoint="permissions"
-      columns={["id", "name", "description", "created_at"]}
+      columns={["id", "entity", "method", "url", "created_at"]}
       columnLabels={{
         id: "ID",
-        name: "Nombre del Permiso",
-        description: "Descripción",
+        entity: "Entidad",
+        method: "Método",
+        url: "URL",
         created_at: "Fecha Creación"
       }}
       formFields={[
-        { 
-          name: "name", 
-          label: "Nombre del Permiso", 
-          type: "text", 
-          required: true, 
-          cols: 12,
-          placeholder: "Ej: users.create, roles.delete, reports.view",
-          helpText: "Nombre único que identifica el permiso (formato: entidad.accion)"
+        {
+          name: "entity",
+          label: "Entidad",
+          type: "text",
+          required: true,
+          cols: 6,
+          placeholder: "Ej: Users, Role",
+          helpText: "Nombre de la entidad a la que aplica el permiso"
         },
-        { 
-          name: "description", 
-          label: "Descripción", 
-          type: "textarea", 
-          required: false, 
-          cols: 12,
-          placeholder: "Describa qué permite hacer este permiso",
-          helpText: "Información adicional sobre el propósito del permiso (opcional)"
+        {
+          name: "method",
+          label: "Método HTTP",
+          type: "text",
+          required: true,
+          cols: 3,
+          placeholder: "GET, POST, PUT, PATCH, DELETE",
+          helpText: "Método HTTP asociado al permiso"
+        },
+        {
+          name: "url",
+          label: "URL",
+          type: "text",
+          required: true,
+          cols: 3,
+          placeholder: "/users/, /roles",
+          helpText: "Ruta a la que aplica el permiso"
         }
       ]}
       dataTransformer={(permissions) => {
         return permissions.map((perm: any) => ({
           ...perm,
+          // Map backend fields to table fields; fallback to '-' when missing
+          entity: perm.entity || perm.name || '-',
+          method: perm.method || '-',
+          url: perm.url || '-',
           created_at: perm.created_at ? new Date(perm.created_at).toLocaleString() : '-'
         }));
       }}
       onBeforeCreate={(data) => {
-        // Limpiar espacios en blanco y convertir a minúsculas
+        // Backend expects { entity, method, url }
         return {
-          name: (data.name || '').trim().toLowerCase(),
-          description: data.description || ''
+          entity: (data.entity || '').trim(),
+          method: (data.method || '').trim().toUpperCase(),
+          url: (data.url || '').trim()
         };
       }}
       emptyMessage="📭 No hay permisos registrados en el sistema"
