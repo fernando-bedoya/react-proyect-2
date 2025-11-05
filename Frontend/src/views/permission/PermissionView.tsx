@@ -40,10 +40,17 @@ const PermissionView: React.FC = () => {
         {
           name: "method",
           label: "Método HTTP",
-          type: "text",
+          type: "select",
           required: true,
           cols: 3,
-          placeholder: "GET, POST, PUT, PATCH, DELETE",
+          options: [
+            { value: 'GET', label: 'GET' },
+            { value: 'POST', label: 'POST' },
+            { value: 'PUT', label: 'PUT' },
+            { value: 'PATCH', label: 'PATCH' },
+            { value: 'DELETE', label: 'DELETE' },
+            // OPTIONS removed per request
+          ],
           helpText: "Método HTTP asociado al permiso"
         },
         {
