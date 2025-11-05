@@ -63,6 +63,7 @@ import { User } from "../models/User";
 import { store } from "../store/store";
 import { setUser } from "../store/userSlice";
 import app from "../firebase"; // Asegurarse de que Firebase esté inicializado
+import { userService } from "./userService";
 
 // Verificar que la app de Firebase esté inicializada antes de usar cualquier servicio
 if (!app) {
@@ -157,23 +158,32 @@ class SecurityService extends EventTarget {
         try {
             // PASO 1 y 2: Enviar credenciales a Firebase
             const userCredential = await signInWithEmailAndPassword(this.auth, credentials.email, credentials.password);
-            const user = userCredential.user;
-            const token = await user.getIdToken();
+            const firebaseUser = userCredential.user;
+            const token = await firebaseUser.getIdToken();
 
-            // Guardar token y usuario en localStorage
-            localStorage.setItem(this.TOKEN_KEY, token);
-            localStorage.setItem(this.USER_KEY, JSON.stringify(user));
+            // PASO 3: Buscar el usuario completo en el backend por email
+            const backendUser = await userService.getUserByEmail(firebaseUser.email || '');
             
-            // Actualizar el estado del usuario en Redux
-            store.dispatch(setUser(user));
+            if (!backendUser) {
+                console.error('❌ Usuario no encontrado en el backend');
+                throw new Error('Usuario no encontrado en el sistema');
+            }
+
+            // Guardar token y usuario del backend en localStorage
+            localStorage.setItem(this.TOKEN_KEY, token);
+            localStorage.setItem(this.USER_KEY, JSON.stringify(backendUser));
+            
+            // Actualizar el estado del usuario en Redux con datos del backend
+            store.dispatch(setUser(backendUser));
             
             console.log('✅ LOGIN EXITOSO');
             console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-            console.log('   Usuario:', user.email);
+            console.log('   Usuario:', backendUser.email);
+            console.log('   ID Usuario:', backendUser.id);
             console.log('   Token recibido:', token.substring(0, 50) + '...');
             
             // Emitir evento personalizado para otros componentes
-            this.dispatchEvent(new CustomEvent("userChange", { detail: user }));
+            this.dispatchEvent(new CustomEvent("userChange", { detail: backendUser }));
             
             console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
             console.log('🎉 AUTENTICACIÓN COMPLETADA');
@@ -181,7 +191,7 @@ class SecurityService extends EventTarget {
             console.log('   Header: Authorization: Bearer ' + token.substring(0, 30) + '...');
             console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
             
-            return { user, access_token: token } as LoginResponse;
+            return { user: backendUser, access_token: token } as LoginResponse;
             
         } catch (error: any) {
             console.error('❌ ERROR EN LOGIN');
@@ -252,7 +262,7 @@ class SecurityService extends EventTarget {
         } catch (error) {
             console.error('❌ ERROR AL CERRAR SESIÓN');
             console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-            console.error('   Error:', error.message);
+            console.error('   Error:', error instanceof Error ? error.message : 'Error desconocido');
             console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
             
             throw error;

@@ -25,6 +25,18 @@ class UserService {
         }
     }
 
+    async getUserByEmail(email: string): Promise<User | null> {
+        try {
+            // Buscar usuario por email en la lista de usuarios
+            const users = await this.getUsers();
+            const user = users.find(u => u.email === email);
+            return user || null;
+        } catch (error) {
+            console.error("Error al buscar usuario por email:", error);
+            return null;
+        }
+    }
+
     async createUser(user: Omit<User, "id">): Promise<User | null> {
         try {
             const response = await axios.post<User>(API_URL, user);
