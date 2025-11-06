@@ -16,7 +16,8 @@ export const axiosInstance = axios.create({
 axiosInstance.interceptors.request.use(
   (config) => {
     // Agregar token de autenticación si existe
-    const token = localStorage.getItem('session');
+    // CORREGIDO: Cambiar 'session' por 'access_token' para consistencia
+    const token = localStorage.getItem('access_token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -58,8 +59,9 @@ axiosInstance.interceptors.response.use(
             allowOutsideClick: false,
           }).then((result: any) => {
             if (result.isConfirmed) {
-              // Limpiar sesión
-              localStorage.removeItem('session');
+              // Limpiar sesión - CORREGIDO: usar access_token para consistencia
+              localStorage.removeItem('access_token');
+              localStorage.removeItem('refresh_token');
               localStorage.removeItem('user');
               // Redirigir al login
               window.location.href = '/auth/signin';
