@@ -567,11 +567,13 @@ const UserProfile: React.FC = () => {
           />
 
           {/* Botones de acción con mejor contraste y visibilidad */}
-          <div className="flex gap-3 mt-4">
+            <div className="flex gap-3 mt-4">
             <button
               onClick={handleUploadPhoto}
               disabled={!selectedPhoto || uploading}
-              className={`flex-1 ${colors.button} text-white px-6 py-3 rounded-lg font-bold text-base transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none`}
+              // Forzar fondo oscuro y texto blanco para garantizar contraste en el modal
+              className={`flex-1 !bg-black hover:!bg-gray-800 text-white px-6 py-3 rounded-lg font-bold text-base transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none`}
+              style={{ backgroundColor: '#000000 !important' }}
             >
               {uploading ? (
                 <span className="flex items-center justify-center gap-2">
