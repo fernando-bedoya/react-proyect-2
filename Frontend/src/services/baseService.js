@@ -2,11 +2,11 @@
 // Este archivo proporciona funciones base para operaciones Create, Read, Update, Delete en cualquier recurso
 // Sirve para evitar duplicar código de peticiones HTTP y estandarizar las operaciones con el backend
 
-import api from './api';
+import axiosInstance from './axiosInterceptor';
 
 /**
  * Servicio base genérico para operaciones CRUD
- * Utiliza la instancia de Axios configurada en api.js
+ * Utiliza la instancia de Axios configurada en axiosInstance.js
  */
 
 /**
@@ -19,7 +19,7 @@ import api from './api';
  */
 export const getAll = async (resource, params = {}) => {
   try {
-    const response = await api.get(`/${resource}`, { params });
+    const response = await axiosInstance.get(`/${resource}`, { params });
     return response.data;
   } catch (error) {
     console.error(`Error al obtener todos los registros de ${resource}:`, error);
@@ -37,7 +37,7 @@ export const getAll = async (resource, params = {}) => {
  */
 export const getById = async (resource, id) => {
   try {
-    const response = await api.get(`/${resource}/${id}`);
+    const response = await axiosInstance.get(`/${resource}/${id}`);
     return response.data;
   } catch (error) {
     console.error(`Error al obtener el registro ${id} de ${resource}:`, error);
@@ -55,7 +55,7 @@ export const getById = async (resource, id) => {
  */
 export const create = async (resource, data) => {
   try {
-    const response = await api.post(`/${resource}`, data);
+    const response = await axiosInstance.post(`/${resource}`, data);
     return response.data;
   } catch (error) {
     console.error(`Error al crear registro en ${resource}:`, error);
@@ -74,7 +74,7 @@ export const create = async (resource, data) => {
  */
 export const update = async (resource, id, data) => {
   try {
-    const response = await api.put(`/${resource}/${id}`, data);
+    const response = await axiosInstance.put(`/${resource}/${id}`, data);
     return response.data;
   } catch (error) {
     console.error(`Error al actualizar el registro ${id} de ${resource}:`, error);
@@ -93,7 +93,7 @@ export const update = async (resource, id, data) => {
  */
 export const patch = async (resource, id, data) => {
   try {
-    const response = await api.patch(`/${resource}/${id}`, data);
+    const response = await axiosInstance.patch(`/${resource}/${id}`, data);
     return response.data;
   } catch (error) {
     console.error(`Error al actualizar parcialmente el registro ${id} de ${resource}:`, error);
@@ -111,7 +111,7 @@ export const patch = async (resource, id, data) => {
  */
 export const remove = async (resource, id) => {
   try {
-    const response = await api.delete(`/${resource}/${id}`);
+    const response = await axiosInstance.delete(`/${resource}/${id}`);
     return response.data;
   } catch (error) {
     console.error(`Error al eliminar el registro ${id} de ${resource}:`, error);
@@ -130,7 +130,7 @@ export const remove = async (resource, id) => {
  */
 export const search = async (resource, query, additionalParams = {}) => {
   try {
-    const response = await api.get(`/${resource}/search`, {
+    const response = await axiosInstance.get(`/${resource}/search`, {
       params: { q: query, ...additionalParams },
     });
     return response.data;

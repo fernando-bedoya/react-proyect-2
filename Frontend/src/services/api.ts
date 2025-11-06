@@ -1,7 +1,7 @@
 // Simple API helper and base URL configuration
 // Uses Vite env var VITE_API_BASE_URL if available, otherwise falls back to localhost:5000
 const meta: any = (typeof import.meta !== 'undefined' ? import.meta : {});
-const BASE_URL = (meta.env && meta.env.VITE_API_BASE_URL) || process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000';
+const BASE_URL = (meta.env && meta.env.VITE_API_BASE_URL) || 'http://localhost:5000';
 
 export function getBaseUrl() {
   return BASE_URL.replace(/\/+$/, '');
