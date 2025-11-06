@@ -86,11 +86,11 @@ const UserViewGeneric: React.FC = () => {
           handler: (user) => navigate(`/passwords/list?userId=${user.id}`)
         },
         {
-          name: "roles",
-          label: "Roles",
-          icon: "shield",
+          name: "signatures",
+          label: "Firmas",
+          icon: "view",
           variant: "outline-success",
-          handler: (user) => navigate(`/user-roles?userId=${user.id}`)
+          handler: (user) => navigate(`/digital-signatures?userId=${user.id}`)
         }
       ]}
       onBeforeCreate={(data) => {
