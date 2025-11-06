@@ -1,11 +1,9 @@
 import { lazy } from 'react';
 
-const Calendar = lazy(() => import('./pages/Calendar'));
-const Chart = lazy(() => import('./pages/Chart'));
+// Páginas principales
 const Profile = lazy(() => import('./pages/Profile'));
-const UserProfile = lazy(() => import('./pages/Profile/UserProfile')); // Nueva página de perfil de usuario
+const UserProfile = lazy(() => import('./pages/Profile/UserProfile'));
 const Settings = lazy(() => import('./pages/Settings'));
-const Tables = lazy(() => import('./pages/Tables'));
 
 // 🔄 REFACTORIZADO: Users CRUD usando GenericCRUDView
 const UserViewGeneric = lazy(() => import('./views/user/UserViewGeneric'));
@@ -52,11 +50,6 @@ const UserAnswersList = lazy(() => import('./views/answer/AnswerView')); // Reut
 
 const coreRoutes = [
   {
-    path: '/calendar',
-    title: 'Calender',
-    component: Calendar,
-  },
-  {
     path: '/profile',
     title: 'Profile',
     component: Profile,
@@ -70,16 +63,6 @@ const coreRoutes = [
     path: '/settings',
     title: 'Settings',
     component: Settings,
-  },
-  {
-    path: '/chart',
-    title: 'Chart',
-    component: Chart,
-  },
-  {
-    path: '/tables',
-    title: 'Tables',
-    component: Tables,
   },
   {
     path: '/users/list',

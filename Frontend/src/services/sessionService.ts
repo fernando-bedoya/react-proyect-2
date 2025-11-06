@@ -1,5 +1,5 @@
-// Import explicitly the axios-backed api implementation (api.js) which exposes get/post/put/delete
-import api from './api.js';
+// Import axiosInterceptor para consistencia con el resto de servicios
+import axiosInstance from './axiosInterceptor';
 import { Session } from '../models/Session';
 
 const BASE_PATH = '/sessions';
@@ -10,7 +10,7 @@ class SessionService {
    */
   async getSessions(): Promise<Session[]> {
     try {
-      const response = await api.get(`${BASE_PATH}/`);
+      const response = await axiosInstance.get(`${BASE_PATH}/`);
       return response.data;
     } catch (error) {
       console.error('Error fetching sessions:', error);
@@ -23,7 +23,7 @@ class SessionService {
    */
   async getSessionById(sessionId: string): Promise<Session> {
     try {
-      const response = await api.get(`${BASE_PATH}/${sessionId}`);
+      const response = await axiosInstance.get(`${BASE_PATH}/${sessionId}`);
       return response.data;
     } catch (error) {
       console.error(`Error fetching session ${sessionId}:`, error);
@@ -36,7 +36,7 @@ class SessionService {
    */
   async getSessionsByUserId(userId: number): Promise<Session[]> {
     try {
-      const response = await api.get(`${BASE_PATH}/user/${userId}`);
+      const response = await axiosInstance.get(`${BASE_PATH}/user/${userId}`);
       return response.data;
     } catch (error) {
       console.error(`Error fetching sessions for user ${userId}:`, error);
@@ -65,7 +65,7 @@ class SessionService {
         payload.expiration = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
       }
 
-      const response = await api.post(
+      const response = await axiosInstance.post(
         `${BASE_PATH}/user/${userId}`,
         payload
       );
@@ -95,7 +95,7 @@ class SessionService {
         payload.expiration = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
       }
 
-      const response = await api.put(
+      const response = await axiosInstance.put(
         `${BASE_PATH}/${sessionId}`,
         payload
       );
@@ -124,7 +124,7 @@ class SessionService {
         return false;
       }
 
-      await api.delete(`${BASE_PATH}/${sessionId}`);
+      await axiosInstance.delete(`${BASE_PATH}/${sessionId}`);
       return true;
     } catch (error) {
       console.error(`Error deleting session ${sessionId}:`, error);
