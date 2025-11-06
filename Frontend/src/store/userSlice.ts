@@ -1,14 +1,15 @@
 // src/store/userSlice.ts
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { User } from "../models/User";
+import { getUser as getStoredUser, setUser as setStoredUser, clearUser as clearStoredUser } from '../utils/userStorage';
 //Definir la composición de la variable reactiva
 interface UserState {
     user: User | null;
 }
 
-const storedUser = localStorage.getItem("user");
+const storedUser = getStoredUser();
 const initialState: UserState = {
-    user: storedUser ? JSON.parse(storedUser) : null,
+    user: storedUser ? (storedUser as User) : null,
 };
 
 const userSlice = createSlice({
@@ -18,9 +19,9 @@ const userSlice = createSlice({
         setUser: (state, action: PayloadAction<User | null>) => {
             state.user = action.payload;
             if (action.payload) {
-                localStorage.setItem("user", JSON.stringify(action.payload));
+                setStoredUser(action.payload);
             } else {
-                localStorage.removeItem("user");
+                clearStoredUser();
             }
         },
     },

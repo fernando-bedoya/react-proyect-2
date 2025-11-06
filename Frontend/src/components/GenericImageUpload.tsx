@@ -203,7 +203,8 @@ const GenericImageUpload: React.FC<GenericImageUploadProps> = ({
           justifyContent: 'center',
           alignItems: 'center'
         }}
-        onClick={!hasImage ? openFileSelector : undefined}
+        // Hacer el área siempre clicable para permitir reemplazar la imagen
+        onClick={openFileSelector}
       >
         {hasImage ? (
           // Preview de la imagen
@@ -236,6 +237,17 @@ const GenericImageUpload: React.FC<GenericImageUploadProps> = ({
               }}
             >
               <X size={18} />
+            </button>
+            {/* Botón para reemplazar la imagen sin necesidad de eliminarla primero */}
+            <button
+              className="position-absolute bottom-0 start-50 translate-middle-x mb-2 bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-md transition-all"
+              onClick={(e) => {
+                e.stopPropagation();
+                openFileSelector();
+              }}
+              title="Cambiar imagen"
+            >
+              Cambiar
             </button>
           </div>
         ) : (

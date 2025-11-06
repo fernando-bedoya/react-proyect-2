@@ -1,4 +1,5 @@
 import axios, { AxiosError } from 'axios';
+import * as userStorage from '../utils/userStorage';
 import Swal from 'sweetalert2';
 
 // Configuración global de axios
@@ -59,10 +60,10 @@ axiosInstance.interceptors.response.use(
             allowOutsideClick: false,
           }).then((result: any) => {
             if (result.isConfirmed) {
-              // Limpiar sesión - CORREGIDO: usar access_token para consistencia
+              // Limpiar sesión - usando access_token y userStorage para consistencia
               localStorage.removeItem('access_token');
               localStorage.removeItem('refresh_token');
-              localStorage.removeItem('user');
+              userStorage.clearUser();
               // Redirigir al login
               window.location.href = '/auth/signin';
             }

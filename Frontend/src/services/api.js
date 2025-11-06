@@ -3,6 +3,7 @@
 // Sirve para centralizar la configuración HTTP y gestionar tokens en todas las peticiones al backend
 
 import axios from 'axios';
+import * as userStorage from '../utils/userStorage';
 
 // Configuración de la URL base del backend
 const API_BASE_URL = 'http://localhost:5000/api';
@@ -100,10 +101,10 @@ api.interceptors.response.use(
         console.warn('   Token usado:', localStorage.getItem('access_token')?.substring(0, 50) + '...');
         console.warn('   Limpiando tokens y redirigiendo al login...');
         
-        // Limpiar el token del localStorage
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('refresh_token');
-        localStorage.removeItem('user');
+  // Limpiar el token del localStorage
+  localStorage.removeItem('access_token');
+  localStorage.removeItem('refresh_token');
+  userStorage.clearUser();
         
         // Redirigir al login (puedes ajustar la ruta según tu aplicación)
         window.location.href = '/login';
@@ -147,7 +148,7 @@ export const getAuthToken = () => {
 export const clearAuth = () => {
   localStorage.removeItem('access_token');
   localStorage.removeItem('refresh_token');
-  localStorage.removeItem('user');
+  userStorage.clearUser();
 };
 
 // Exportar la instancia configurada

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Shield, Plus } from "lucide-react";
 import Swal from "sweetalert2";
 import GenericTable from "../../components/GenericTable";
+import RolePermissionTable from '../../components/RolePermissionTable';
 import rolePermissionService from "../../services/rolePermissionService";
 import { RolePermission } from "../../models/RolePermission";
 
@@ -188,14 +189,10 @@ const AdministratorList: React.FC = () => {
                     </div>
                 ) : (
                     /* 📊 Tabla genérica unificada - se adapta automáticamente al tema */
-                    <GenericTable
+                    <RolePermissionTable
                         data={rolePermissions}
-                        columns={visibleColumns as any} // Usar las columnas visibles (con custom renders)
                         actions={actions}
                         onAction={handleAction}
-                        striped
-                        hover
-                        responsive
                         emptyMessage="No hay asignaciones de permisos registradas"
                     />
                 )}

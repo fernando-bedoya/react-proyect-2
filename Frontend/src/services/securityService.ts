@@ -64,6 +64,7 @@ import { store } from "../store/store";
 import { setUser } from "../store/userSlice";
 import app from "../firebase"; // Asegurarse de que Firebase esté inicializado
 import { userService } from "./userService";
+import * as userStorage from '../utils/userStorage';
 
 // Verificar que la app de Firebase esté inicializada antes de usar cualquier servicio
 if (!app) {
@@ -99,18 +100,9 @@ class SecurityService extends EventTarget {
         // Obtener URL de la API desde variables de entorno
         this.API_URL = (import.meta as any).env?.VITE_API_URL || "";
         
-        // Intentar recuperar usuario del localStorage al iniciar
-        const storedUser = localStorage.getItem(this.USER_KEY);
-        if (storedUser) {
-            try {
-                this.user = JSON.parse(storedUser);
-            } catch (error) {
-                console.error('Error al parsear usuario del localStorage:', error);
-                this.user = {};
-            }
-        } else {
-            this.user = {};
-        }
+        // Intentar recuperar usuario normalizado usando userStorage
+        const stored = userStorage.getUser();
+        this.user = stored || {};
 
         // Log inicial para debugging
         console.log('🔐 SecurityService inicializado');
@@ -118,15 +110,38 @@ class SecurityService extends EventTarget {
         console.log('   Usuario en caché:', this.user.email || 'No autenticado');
 
         // Escuchar cambios en el estado de autenticación
-        onAuthStateChanged(this.auth, (user) => {
-            if (user) {
-                user.getIdToken().then((token) => {
+        onAuthStateChanged(this.auth, async (firebaseUser) => {
+            if (firebaseUser) {
+                try {
+                    const token = await firebaseUser.getIdToken();
                     localStorage.setItem(this.TOKEN_KEY, token);
-                    localStorage.setItem(this.USER_KEY, JSON.stringify(user));
-                });
+
+                    // Intentar mapear al usuario del backend por email
+                    let backendUser = null;
+                    try {
+                        backendUser = await userService.getUserByEmail(firebaseUser.email || '');
+                    } catch (err) {
+                        console.warn('No se pudo obtener usuario del backend desde onAuthStateChanged:', err);
+                    }
+
+                    if (backendUser) {
+                        // Guardar usuario backend normalizado
+                        userStorage.setUser(backendUser);
+                        this.user = backendUser as any;
+                        store.dispatch(setUser(backendUser));
+                    } else {
+                        // No hay usuario en backend; guardar una versión normalizada del firebaseUser
+                        userStorage.setUser(firebaseUser);
+                        this.user = userStorage.getUser() as any || {};
+                        store.dispatch(setUser(this.user as any));
+                    }
+                } catch (err) {
+                    console.error('Error en onAuthStateChanged handling:', err);
+                }
             } else {
                 localStorage.removeItem(this.TOKEN_KEY);
-                localStorage.removeItem(this.USER_KEY);
+                userStorage.clearUser();
+                store.dispatch(setUser(null));
             }
         });
     }
@@ -169,9 +184,9 @@ class SecurityService extends EventTarget {
                 throw new Error('Usuario no encontrado en el sistema');
             }
 
-            // Guardar token y usuario del backend en localStorage
+            // Guardar token y usuario del backend (usando la utilidad centralizada)
             localStorage.setItem(this.TOKEN_KEY, token);
-            localStorage.setItem(this.USER_KEY, JSON.stringify(backendUser));
+            userStorage.setUser(backendUser);
             
             // Actualizar el estado del usuario en Redux con datos del backend
             store.dispatch(setUser(backendUser));
@@ -242,8 +257,8 @@ class SecurityService extends EventTarget {
             // Limpiar tokens del localStorage
             localStorage.removeItem(this.TOKEN_KEY);
             localStorage.removeItem(this.REFRESH_TOKEN_KEY);
-            localStorage.removeItem(this.USER_KEY);
-            console.log('   ✓ Tokens eliminados del localStorage');
+            userStorage.clearUser();
+            console.log('   ✓ Tokens y usuario eliminados del localStorage');
             
             // Limpiar usuario de la memoria
             this.user = {};
