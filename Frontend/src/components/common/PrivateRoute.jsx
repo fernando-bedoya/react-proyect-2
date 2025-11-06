@@ -5,6 +5,7 @@
 import React, { useState, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import { Spinner, Container } from 'react-bootstrap';
+import * as userStorage from '../../utils/userStorage';
 
 /**
  * Componente de protección de rutas con verificación asíncrona
@@ -42,10 +43,10 @@ const PrivateRoute = ({
      * Verifica de forma asíncrona si el usuario está autenticado
      */
     const checkAuthentication = async () => {
-      try {
-        // Verificar si existe un token de acceso
-        const token = localStorage.getItem('access_token');
-        const user = localStorage.getItem('user');
+  try {
+  // Verificar si existe un token de acceso
+  const token = localStorage.getItem('access_token');
+  const storedUser = userStorage.getUser();
         
         // Opcional: Verificar si el token no ha expirado
         const tokenExpiry = localStorage.getItem('token_expiry');
@@ -66,8 +67,8 @@ const PrivateRoute = ({
           await new Promise(resolve => setTimeout(resolve, 300));
         }
 
-        // Determinar si el usuario está autenticado
-        setIsAuthenticated(isTokenValid && !!user);
+  // Determinar si el usuario está autenticado
+  setIsAuthenticated(isTokenValid && !!storedUser);
 
       } catch (error) {
         console.error('Error al verificar autenticación:', error);
@@ -123,11 +124,11 @@ const PrivateRoute = ({
 
   // Si no está autenticado, limpiar sesión y redirigir
   if (!isAuthenticated) {
-    // Limpiar datos de sesión
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('refresh_token');
-    localStorage.removeItem('user');
-    localStorage.removeItem('token_expiry');
+  // Limpiar datos de sesión
+  localStorage.removeItem('access_token');
+  localStorage.removeItem('refresh_token');
+  userStorage.clearUser();
+  localStorage.removeItem('token_expiry');
     
     console.warn('⚠️ No hay sesión activa. Redirigiendo a:', redirectTo);
     
@@ -155,19 +156,14 @@ export const useAuth = () => {
   };
 
   const getUser = () => {
-    const userStr = localStorage.getItem('user');
-    try {
-      return userStr ? JSON.parse(userStr) : null;
-    } catch {
-      return null;
-    }
+    return userStorage.getUser();
   };
 
   const logout = () => {
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('refresh_token');
-    localStorage.removeItem('user');
-    localStorage.removeItem('token_expiry');
+  localStorage.removeItem('access_token');
+  localStorage.removeItem('refresh_token');
+  userStorage.clearUser();
+  localStorage.removeItem('token_expiry');
     window.location.href = '/login';
   };
 

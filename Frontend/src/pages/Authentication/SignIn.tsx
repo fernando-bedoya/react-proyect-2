@@ -20,6 +20,7 @@ import sessionService from '../../services/sessionService';
 import Swal from 'sweetalert2';
 import { useDispatch } from 'react-redux';
 import { setUser } from '../../store/userSlice';
+import * as userStorage from '../../utils/userStorage';
 
 const SignIn: React.FC = () => {
   const navigate = useNavigate();
@@ -44,7 +45,7 @@ const SignIn: React.FC = () => {
       dispatch(setUser(response.user || response));
 
       // 💾 Guardar en localStorage (persistencia entre recargas)
-      localStorage.setItem('user', JSON.stringify(response.user || response));
+  userStorage.setUser(response.user || response);
 
       // ----- Nuevo: crear sesión en el backend automáticamente -----
       try {
@@ -233,7 +234,7 @@ const SignIn: React.FC = () => {
       dispatch(setUser(existingUser));
 
       // Guardar en localStorage para el sistema JWT
-      localStorage.setItem('user', JSON.stringify(existingUser));
+  userStorage.setUser(existingUser);
 
       // Intentar crear sesión en backend y redirigir apropiadamente
       const createdSession = await createBackendSession(existingUser);
@@ -311,7 +312,7 @@ const SignIn: React.FC = () => {
       dispatch(setUser(existingUser));
 
       // Guardar en localStorage para el sistema JWT
-      localStorage.setItem('user', JSON.stringify(existingUser));
+  userStorage.setUser(existingUser);
 
       // Intentar crear sesión en backend y redirigir apropiadamente
       const createdSession = await createBackendSession(existingUser);
@@ -389,7 +390,7 @@ const SignIn: React.FC = () => {
       dispatch(setUser(existingUser));
 
       // Guardar en localStorage para el sistema JWT
-      localStorage.setItem('user', JSON.stringify(existingUser));
+  userStorage.setUser(existingUser);
 
       // Mostrar notificación de bienvenida
       await Swal.fire({

@@ -4,6 +4,7 @@
 
 import React from 'react';
 import { Navigate } from 'react-router-dom';
+import * as userStorage from '../../utils/userStorage';
 
 /**
  * Componente de protección de rutas (AuthGuard)
@@ -38,10 +39,10 @@ const AuthGuard = ({ children, redirectTo = '/login' }) => {
 
   // Si no hay sesión activa, redirigir al login
   if (!isAuthenticated()) {
-    // Limpiar cualquier dato residual de sesión
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('refresh_token');
-    localStorage.removeItem('user');
+  // Limpiar cualquier dato residual de sesión
+  localStorage.removeItem('access_token');
+  localStorage.removeItem('refresh_token');
+  userStorage.clearUser();
     
     console.warn('No hay sesión activa. Redirigiendo a:', redirectTo);
     

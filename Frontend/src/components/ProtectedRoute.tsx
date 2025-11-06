@@ -11,6 +11,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import SecurityService from '../services/securityService';
 import { setUser } from '../store/userSlice';
 import { RootState } from '../store/store';
+import * as userStorage from '../utils/userStorage';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -40,9 +41,9 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
       try {
         console.log('🛡️ Guard: Interceptando acceso a ruta protegida:', location.pathname);
         
-        // 🔐 CAPA 1: Verificar tokens en localStorage (persistencia)
-        const accessToken = localStorage.getItem('access_token');
-        const userStorage = localStorage.getItem('user');
+  // 🔐 CAPA 1: Verificar tokens en localStorage (persistencia)
+  const accessToken = localStorage.getItem('access_token');
+  const storedUser = userStorage.getUser();
         
         if (!accessToken) {
           console.log('❌ Guard: No hay token de acceso - Acceso denegado');
@@ -63,13 +64,12 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
         
         // 🔐 CAPA 3: Sincronizar con Redux Store (estado global)
         // Si hay usuario en localStorage pero no en Redux, restaurar el estado
-        if (userStorage && !reduxUser) {
+        if (storedUser && !reduxUser) {
           try {
-            const parsedUser = JSON.parse(userStorage);
-            console.log('🔄 Guard: Restaurando usuario en Redux desde localStorage');
-            dispatch(setUser(parsedUser));
+            console.log('🔄 Guard: Restaurando usuario en Redux desde userStorage');
+            dispatch(setUser(storedUser as any));
           } catch (error) {
-            console.error('❌ Guard: Error al parsear usuario de localStorage:', error);
+            console.error('❌ Guard: Error al restaurar usuario desde userStorage:', error);
           }
         }
         
@@ -137,11 +137,11 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     console.log('🚫 Guard: Acceso denegado - Redirigiendo a login');
     console.log('📍 Guard: Guardando ruta de destino:', location.pathname);
     
-    // 🧹 LIMPIEZA COMPLETA DE SESIÓN (interceptor de limpieza)
-    // Eliminar todos los tokens y datos de usuario de localStorage
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('refresh_token');
-    localStorage.removeItem('user');
+  // 🧹 LIMPIEZA COMPLETA DE SESIÓN (interceptor de limpieza)
+  // Eliminar todos los tokens y datos de usuario de localStorage
+  localStorage.removeItem('access_token');
+  localStorage.removeItem('refresh_token');
+  userStorage.clearUser();
     
     // Limpiar Redux Store también
     dispatch(setUser(null));

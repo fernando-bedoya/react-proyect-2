@@ -140,6 +140,14 @@ const DropdownUser = () => {
     
     loadProfilePhoto();
   }, [user]);
+  
+  // Si no hay foto en el backend, intentar usar la foto del proveedor (Firebase) u otros campos comunes
+  useEffect(() => {
+    if (!profilePhoto && user) {
+      const possible = (user as any).photoURL || (user as any).avatar || (user as any).picture || null;
+      if (possible) setProfilePhoto(possible as string);
+    }
+  }, [user, profilePhoto]);
 
   // close on click outside
   useEffect(() => {

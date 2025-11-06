@@ -1,4 +1,5 @@
 import axios, { AxiosError } from 'axios';
+import * as userStorage from '../utils/userStorage';
 import Swal from 'sweetalert2';
 
 // Configuración global de axios
@@ -60,7 +61,7 @@ axiosInstance.interceptors.response.use(
             if (result.isConfirmed) {
               // Limpiar sesión
               localStorage.removeItem('session');
-              localStorage.removeItem('user');
+              userStorage.clearUser();
               // Redirigir al login
               window.location.href = '/auth/signin';
             }
